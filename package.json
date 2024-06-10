@@ -1,0 +1,55 @@
+{
+  "name": "oscal-cli",
+  "version": "1.0.0",
+  "description": "oscal cli",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "validate": "node index.mjs validate",
+    "convert": "node index.mjs convert",
+    "scaffold": "node index.mjs scaffold",
+    "build-native":"build.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wandmagic/oscal-js.git"
+  },
+  "keywords": [
+    "oscal"
+  ],
+  "author": "GSA",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wandmagic/oscal-js/issues"
+  },
+  "homepage": "https://github.com/wandmagic/oscal-js#readme",
+  "dependencies": {
+    "@babel/core": "^7.24.7",
+    "@babel/preset-env": "^7.24.7",
+    "babel-jest": "^29.7.0",
+    "child_process": "^1.0.2",
+    "commander": "^12.1.0",
+    "inquirer": "^9.2.23",
+    "jest": "^29.7.0",
+    "run-func": "^3.0.0",
+    "xml2js": "^0.6.2",
+    "yaml": "^2.4.3"
+  },
+  "type": "module",
+  "presets": [
+    "@babel/preset-env"
+  ],
+  "jest": {
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|js?|tsx?|ts?)$",
+    "transform": {},
+    "testPathIgnorePatterns": [
+      "<rootDir>/build/",
+      "<rootDir>/node_modules/"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "jsx",
+      "mjs"
+    ]
+  }
+}

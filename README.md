@@ -1,1 +1,1 @@
-# oscal-js
+# oscal-cli

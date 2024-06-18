@@ -9,7 +9,7 @@
     "convert": "node ./src/cli.mjs convert",
     "scaffold": "node ./src/cli.mjs scaffold",
     "generate": "node ./src/cli.mjs generate",
-    "postinstall": "node scripts/fetchLatestRelease.mjs"
+    "postinstall": "node scripts/fetchOscalRelease.mjs"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
   "dependencies": {
     "@babel/core": "^7.24.7",
     "@babel/preset-env": "^7.24.7",
+    "@terascope/fetch-github-release": "^0.8.10",
     "babel-jest": "^29.7.0",
     "child_process": "^1.0.2",
     "commander": "^12.1.0",

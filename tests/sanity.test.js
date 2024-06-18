@@ -1,4 +1,4 @@
-import {scaffold, detectOscalDocumentType, isOscalCliInstalled, installOscalCli, executeOscalCliCommand } from '../oscal.mjs';
+import {scaffold, detectOscalDocumentType, isOscalCliInstalled, installOscalCli, executeOscalCliCommand } from '../src/oscal.mjs';
 import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';

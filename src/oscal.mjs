@@ -6,47 +6,81 @@ import inquirer from 'inquirer';
 import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import {  OpenAI } from 'openai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Function to detect the OSCAL document type
+// Function to detect the OSCAL document type and file format
 const detectOscalDocumentType = (filePath) => {
   console.log("Reading document at " + filePath);
-  const fileContent = fs.readFileSync(filePath, 'utf-8');
-  const parser = new xml2js.Parser();
+  const fileExtension = path.extname(filePath).toLowerCase();
+  let documentType;
+  let fileFormat;
 
-  return new Promise((resolve, reject) => {
-    parser.parseString(fileContent, (err, result) => {
-      if (err) {
-        reject(err);
-      } else {
-        const rootElement = Object.keys(result)[0];
-        let documentType;
+  if (fileExtension === '.xml') {
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    const parser = new xml2js.Parser();
 
-        switch (rootElement) {
-          case 'catalog':
-            documentType = 'catalog';
-            break;
-          case 'profile':
-            documentType = 'profile';
-            break;
-          case 'component-definition':
-            documentType = 'component-definition';
-            break;
-          case 'system-security-plan':
-            documentType = 'ssp';
-            break;
-          default:
-            documentType = 'metaschema';
-            break;
+    return new Promise((resolve, reject) => {
+      parser.parseString(fileContent, (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          const rootElement = Object.keys(result)[0];
+
+          switch (rootElement) {
+            case 'catalog':
+              documentType = 'catalog';
+              break;
+            case 'profile':
+              documentType = 'profile';
+              break;
+            case 'component-definition':
+              documentType = 'component-definition';
+              break;
+            case 'system-security-plan':
+              documentType = 'ssp';
+              break;
+            default:
+              documentType = 'metaschema';
+              break;
+          }
+
+          fileFormat = 'xml';
+          resolve([documentType, fileFormat ]);
         }
-
-        resolve(documentType);
-      }
+      });
     });
-  });
-}
+  } else if (fileExtension === '.json') {
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    const jsonData = JSON.parse(fileContent);
+    const rootElement = Object.keys(jsonData)[0];
+
+    switch (rootElement) {
+      case 'catalog':
+        documentType = 'catalog';
+        break;
+      case 'profile':
+        documentType = 'profile';
+        break;
+      case 'component-definition':
+        documentType = 'component-definition';
+        break;
+      case 'system-security-plan':
+        documentType = 'ssp';
+        break;
+      default:
+        documentType = 'metaschema';
+        break;
+    }
+
+    fileFormat = 'json';
+    return Promise.resolve([documentType, fileFormat ]);
+  } else {
+    return Promise.reject(new Error('Unsupported file format. Only XML and JSON are supported.'));
+  }
+};
 // Function to check if the OSCAL CLI is installed
 const isOscalCliInstalled = () => {
   return new Promise((resolve) => {
@@ -100,7 +134,7 @@ const installOscalCli = () => {
 }
 
 // Function to execute the Java OSCAL CLI command
-const executeOscalCliCommand = (command, args) => {
+const executeOscalCliCommand = (command, args,showLoader=true) => {
   return new Promise((resolve, reject) => {
     const oscalCliPath = './oscal-cli/bin/oscal-cli';
     const fullArgs = [command, ...args];
@@ -108,7 +142,14 @@ const executeOscalCliCommand = (command, args) => {
 
     let stdout = '';
     let stderr = '';
+    // Indeterminate loading glyph
+    const loadingGlyph = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    let loadingIndex = 0;
 
+    const loading = setInterval(() => {
+      process.stdout.write(`\r\x1b[36m${loadingGlyph[loadingIndex]}\x1b[0m`);
+      loadingIndex = (loadingIndex + 1) % loadingGlyph.length;
+    }, 100);
     oscalCliProcess.stdout.on('data', (data) => {
       stdout += data.toString();
     });
@@ -116,15 +157,22 @@ const executeOscalCliCommand = (command, args) => {
     oscalCliProcess.stderr.on('data', (data) => {
       stderr += data.toString();
     });
-    oscalCliProcess.on("disconnect",()=>{
+
+    oscalCliProcess.on('disconnect', () => {
+      clearInterval(loading);
       reject(new Error(`OSCAL CLI process disconnected`));
-    })
-    oscalCliProcess.on("message",(message)=>{
+    });
+
+    oscalCliProcess.on('message', (message) => {
       console.log(message);
-    })
+    });
+
     oscalCliProcess.on('close', (code) => {
+      clearInterval(loading);
+      process.stdout.write('\r\x1b[K'); // Clear the loading glyph line
+
       if (code === 0) {
-        resolve(stdout+stderr);
+        resolve(stdout + stderr);
       } else {
         reject(new Error(`OSCAL CLI process exited with code ${code}:\n${stderr}`));
       }
@@ -142,13 +190,19 @@ program
   .action((options) => {
     const { file } = options;
     // Logic for validation command
-    console.log('Validating OSCAL document at ', file);
+    if(typeof file==='undefined'){
+      console.log("use -f or --file to specify the file");
+      return;
+    }
+    console.log('Begin OSCAL document validation at ', file);
 
     detectOscalDocumentType(file)
-      .then((command) => {
+      .then(async ([command,fileType]) => {
+        console.log("Detected "+command+" "+fileType);
         // Execute the OSCAL CLI command
-        const args = ["validate", file];
-        executeOscalCliCommand(command, args);
+        const args = ["validate", file,"--as="+fileType];
+        const output=await executeOscalCliCommand(command, args);
+        console.log(output);
       })
       .catch((error) => {
         console.error('Error detecting OSCAL document type:', error);
@@ -164,33 +218,79 @@ program.command('convert')
   .description('Convert an OSCAL document (XML,JSON)')
   .option('-f, --file <path>', 'Path to the OSCAL document')
   .option('-o, --output <path>', 'Path to the output')
+  .option('-v, --verbosity <level>', 'logging level [debug,info,warning,error,silent]')
   .action((options) => {
     const { file, output } = options;
     // Logic for conversion command
-    console.log('Converting OSCAL document ' + file, " => " + output);
-
-    // Determine the input and output file extensions
-    const inputExtension = path.extname(file).toLowerCase();
-    const outputExtension = path.extname(output).toLowerCase();
-
-    // Determine the conversion command based on the file extensions
-    let toArg;
-    if (inputExtension === '.xml' && outputExtension === '.json') {
-      toArg = '--to=json';
-    } else if (inputExtension === '.json' && outputExtension === '.xml') {
-      toArg = '--to=xml';
-    } else {
-      console.error('Invalid file extension for conversion.');
-      process.exit(1);
-    }
-
+    console.info('Converting OSCAL document ' + file, " => " + output);
     // Execute the OSCAL CLI conversion command
-    const args = ["convert", toArg, file, output];
-    detectOscalDocumentType(file).then((command) => {
-      executeOscalCliCommand(command, args);
+    detectOscalDocumentType(file).then(async ([command,fileType]) => {
+      const args = ["convert", "--to="+fileType, file, output];
+      const result=await executeOscalCliCommand(command, args);
+      console.log(result);
     })
   });
 
+  
+  async function getOpenAIKey() {
+    const openaiKey = process.env.OPENAI_KEY;
+  
+    if (openaiKey) {
+      return openaiKey;
+    } else {
+      console.log("inquiring");
+      const answers = await inquirer.prompt([
+        {
+          type: 'password',
+          name: 'apiKey',
+          message: 'Please enter your OpenAI API key:',
+        },
+      ]);
+      return answers.apiKey;
+    }
+  }
+  
+  async function generateOSCALDocument(options) {
+    const { prompt, type,format } = options;
+    console.log("Generating "+type);
+    if(!prompt||!type||!format){
+      console.log("Missing parameters");
+      !type && console.log("Please enter oscal -type (ssp,etc)")
+      !format && console.log("Please enter oscal -format (xml,json)")
+      !prompt && console.log("Describe your oscal item -prompt")
+      return;
+    }
+    try {
+      const apiKey = await getOpenAIKey();
+  
+      // Set up OpenAI API configuration
+      const openAi = new OpenAI({
+        apiKey: apiKey,
+      });
+  
+      // Call the OpenAI API to generate the document
+      const stream = await openAi.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages:[{ role: 'user', content: `Please generate an oscal ${type} in ${format} with content: ${prompt}` }],
+        stream: true,
+      });
+      for await (const chunk of stream) {
+        process.stdout.write(chunk.choices[0]?.delta?.content || '');
+      }
+      // Get the generated document from the API response
+    } catch (error) {
+      console.error('Error generating OSCAL document:', error);
+    }
+  }
+  
+  program
+    .command('generate')
+    .description('Generate an OSCAL document using OpenAI API')
+    .option('-t, --type <oscal-type>', 'OSCAL-TYPE to generate')
+    .option('-f, --format <oscal-format>', 'OSCAL-FORMAT (XML,JSON) to generate')
+    .option('-p, --prompt <path>', 'Prompt for generating the document')
+    .action(generateOSCALDocument);
+  
 
 export const scaffold = async (options) => {
   // Logic for scaffolding command

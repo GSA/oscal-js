@@ -1,5 +1,5 @@
 import { downloadRelease } from '@terascope/fetch-github-release';
-
+import {existsSync} from 'fs';
 const user = 'usnistgov';
 const repo = 'OSCAL';
 const outputdir = 'content';
@@ -17,7 +17,7 @@ function filterAsset(asset) {
   // Select assets that contain the string 'windows'.
   return asset.name.includes('complete');
 }
-
+if (!existsSync(outputdir)) {
 downloadRelease(user, repo, outputdir, filterRelease, filterAsset, leaveZipped, disableLogging)
   .then(function() {
     console.log('Latest oscal downloaded.');
@@ -25,3 +25,4 @@ downloadRelease(user, repo, outputdir, filterRelease, filterAsset, leaveZipped, 
   .catch(function(err) {
     console.error(err.message);
   });
+}

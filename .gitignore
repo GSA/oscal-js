@@ -1,3 +1,4 @@
 node_modules
 oscal-cli
-content
+/dist
+.DS_Store

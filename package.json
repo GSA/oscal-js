@@ -5,13 +5,13 @@
   "main": "./dist/cli.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
     "validate": "node ./dist/cli.js validate",
     "convert": "node ./dist/cli.js convert",
     "scaffold": "node ./dist/cli.js scaffold",
     "build": "tsc",
     "types": "node ./dist/scripts/generateTypes.js",
-    "generate": "node ./dist/cli.js generate"
+    "generate": "node ./dist/cli.js generate",
+    "test": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js"
   },
   "keywords": [
     "oscal"
@@ -24,13 +24,14 @@
     "@terascope/fetch-github-release": "^0.8.10",
     "ajv": "^8.16.0",
     "babel-jest": "^29.7.0",
+    "chai": "^5.1.1",
     "child_process": "^1.0.2",
     "commander": "^12.1.0",
     "inquirer": "^9.2.23",
     "jest": "^29.7.0",
+    "jest-cucumber": "^4.4.0",
     "openai": "^4.51.0",
     "run-func": "^3.0.0",
-    "ts-node": "^10.9.2",
     "tsc": "^2.0.4",
     "xml2js": "^0.6.2",
     "yaml": "^2.4.3"
@@ -39,13 +40,17 @@
   "presets": [
     "@babel/preset-env"
   ],
-  
   "devDependencies": {
     "@babel/preset-typescript": "^7.24.7",
+    "@cucumber/cucumber": "^10.8.0",
+    "@types/chai": "^4.3.16",
     "@types/inquirer": "^9.0.7",
+    "@types/node": "^20.14.9",
     "@types/xml2js": "^0.4.14",
     "json-schema-to-typescript": "^14.1.0",
     "ts-jest": "^29.1.5",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.5.2"
   }
 }

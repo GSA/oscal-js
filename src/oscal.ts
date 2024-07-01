@@ -103,7 +103,7 @@ export const isOscalCliInstalled = (): Promise<boolean> => {
 export const installOscalCli = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     const oscalCliVersion = '1.0.3';
-    const oscalCliInstallUrl = `https://repo1.maven.org/maven2/gov/nist/secauto/oscal/tools/oscal-cli/cli-core/${oscalCliVersion}/cli-core-${oscalCliVersion}-oscal-cli.zip`;
+    const oscalCliInstallUrl = `https://github.com/wandmagic/oscal-cli/releases/download/oscal-cli_1.1.0/oscal-cli-1.1.0-SNAPSHOT-20240620.zip`;
     const oscalCliInstallPath = './oscal-cli/';
 
     exec(`mkdir -p ${oscalCliInstallPath}`, (error) => {

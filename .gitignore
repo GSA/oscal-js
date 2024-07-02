@@ -2,3 +2,4 @@ node_modules
 oscal-cli
 /dist
 .DS_Store
+/reports

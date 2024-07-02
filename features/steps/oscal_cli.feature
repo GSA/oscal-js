@@ -16,10 +16,36 @@ Feature: OSCAL CLI Wrapper
 
   Scenario: Execute OSCAL CLI command
     Given I have an OSCAL document "ssp.xml"
-    When I execute the OSCAL CLI command "ssp validate" on the document
+    When I execute the OSCAL CLI command "validate" on the document
     Then I should receive the execution result
 
   Scenario: Convert OSCAL document from XML to JSON
     Given I have an OSCAL document "ssp.xml"
     When I convert the document to JSON
     Then I should receive the conversion result
+
+  Scenario: Get sarif output invalid xml
+    Given I have an OSCAL document "bad-ssp.xml"
+    When I validate with sarif output on the document
+    Then I should receive the sarif output
+
+  Scenario: Get sarif output for valid xml
+    Given I have an OSCAL document "ssp.xml"
+    When I validate with sarif output on the document
+    Then I should receive the sarif output
+
+  Scenario: Get sarif output for valid json
+    Given I have an OSCAL document "ssp.json"
+    When I validate with sarif output on the document
+    Then I should receive the sarif output
+
+  Scenario: Get sarif output for valid xml
+    Given I have an OSCAL document "ssp.xml"
+    Given I have an Metaschema extensions document "fedramp-external-constraints.xml"
+    When I validate with metaschema extensions and sarif output on the document
+    Then I should receive the sarif output
+
+  Scenario: validate javascript object inline
+    Given I have an OSCAL document "ssp.json"
+    When I validate with imported validate function
+    Then I should receive a validation object

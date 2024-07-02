@@ -1,18 +1,24 @@
 import { program } from 'commander';
-import fs from 'fs';
+import fs, { readFileSync, rmSync } from 'fs';
 import xml2js from 'xml2js';
 import { exec, spawn, ChildProcess } from 'child_process';
 import inquirer from 'inquirer';
 import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { Log, Run } from "sarif"
 import { OpenAI } from 'openai';
+import { promisify } from 'util';
+import { v4 as uuidv4, v4 } from 'uuid';
+import { execSync } from 'child_process';
+import { sarifSchema } from './schema/sarif';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 type OscalDocumentType = 'catalog' | 'profile' | 'component-definition' | 'ssp' | 'metaschema';
 type FileFormat = 'xml' | 'json';
+
 
 // Function to detect the OSCAL document type and file format
 export const detectOscalDocumentType = (filePath: string): Promise<[OscalDocumentType, FileFormat]> => {
@@ -99,92 +105,127 @@ export const isOscalCliInstalled = (): Promise<boolean> => {
   });
 };
 
-// Function to install the OSCAL CLI
-export const installOscalCli = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const oscalCliVersion = '1.0.3';
-    const oscalCliInstallUrl = `https://github.com/wandmagic/oscal-cli/releases/download/oscal-cli_1.1.0/oscal-cli-1.1.0-SNAPSHOT-20240620.zip`;
-    const oscalCliInstallPath = './oscal-cli/';
-
-    exec(`mkdir -p ${oscalCliInstallPath}`, (error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-
-      exec(`curl -o ${oscalCliInstallPath}/oscal-cli.zip ${oscalCliInstallUrl}`, (error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-
-        exec(`unzip -o ${oscalCliInstallPath}/oscal-cli.zip -d ${oscalCliInstallPath}`, (error) => {
-          if (error) {
-            reject(error);
-            return;
-          }
-
-          exec(`chmod +x ${oscalCliInstallPath}/bin/oscal-cli`, (error) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve();
-            }
-          });
-        });
-      });
-    });
-  });
-}
-
-// Function to execute the Java OSCAL CLI command
-export const executeOscalCliCommand = (command: string, args: string[], showLoader: boolean = true): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const oscalCliPath = './oscal-cli/bin/oscal-cli';
-    const fullArgs = [command, ...args];
-    const oscalCliProcess: ChildProcess = spawn(oscalCliPath, fullArgs);
-
-    let stdout = '';
-    let stderr = '';
-    // Indeterminate loading glyph
-    const loadingGlyph = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-    let loadingIndex = 0;
-
-    const loading = setInterval(() => {
-      process.stdout.write(`\r\x1b[36m${loadingGlyph[loadingIndex]}\x1b[0m`);
-      loadingIndex = (loadingIndex + 1) % loadingGlyph.length;
-    }, 100);
-
-    oscalCliProcess.stdout?.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    oscalCliProcess.stderr?.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    oscalCliProcess.on('disconnect', () => {
-      clearInterval(loading);
-      reject(new Error(`OSCAL CLI process disconnected`));
-    });
-
-    oscalCliProcess.on('message', (message) => {
-      console.log(message);
-    });
-
-    oscalCliProcess.on('close', (code) => {
-      clearInterval(loading);
-      process.stdout.write('\r\x1b[K'); // Clear the loading glyph line
-
-      if (code === 0) {
-        resolve(stdout + stderr);
+export const isJavaInstalled = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    exec('which java', (error) => {
+      if (!error) {
+        resolve(true);
       } else {
-        reject(new Error(`OSCAL CLI process exited with code ${code}:\n${stderr}`));
+        resolve(false);
       }
     });
   });
 };
 
+// Function to install the OSCAL CLI
+export const installOscalCli = (): void => {
+  const oscalCliInstallUrl = `https://codeload.github.com/wandmagic/oscal/zip/refs/heads/cli`;
+  const oscalCliInstallPath = './oscal-cli';
+  const zipFilePath = './oscal-cli.zip';
+
+  try {
+    // Download the zip file
+    execSync(`curl -o ${zipFilePath} ${oscalCliInstallUrl}`);
+
+    // Unzip the file
+    execSync(`unzip -o ${zipFilePath}`);
+
+    // Make the CLI executable
+    execSync(`chmod +x ${oscalCliInstallPath}/bin/oscal-cli`);
+
+    // Delete the zip file
+    fs.unlinkSync(zipFilePath);
+  } catch (error:any) {
+    throw new Error(`Failed to install OSCAL CLI: ${error.message}`);
+  }
+};
+
+const execPromise = promisify(exec);
+
+export const executeOscalCliCommand = async (command: string, args: string[], showLoader: boolean = true): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    findOscalCliPath().then(oscalCliPath => {
+      const fullArgs = [command, ...args];
+      const oscalCliProcess: ChildProcess = spawn(oscalCliPath, fullArgs);
+
+      let stdout = '';
+      let stderr = '';
+      // Indeterminate loading glyph
+      const loadingGlyph = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+      let loadingIndex = 0;
+
+      let loading: NodeJS.Timeout | null = null;
+      if (showLoader) {
+        loading = setInterval(() => {
+          process.stdout.write(`\r\x1b[36m${loadingGlyph[loadingIndex]}\x1b[0m`);
+          loadingIndex = (loadingIndex + 1) % loadingGlyph.length;
+        }, 100);
+      }
+
+      oscalCliProcess.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      oscalCliProcess.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      oscalCliProcess.on('disconnect', () => {
+        if (loading) clearInterval(loading);
+        reject(new Error(`OSCAL CLI process disconnected`+stderr));
+      });
+
+      oscalCliProcess.on('message', (message) => {
+        stdout += message.toString();
+      });
+
+      oscalCliProcess.on('close', (code) => {
+        if (loading) {
+          clearInterval(loading);
+          process.stdout.write('\r\x1b[K'); // Clear the loading glyph line
+        }
+
+        if (code === 0) {
+          resolve(stdout);
+        } else {
+          console.error(stdout);
+          reject(new Error(`OSCAL CLI process exited with code ${code}:\n${stderr}`));
+        }
+      });
+    }).catch(error => reject(error));
+  });
+};
+export const validateWithSarif = async ( args: string[]): Promise<Log> => {
+  const tempFile = path.join(`oscal-cli-sarif-log-${v4()}.json`);
+  const sarifArgs = [...args, '-o', tempFile,"--sarif-include-pass"];
+
+  try {
+    await executeOscalCliCommand('validate', sarifArgs, false);
+  } catch (error) {
+    console.error("Error executing oscal cli command validate "+sarifArgs);
+    const sarifOutput = readFileSync(tempFile, 'utf8');
+    rmSync(tempFile);
+    return JSON.parse(sarifOutput) as Log;
+  }
+  try {
+    const sarifOutput = readFileSync(tempFile, 'utf8');
+    rmSync(tempFile);
+    return JSON.parse(sarifOutput) as Log;
+  } catch (error) {
+    console.error("ERRORING",error);
+    throw new Error(`Failed to read or parse SARIF output: ${error}`);
+  }
+};
+
+const findOscalCliPath = async (): Promise<string> => {
+  try {
+    const { stdout } = await execPromise('which oscal-cli');
+    return stdout.trim();
+  } catch (error) {
+    // If 'which' command fails, fall back to the local path
+    return './oscal-cli/bin/oscal-cli';
+  }
+};
 // Commander.js configuration
 program
   .version('1.0.0')
@@ -201,12 +242,11 @@ program
     console.log('Begin OSCAL document validation at ', file);
 
     detectOscalDocumentType(file)
-      .then(async ([command, fileType]) => {
-        console.log("Detected " + command + " " + fileType);
+      .then(async ([documentType, fileType]) => {
+        console.log("Detected " + documentType + " " + fileType);
         // Execute the OSCAL CLI command
-        const args = ["validate", file, "--as=" + fileType];
-        const output = await executeOscalCliCommand(command, args);
-        console.log(output);
+        const args = [documentType, file, "--as=" + fileType];
+        const output = await executeOscalCliCommand('validate', args);
       })
       .catch((error) => {
         console.error('Error detecting OSCAL document type:', error);
@@ -228,8 +268,8 @@ program.command('convert')
     console.info('Converting OSCAL document ' + file, " => " + output);
     // Execute the OSCAL CLI conversion command
     detectOscalDocumentType(file).then(async ([command, fileType]) => {
-      const args = ["convert", "--to=" + fileType, file, output];
-      const result = await executeOscalCliCommand(command, args);
+      const args = [command, "--to=" + fileType, file, output];
+      const result = await executeOscalCliCommand("convert", args);
       console.log(result);
     });
   });

@@ -1,4 +1,4 @@
-{
+export const OscalSchema={
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://csrc.nist.gov/ns/oscal/1.0/1.1.2/schema.json",
   "$comment": "OSCAL Unified Model of Models: JSON Schema",

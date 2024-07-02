@@ -11,7 +11,6 @@ import { OpenAI } from 'openai';
 import { promisify } from 'util';
 import { v4 as uuidv4, v4 } from 'uuid';
 import { execSync } from 'child_process';
-import { sarifSchema } from './schema/sarif';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -239,13 +238,14 @@ program
       console.log("use -f or --file to specify the file");
       return;
     }
-    console.log('Begin OSCAL document validation at ', file);
+    console.log('Begining OSCAL document validation at ', file);
 
     detectOscalDocumentType(file)
       .then(async ([documentType, fileType]) => {
         console.log("Detected " + documentType + " " + fileType);
         // Execute the OSCAL CLI command
         const args = [documentType, file, "--as=" + fileType];
+        console.error(args);
         const output = await executeOscalCliCommand('validate', args);
       })
       .catch((error) => {
@@ -265,7 +265,6 @@ program.command('convert')
       console.log("Both --file and --output are required");
       return;
     }
-    console.info('Converting OSCAL document ' + file, " => " + output);
     // Execute the OSCAL CLI conversion command
     detectOscalDocumentType(file).then(async ([command, fileType]) => {
       const args = [command, "--to=" + fileType, file, output];
@@ -337,6 +336,28 @@ program
   .option('-f, --format <oscal-format>', 'OSCAL-FORMAT (XML,JSON) to generate')
   .option('-p, --prompt <path>', 'Prompt for generating the document')
   .action(generateOSCALDocument);
+
+
+
+  program.command('resolve')
+  .description('Resolve an OSCAL profile (XML,JSON)')
+  .option('-f, --file <path>', 'Path to the OSCAL document')
+  .option('-o, --output <path>', 'Path to the output')
+  .action((options: { file?: string; output?: string }) => {
+    const { file, output } = options;
+    if (!file || !output) {
+      console.log("Both --file and --output are required");
+      return;
+    }
+    // Execute the OSCAL CLI conversion command
+    detectOscalDocumentType(file).then(async ([_, fileType]) => {
+      const args = [ "--to=" + fileType, file, output];
+      const result = await executeOscalCliCommand("resolve-profile", args);
+      console.log(result);
+    });
+  });
+
+
 
 interface ScaffoldOptions {
   output?: string;

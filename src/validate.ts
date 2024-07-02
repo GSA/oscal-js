@@ -1,33 +1,42 @@
 import { Ajv } from 'ajv';
+import addFormats from "ajv-formats";
 import { exec } from 'child_process';
+import { rmSync, writeFileSync } from 'fs';
+import path from 'path';
 import { promisify } from 'util';
+import { v4 } from 'uuid';
+import { installOscalCli, isJavaInstalled, isOscalCliInstalled, validateWithSarif } from './oscal.js';
 import { OscalSchema } from './schema/oscal.complete.js';
 import { OscalJsonPackage } from './types.js';
-import {isOscalCliInstalled,isJavaInstalled,validateWithSarif, installOscalCli} from './oscal.js'
-import {  readFileSync, rm, rmSync, writeFileSync } from 'fs';
-import path from 'path';
-import { v4 } from 'uuid';
+
 
 const execAsync = promisify(exec);
 
-export async function validateOscalDocument(
+export async function validate(
   document: OscalJsonPackage,
+  useAjv:boolean=false
 ): Promise<{ isValid: boolean; errors?: string[] }> {
   const javaInstalled = await isJavaInstalled();
 
   if (!javaInstalled) {
     // If Java is not installed, use JSON Schema validation only
+    console.error("Validating with schema");
     return validateWithJsonSchema(document);
   }
 
   let oscalCliInstalled = await isOscalCliInstalled();
 
-  if (!oscalCliInstalled) {
+  if (!oscalCliInstalled||useAjv) {
     // If OSCAL CLI is not installed, attempt to install it
     try {
-      await installOscalCli();
+      if(!useAjv){
+
+      installOscalCli();
       oscalCliInstalled = true;
-    } catch (error) {
+    }else{
+      return validateWithJsonSchema(document);
+    }
+  } catch (error) {
       console.error('Failed to install OSCAL CLI:', error);
       // Fallback to JSON Schema validation if installation fails
       return validateWithJsonSchema(document);
@@ -38,7 +47,6 @@ export async function validateOscalDocument(
     // Use OSCAL CLI for validation
     const tempFile = path.join(`./oscal-cli-tmp-input-${v4()}.json`);
     writeFileSync(tempFile,JSON.stringify(document));
-    const fil=readFileSync(tempFile);
     var response =  parseSarifToErrorStrings(await validateWithSarif([tempFile]));
     rmSync(tempFile);
     return response;
@@ -69,7 +77,6 @@ function parseSarifToErrorStrings(sarifResult: any): { isValid: boolean; errors:
       }
     }
   }
-
   return { isValid: errors.length === 0, errors };
 }
 
@@ -77,10 +84,11 @@ function validateWithJsonSchema(
   document: OscalJsonPackage,
 ): { isValid: boolean; errors?: string[] } {
   const ajv = new Ajv();
+  addFormats(ajv);
   const validate = ajv.compile(OscalSchema);
-  const isJsonSchemaValid = validate(document);
-
+  const isJsonSchemaValid = validate({...document,$schema:"http://csrc.nist.gov/ns/oscal/1.0"});
   if (!isJsonSchemaValid) {
+    console.error(validate.errors);
     return {
       isValid: false,
       errors: validate.errors?.map((error: any) => `JSON Schema: ${error.message} at ${error.instancePath}`)

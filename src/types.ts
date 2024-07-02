@@ -1803,6 +1803,17 @@ export interface IncludeAll {}
 /**
  * Used to select a control for inclusion/exclusion based on one or more control identifiers. A set of statement identifiers can be used to target the inclusion/exclusion to only specific control statements providing more granularity over the specific statements that are within the asessment scope.
  */
+export interface ProfileSelectControl {
+  "control-id": ControlIdentifierReference;
+  /**
+   * @minItems 1
+   */
+  "with-ids"?: [IncludeSpecificStatements, ...IncludeSpecificStatements[]];
+}
+
+/**
+ * Used to select a control for inclusion/exclusion based on one or more control identifiers. A set of statement identifiers can be used to target the inclusion/exclusion to only specific control statements providing more granularity over the specific statements that are within the asessment scope.
+ */
 export interface SelectControl {
   "control-id": ControlIdentifierReference;
   /**
@@ -1810,6 +1821,16 @@ export interface SelectControl {
    */
   "statement-ids"?: [IncludeSpecificStatements, ...IncludeSpecificStatements[]];
 }
+/**
+ * Used to select a control for inclusion/exclusion based on one or more control identifiers. A set of statement identifiers can be used to target the inclusion/exclusion to only specific control statements providing more granularity over the specific statements that are within the asessment scope.
+ */
+export interface SelectImportControl {
+  /**
+   * @minItems 1
+   */
+  "with-ids"?: [IncludeSpecificStatements, ...IncludeSpecificStatements[]];
+}
+
 /**
  * A collection of resources that may be referenced from within the OSCAL document instance.
  */
@@ -1905,11 +1926,11 @@ export interface ImportResource {
   /**
    * @minItems 1
    */
-  "include-controls"?: [SelectControl, ...SelectControl[]];
+  "include-controls"?: [SelectImportControl, ...SelectImportControl[]];
   /**
    * @minItems 1
    */
-  "exclude-controls"?: [SelectControl, ...SelectControl[]];
+  "exclude-controls"?: [SelectImportControl, ...SelectImportControl[]];
 }
 /**
  * Provides structuring directives that instruct how controls are organized after profile resolution.

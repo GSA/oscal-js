@@ -1,4 +1,4 @@
-export const OscalSchema={
+{
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://csrc.nist.gov/ns/oscal/1.0/1.1.2/schema.json",
   "$comment": "OSCAL Unified Model of Models: JSON Schema",
@@ -431,12 +431,12 @@ export const OscalSchema={
           "type": "array",
           "minItems": 1,
           "items": {
-            "title": "Parameter Constraint Test",
+            "title": "Constraint Test",
             "description": "A test expression which is expected to be evaluated by a tool.",
             "type": "object",
             "properties": {
               "expression": {
-                "title": "Constraint test Expression",
+                "title": "Constraint test",
                 "description": "A formal (executable) expression of a constraint.",
                 "$ref": "#/definitions/StringDatatype"
               },
@@ -523,7 +523,7 @@ export const OscalSchema={
       "type": "object",
       "properties": {
         "title": {
-          "title": "Metadata Document Title",
+          "title": "Document Title",
           "description": "A name given to the document, which may be used by a tool for display and navigation.",
           "type": "string"
         },
@@ -989,12 +989,12 @@ export const OscalSchema={
                   "type": "object",
                   "properties": {
                     "href": {
-                      "title": "Resource Hypertext Reference",
+                      "title": "Hypertext Reference",
                       "description": "A resolvable URL pointing to the referenced resource.",
                       "$ref": "#/definitions/URIReferenceDatatype"
                     },
                     "media-type": {
-                      "title": "Resource Media Type",
+                      "title": "Media Type",
                       "description": "A label that indicates the nature of a resource, as a data serialization or format.",
                       "$ref": "#/definitions/StringDatatype"
                     },
@@ -1018,12 +1018,12 @@ export const OscalSchema={
                 "type": "object",
                 "properties": {
                   "filename": {
-                    "title": "Resource Base64 File Name",
+                    "title": "File Name",
                     "description": "Name of the file before it was encoded as Base64 to be embedded in a resource. This is the name that will be assigned to the file when the file is decoded.",
                     "$ref": "#/definitions/TokenDatatype"
                   },
                   "media-type": {
-                    "title": "Resource Base64 Media Type",
+                    "title": "Media Type",
                     "description": "A label that indicates the nature of a resource, as a data serialization or format.",
                     "$ref": "#/definitions/StringDatatype"
                   },
@@ -1148,7 +1148,7 @@ export const OscalSchema={
       "type": "object",
       "properties": {
         "role-id": {
-          "title": "Responsible Role Id",
+          "title": "Responsible Role",
           "description": "A reference to a role performed by a party.",
           "$ref": "#/definitions/TokenDatatype"
         },
@@ -1420,7 +1420,7 @@ export const OscalSchema={
           "$ref": "#/definitions/StringDatatype"
         },
         "state": {
-          "title": "State Or Region",
+          "title": "State",
           "description": "State, province or analogous geographical region for a mailing address.",
           "$ref": "#/definitions/StringDatatype"
         },
@@ -1528,14 +1528,14 @@ export const OscalSchema={
           "type": "array",
           "minItems": 1,
           "items": {
-            "$ref": "#/definitions/select-profile-control-by-id"
+            "$ref": "#/definitions/select-control-by-id"
           }
         },
         "exclude-controls": {
           "type": "array",
           "minItems": 1,
           "items": {
-            "$ref": "#/definitions/select-profile-control-by-id"
+            "$ref": "#/definitions/select-control-by-id"
           }
         }
       },
@@ -1620,22 +1620,22 @@ export const OscalSchema={
           "type": "array",
           "minItems": 1,
           "items": {
-            "title": "Modify Parameter Setting",
+            "title": "Parameter Setting",
             "description": "A parameter setting, to be propagated to points of insertion.",
             "type": "object",
             "properties": {
               "param-id": {
-                "title": "Modify Parameter ID",
+                "title": "Parameter ID",
                 "description": "An identifier for the parameter.",
                 "$ref": "#/definitions/TokenDatatype"
               },
               "class": {
-                "title": "Modify Parameter Class",
+                "title": "Parameter Class",
                 "description": "A textual label that provides a characterization of the parameter.",
                 "$ref": "#/definitions/TokenDatatype"
               },
               "depends-on": {
-                "title": "Modify Depends On",
+                "title": "Depends On",
                 "description": "**(deprecated)** Another parameter invoking this one. This construct has been deprecated and should not be used.",
                 "$ref": "#/definitions/TokenDatatype"
               },
@@ -1654,12 +1654,12 @@ export const OscalSchema={
                 }
               },
               "label": {
-                "title": "Modify Parameter Label",
+                "title": "Parameter Label",
                 "description": "A short, placeholder name for the parameter, which can be used as a substitute for a value if no value is assigned.",
                 "type": "string"
               },
               "usage": {
-                "title": "Modify Parameter Usage Description",
+                "title": "Parameter Usage Description",
                 "description": "Describes the purpose and use of a parameter.",
                 "type": "string"
               },
@@ -1703,7 +1703,7 @@ export const OscalSchema={
             "type": "object",
             "properties": {
               "control-id": {
-                "title": "Alter Control Identifier Reference",
+                "title": "Control Identifier Reference",
                 "description": "A reference to a control with a corresponding id value. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference).",
                 "$ref": "#/definitions/TokenDatatype"
               },
@@ -1716,17 +1716,17 @@ export const OscalSchema={
                   "type": "object",
                   "properties": {
                     "by-name": {
-                      "title": "Removal Reference by (assigned) name",
+                      "title": "Reference by (assigned) name",
                       "description": "Identify items remove by matching their assigned name.",
                       "$ref": "#/definitions/TokenDatatype"
                     },
                     "by-class": {
-                      "title": "Removal Reference by class",
+                      "title": "Reference by class",
                       "description": "Identify items to remove by matching their class.",
                       "$ref": "#/definitions/TokenDatatype"
                     },
                     "by-id": {
-                      "title": "Removal Reference by ID",
+                      "title": "Reference by ID",
                       "description": "Identify items to remove indicated by their id.",
                       "$ref": "#/definitions/TokenDatatype"
                     },
@@ -1784,12 +1784,12 @@ export const OscalSchema={
                       ]
                     },
                     "by-id": {
-                      "title": "Addition Reference by ID",
+                      "title": "Reference by ID",
                       "description": "Target location of the addition.",
                       "$ref": "#/definitions/TokenDatatype"
                     },
                     "title": {
-                      "title": "Addition Title Change",
+                      "title": "Title Change",
                       "description": "A name given to the control, which may be used by a tool for display and navigation.",
                       "type": "string"
                     },
@@ -1877,6 +1877,33 @@ export const OscalSchema={
       },
       "additionalProperties": false
     },
+    "select-profile-control-by-id" : 
+    { "title" : "Select Profile Control",
+     "description" : "Select a control or controls from an imported control set.",
+     "$id" : "#definitions/select-profile-control-by-id",
+     "type" : "object",
+     "properties" : 
+     { "with-child-controls" : 
+      { "title" : "Include Contained Controls with Control",
+       "description" : "When a control is included, whether its child (dependent) controls are also included.",
+       "allOf" : 
+       [ 
+        { "$ref" : "#/definitions/TokenDatatype" },
+        
+        { "enum" : 
+         [ "yes",
+          "no" ] } ] },
+      "with-ids" : 
+      { "type" : "array",
+       "minItems" : 1,
+       "items" : 
+       { "$ref" : "#/definitions/with-id" } },
+      "matching" : 
+      { "type" : "array",
+       "minItems" : 1,
+       "items" : 
+       { "$ref" : "#/definitions/matching" } } },
+     "additionalProperties" : false },
     "select-control-by-id": {
       "title": "Select Control",
       "description": "Used to select a control for inclusion/exclusion based on one or more control identifiers. A set of statement identifiers can be used to target the inclusion/exclusion to only specific control statements providing more granularity over the specific statements that are within the asessment scope.",
@@ -1903,32 +1930,6 @@ export const OscalSchema={
       ],
       "additionalProperties": false
     },
-    "select-profile-control-by-id" : 
-    { "title" : "Select Control",
-     "description" : "Select a control or controls from an imported control set.",
-     "$id" : "#/definitions/select-profile-control-by-id",
-     "type" : "object",
-     "properties" : 
-     { "with-child-controls" : 
-      { "title" : "Include Contained Controls with Control",
-       "description" : "When a control is included, whether its child (dependent) controls are also included.",
-       "allOf" : 
-       [ 
-        { "$ref" : "#/definitions/TokenDatatype" },
-        
-        { "enum" : 
-         [ "yes",
-          "no" ] } ] },
-      "with-ids" : 
-      { "type" : "array",
-       "minItems" : 1,
-       "items" : 
-       { "$ref" : "#/definitions/with-id" } },
-      "matching" : 
-      { "type" : "array",
-       "minItems" : 1,
-       "items" : 
-       { "$ref" : "#/definitions/matching" } } }},
     "with-id": {
       "title": "Match Controls by Identifier",
       "description": "Selecting a control by its ID given as a literal.",
@@ -2012,18 +2013,18 @@ export const OscalSchema={
       "additionalProperties": false
     },
     "defined-component": {
-      "title": "Defined Component",
+      "title": "Component",
       "description": "A defined component that can be part of an implemented system.",
       "$id": "#/definitions/defined-component",
       "type": "object",
       "properties": {
         "uuid": {
-          "title": "Defined Component Identifier",
+          "title": "Component Identifier",
           "description": "Provides a globally unique means to identify a given component.",
           "$ref": "#/definitions/UUIDDatatype"
         },
         "type": {
-          "title": "Defined Component Type",
+          "title": "Component Type",
           "description": "A category describing the purpose of the component.",
           "anyOf": [
             {
@@ -2047,17 +2048,17 @@ export const OscalSchema={
           ]
         },
         "title": {
-          "title": "Defined Component Title",
+          "title": "Component Title",
           "description": "A human readable name for the component.",
           "type": "string"
         },
         "description": {
-          "title": "Defined Component Description",
+          "title": "Component Description",
           "description": "A description of the component, including information about its function.",
           "type": "string"
         },
         "purpose": {
-          "title": "Defined Component Purpose",
+          "title": "Purpose",
           "description": "A summary of the technological or business purpose of the component.",
           "type": "string"
         },
@@ -2175,12 +2176,12 @@ export const OscalSchema={
       "type": "object",
       "properties": {
         "component-uuid": {
-          "title": "incorporating Component Reference",
+          "title": "Component Reference",
           "description": "A machine-oriented identifier reference to a component.",
           "$ref": "#/definitions/UUIDDatatype"
         },
         "description": {
-          "title": "incorporating Component Description",
+          "title": "Component Description",
           "description": "A description of the component, including information about its function.",
           "type": "string"
         }
@@ -2192,13 +2193,13 @@ export const OscalSchema={
       "additionalProperties": false
     },
     "control-implementation": {
-      "title": "SSP Control Implementation",
+      "title": "Control Implementation",
       "description": "Describes how the system satisfies a set of controls.",
       "$id": "#/definitions/control-implementation",
       "type": "object",
       "properties": {
         "description": {
-          "title": "SSP Control Implementation Description",
+          "title": "Control Implementation Description",
           "description": "A statement describing important things to know about how this set of control satisfaction documentation is approached.",
           "type": "string"
         },
@@ -2235,7 +2236,7 @@ export const OscalSchema={
           "$ref": "#/definitions/UUIDDatatype"
         },
         "control-id": {
-          "title": "Implemented Control Identifier Reference",
+          "title": "Control Identifier Reference",
           "description": "A reference to a control with a corresponding id value. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference).",
           "$ref": "#/definitions/TokenDatatype"
         },
@@ -2413,12 +2414,12 @@ export const OscalSchema={
           }
         },
         "status": {
-          "title": "Operating Status",
+          "title": "Status",
           "description": "Describes the operational status of the system component.",
           "type": "object",
           "properties": {
             "state": {
-              "title": "Operating State",
+              "title": "State",
               "description": "The operational status.",
               "allOf": [
                 {
@@ -2716,7 +2717,7 @@ export const OscalSchema={
             "type": "object",
             "properties": {
               "component-uuid": {
-                "title": "Implemented Component Universally Unique Identifier Reference",
+                "title": "Component Universally Unique Identifier Reference",
                 "description": "A machine-oriented identifier reference to a component that is implemented as part of an inventory item.",
                 "$ref": "#/definitions/UUIDDatatype"
               },
@@ -2768,7 +2769,7 @@ export const OscalSchema={
       "type": "object",
       "properties": {
         "param-id": {
-          "title": "Set Parameter ID",
+          "title": "Parameter ID",
           "description": "A human-oriented reference to a parameter within a control, who's catalog has been imported into the current implementation context.",
           "$ref": "#/definitions/TokenDatatype"
         },
@@ -2776,7 +2777,7 @@ export const OscalSchema={
           "type": "array",
           "minItems": 1,
           "items": {
-            "title": "Param Value",
+            "title": "Parameter Value",
             "description": "A parameter value or set of values.",
             "$ref": "#/definitions/StringDatatype"
           }
@@ -3006,7 +3007,7 @@ export const OscalSchema={
                 "$ref": "#/definitions/UUIDDatatype"
               },
               "title": {
-                "title": "information type title",
+                "title": "title field",
                 "description": "A human readable name for the information type. This title should be meaningful within the context of the system.",
                 "type": "string"
               },
@@ -3489,7 +3490,7 @@ export const OscalSchema={
       "type": "object",
       "properties": {
         "component-uuid": {
-          "title": "By Component Universally Unique Identifier Reference",
+          "title": "Component Universally Unique Identifier Reference",
           "description": "A machine-oriented identifier reference to the component that is implemeting a given control.",
           "$ref": "#/definitions/UUIDDatatype"
         },
@@ -3615,7 +3616,7 @@ export const OscalSchema={
                     "$ref": "#/definitions/UUIDDatatype"
                   },
                   "provided-uuid": {
-                    "title": "Control Implementation Provided UUID",
+                    "title": "Provided UUID",
                     "description": "A machine-oriented identifier reference to an inherited control implementation that a leveraging system is inheriting from a leveraged system.",
                     "$ref": "#/definitions/UUIDDatatype"
                   },
@@ -3805,7 +3806,7 @@ export const OscalSchema={
           "$ref": "#/definitions/import-ssp"
         },
         "local-definitions": {
-          "title": "Assessment Plan Local Definitions",
+          "title": "Local Definitions",
           "description": "Used to define data objects that are used in the assessment plan, that do not appear in the referenced SSP.",
           "type": "object",
           "properties": {
@@ -3924,7 +3925,7 @@ export const OscalSchema={
       "type": "object",
       "properties": {
         "control-id": {
-          "title": "Assessment-Specific Control Identifier Reference",
+          "title": "Control Identifier Reference",
           "description": "A reference to a control with a corresponding id value. When referencing an externally defined control, the Control Identifier Reference must be used in the context of the external / imported OSCAL instance (e.g., uri-reference).",
           "$ref": "#/definitions/TokenDatatype"
         },
@@ -4176,12 +4177,12 @@ export const OscalSchema={
           "type": "object",
           "properties": {
             "on-date": {
-              "title": "Task On Date Condition",
+              "title": "On Date Condition",
               "description": "The task is intended to occur on the specified date.",
               "type": "object",
               "properties": {
                 "date": {
-                  "title": "Task DateTime",
+                  "title": "On Date Condition",
                   "description": "The task must occur on the specified date.",
                   "$ref": "#/definitions/DateTimeWithTimezoneDatatype"
                 }
@@ -4192,17 +4193,17 @@ export const OscalSchema={
               "additionalProperties": false
             },
             "within-date-range": {
-              "title": "Task On Date Range Condition",
+              "title": "On Date Range Condition",
               "description": "The task is intended to occur within the specified date range.",
               "type": "object",
               "properties": {
                 "start": {
-                  "title": "Task Start Date Condition",
+                  "title": "Start Date Condition",
                   "description": "The task must occur on or after the specified date.",
                   "$ref": "#/definitions/DateTimeWithTimezoneDatatype"
                 },
                 "end": {
-                  "title": "Task End Date Condition",
+                  "title": "End Date Condition",
                   "description": "The task must occur on or before the specified date.",
                   "$ref": "#/definitions/DateTimeWithTimezoneDatatype"
                 }
@@ -4214,17 +4215,17 @@ export const OscalSchema={
               "additionalProperties": false
             },
             "at-frequency": {
-              "title": "Task Frequency Condition",
+              "title": "Frequency Condition",
               "description": "The task is intended to occur at the specified frequency.",
               "type": "object",
               "properties": {
                 "period": {
-                  "title": "Task Period",
+                  "title": "Period",
                   "description": "The task must occur after the specified period has elapsed.",
                   "$ref": "#/definitions/PositiveIntegerDatatype"
                 },
                 "unit": {
-                  "title": "Task Time Unit",
+                  "title": "Time Unit",
                   "description": "The unit of time for the period.",
                   "allOf": [
                     {
@@ -4261,7 +4262,7 @@ export const OscalSchema={
             "type": "object",
             "properties": {
               "task-uuid": {
-                "title": "Dependent Task Universally Unique Identifier Reference",
+                "title": "Task Universally Unique Identifier Reference",
                 "description": "A machine-oriented identifier reference to a unique task.",
                 "$ref": "#/definitions/UUIDDatatype"
               },
@@ -4648,12 +4649,12 @@ export const OscalSchema={
       "type": "object",
       "properties": {
         "subject-uuid": {
-          "title": "Subject Universally Unique Identifier Reference By Id",
+          "title": "Subject Universally Unique Identifier Reference",
           "description": "A machine-oriented identifier reference to a component, inventory-item, location, party, user, or resource using it's UUID.",
           "$ref": "#/definitions/UUIDDatatype"
         },
         "type": {
-          "title": "Subject Universally Unique Identifier Reference Type By Id",
+          "title": "Subject Universally Unique Identifier Reference Type",
           "description": "Used to indicate the type of object pointed to by the uuid-ref within a subject.",
           "anyOf": [
             {
@@ -4860,7 +4861,7 @@ export const OscalSchema={
       "additionalProperties": false
     },
     "finding-target": {
-      "title": "Finding Target Objective Status",
+      "title": "Objective Status",
       "description": "Captures an assessor's conclusions regarding the degree to which an objective is satisfied.",
       "$id": "#/definitions/finding-target",
       "type": "object",
@@ -5022,12 +5023,12 @@ export const OscalSchema={
           "type": "array",
           "minItems": 1,
           "items": {
-            "title": "Finding Related Observation",
+            "title": "Related Observation",
             "description": "Relates the finding to a set of referenced observations that were used to determine the finding.",
             "type": "object",
             "properties": {
               "observation-uuid": {
-                "title": "Finding Related Observation Universally Unique Identifier Reference",
+                "title": "Observation Universally Unique Identifier Reference",
                 "description": "A machine-oriented identifier reference to an observation defined in the list of observations.",
                 "$ref": "#/definitions/UUIDDatatype"
               }
@@ -5042,12 +5043,12 @@ export const OscalSchema={
           "type": "array",
           "minItems": 1,
           "items": {
-            "title": "Finding Associated Risk",
+            "title": "Associated Risk",
             "description": "Relates the finding to a set of referenced risks that were used to determine the finding.",
             "type": "object",
             "properties": {
               "risk-uuid": {
-                "title": "Finding Risk Universally Unique Identifier Reference",
+                "title": "Risk Universally Unique Identifier Reference",
                 "description": "A machine-oriented identifier reference to a risk defined in the list of risks.",
                 "$ref": "#/definitions/UUIDDatatype"
               }
@@ -5275,12 +5276,12 @@ export const OscalSchema={
           ]
         },
         "actor-uuid": {
-          "title": "Origin Actor Universally Unique Identifier Reference",
+          "title": "Actor Universally Unique Identifier Reference",
           "description": "A machine-oriented identifier reference to the tool or person based on the associated type.",
           "$ref": "#/definitions/UUIDDatatype"
         },
         "role-id": {
-          "title": "Origin Actor Role",
+          "title": "Actor Role",
           "description": "For a party, this can optionally be used to specify the role the actor was performing.",
           "$ref": "#/definitions/TokenDatatype"
         },
@@ -5560,7 +5561,7 @@ export const OscalSchema={
                     "$ref": "#/definitions/UUIDDatatype"
                   },
                   "title": {
-                    "title": "Rist Title",
+                    "title": "Title",
                     "description": "The title for this risk log entry.",
                     "type": "string"
                   },
@@ -5570,12 +5571,12 @@ export const OscalSchema={
                     "type": "string"
                   },
                   "start": {
-                    "title": "Rist Event Start",
+                    "title": "Start",
                     "description": "Identifies the start date and time of the event.",
                     "$ref": "#/definitions/DateTimeWithTimezoneDatatype"
                   },
                   "end": {
-                    "title": "Risk Event End",
+                    "title": "End",
                     "description": "Identifies the end date and time of the event. If the event is a point in time, the start and end will be the same date and time.",
                     "$ref": "#/definitions/DateTimeWithTimezoneDatatype"
                   },
@@ -5970,12 +5971,12 @@ export const OscalSchema={
       "type": "object",
       "properties": {
         "uuid": {
-          "title": "Assessment Part Identifier",
+          "title": "Part Identifier",
           "description": "A machine-oriented, globally unique identifier with cross-instance scope that can be used to reference this part elsewhere in this or other OSCAL instances. The locally defined UUID of the part can be used to reference the data item locally or globally (e.g., in an ported OSCAL instance). This UUID should be assigned per-subject, which means it should be consistently used to identify the same subject across revisions of the document.",
           "$ref": "#/definitions/UUIDDatatype"
         },
         "name": {
-          "title": "Assessment Part Name",
+          "title": "Part Name",
           "description": "A textual label that uniquely identifies the part's semantic type.",
           "anyOf": [
             {
@@ -5991,17 +5992,17 @@ export const OscalSchema={
           ]
         },
         "ns": {
-          "title": "Assessment Part Namespace",
+          "title": "Part Namespace",
           "description": "A namespace qualifying the part's name. This allows different organizations to associate distinct semantics with the same name.",
           "$ref": "#/definitions/URIDatatype"
         },
         "class": {
-          "title": "Assessment Part Class",
+          "title": "Part Class",
           "description": "A textual label that provides a sub-type or characterization of the part's name. This can be used to further distinguish or discriminate between the semantics of multiple parts of the same control with the same name and ns.",
           "$ref": "#/definitions/TokenDatatype"
         },
         "title": {
-          "title": "Assessment Part Title",
+          "title": "Part Title",
           "description": "A name given to the part, which may be used by a tool for display and navigation.",
           "type": "string"
         },
@@ -6013,7 +6014,7 @@ export const OscalSchema={
           }
         },
         "prose": {
-          "title": "Assessment Part Text",
+          "title": "Part Text",
           "description": "Permits multiple paragraphs, lists, tables etc.",
           "type": "string"
         },
@@ -6055,7 +6056,7 @@ export const OscalSchema={
           "$ref": "#/definitions/import-ap"
         },
         "local-definitions": {
-          "title": "Assessment Results Local Definitions",
+          "title": "Local Definitions",
           "description": "Used to define data objects that are used in the assessment plan, that do not appear in the referenced SSP.",
           "type": "object",
           "properties": {
@@ -6120,12 +6121,12 @@ export const OscalSchema={
           "type": "string"
         },
         "start": {
-          "title": "Result start field",
+          "title": "start field",
           "description": "Date/time stamp identifying the start of the evidence collection reflected in these results.",
           "$ref": "#/definitions/DateTimeWithTimezoneDatatype"
         },
         "end": {
-          "title": "Result end field",
+          "title": "end field",
           "description": "Date/time stamp identifying the end of the evidence collection reflected in these results. In a continuous motoring scenario, this may contain the same value as start if appropriate.",
           "$ref": "#/definitions/DateTimeWithTimezoneDatatype"
         },
@@ -6144,7 +6145,7 @@ export const OscalSchema={
           }
         },
         "local-definitions": {
-          "title": "Assessment Result Local Definitions",
+          "title": "Local Definitions",
           "description": "Used to define data objects that are used in the assessment plan, that do not appear in the referenced SSP.",
           "type": "object",
           "properties": {
@@ -6243,12 +6244,12 @@ export const OscalSchema={
                     "type": "string"
                   },
                   "start": {
-                    "title": "Action Start",
+                    "title": "Start",
                     "description": "Identifies the start date and time of an event.",
                     "$ref": "#/definitions/DateTimeWithTimezoneDatatype"
                   },
                   "end": {
-                    "title": "Action End",
+                    "title": "End",
                     "description": "Identifies the end date and time of an event. If the event is a point in time, the start and end will be the same date and time.",
                     "$ref": "#/definitions/DateTimeWithTimezoneDatatype"
                   },
@@ -6481,7 +6482,7 @@ export const OscalSchema={
           "type": "array",
           "minItems": 1,
           "items": {
-            "title": "POA&M Origin",
+            "title": "Origin",
             "description": "Identifies the source of the finding, such as a tool or person.",
             "type": "object",
             "properties": {
@@ -6523,12 +6524,12 @@ export const OscalSchema={
           "type": "array",
           "minItems": 1,
           "items": {
-            "title": "Poam Item Finding Related Observation",
+            "title": "Related Observation",
             "description": "Relates the poam-item to a set of referenced observations that were used to determine the finding.",
             "type": "object",
             "properties": {
               "observation-uuid": {
-                "title": "Related Observation Universally Unique Identifier Reference",
+                "title": "Observation Universally Unique Identifier Reference",
                 "description": "A machine-oriented identifier reference to an observation defined in the list of observations.",
                 "$ref": "#/definitions/UUIDDatatype"
               }

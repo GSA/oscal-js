@@ -10,21 +10,23 @@ import {
   installOscalCli, 
   isOscalCliInstalled 
 } from '../../src/oscal.js';
-import {sarifSchema} from "../../src/schema/sarif"
 import { Log } from 'sarif';
 import Ajv from 'ajv';
 import addFormats from "ajv-formats"
-import { validateOscalDocument } from '../../src/validate.js';
+import { validate } from '../../src/validate.js';
 import { readFileSync } from 'fs';
+import { convert } from '../../src/convert.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let documentPath: string;
+let outputPath: string;
 let metaschemaDocumentPath: string;
 let documentType: string;
 let cliInstalled: boolean;
 let executionResult: string;
+let convertResult: string;
 let sarifResult: Log;
 let validateResult: { isValid: boolean; errors?: string[] | undefined; };
 let conversionResult: string;
@@ -84,7 +86,6 @@ When('I validate with sarif output on the document', async function () {
 });
 
 Then('I should receive the execution result', function () {
-  console.log(executionResult);
   expect(executionResult).to.exist;
 });
 
@@ -94,7 +95,6 @@ When('I convert the document to JSON', async function () {
 });
 
 Then('I should receive the conversion result', function () {
-  console.log(conversionResult);
   expect(conversionResult).to.exist;
 });
 
@@ -119,7 +119,24 @@ expect(typeof validateResult.isValid==='boolean');
 
 When('I validate with imported validate function', async () => {
   var document=JSON.parse(readFileSync(documentPath).toString());
-  validateResult=await validateOscalDocument(document)
+  validateResult=await validate(document,true)
 })
+
+Then('I should receive a valid json object', async () => {
+  // Write code here that turns the phrase above into concrete actions
+  const document=JSON.parse(readFileSync(outputPath).toString());
+  const {isValid,errors}=await validate( document,true)
+console.error(errors);
+ expect(isValid).to.be.true;
+})
+
+When('I convert it with imported convert function', async () => {
+  await convert(documentPath,outputPath);
+})
+
+Given('I want an OSCAL document {string}', (filename: string) => {
+  outputPath = path.join(__dirname, '..', '..', 'examples', filename);
+})
+
 
 

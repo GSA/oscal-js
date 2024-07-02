@@ -49,3 +49,9 @@ Feature: OSCAL CLI Wrapper
     Given I have an OSCAL document "ssp.json"
     When I validate with imported validate function
     Then I should receive a validation object
+
+  Scenario: convert javascript object inline
+    Given I have an OSCAL document "profile.xml"
+    Given I want an OSCAL document "profile.json"
+    When I convert it with imported convert function
+    Then I should receive a valid json object

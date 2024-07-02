@@ -7,7 +7,7 @@
     "target": "ES2015",
     "outDir": "./dist",
     "resolveJsonModule":true,
-    "rootDir": "./",
+    "rootDir": "./src/",
     "allowJs": true,
     "noImplicitAny": false
   },
@@ -15,6 +15,5 @@
     "esm": true,
     "experimentalSpecifierResolution": "node"
   },
-  "include": ["features/**/*.ts", "src/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules","features/","examples","dist"]
 }

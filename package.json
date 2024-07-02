@@ -1,16 +1,15 @@
 {
   "name": "oscal",
-  "version": "1.0.5",
+  "version": "1.0.8",
   "description": "oscal",
   "main": "./dist/cli.js",
+  "bin": {
+    "oscal": "node ./dist/cli.js"
+  },
   "types": "dist/index.d.ts",
   "scripts": {
-    "validate": "node ./dist/cli.js validate",
-    "convert": "node ./dist/cli.js convert",
-    "scaffold": "node ./dist/cli.js scaffold",
     "build": "tsc",
     "types": "node ./dist/scripts/generateTypes.js",
-    "generate": "node ./dist/cli.js generate",
     "test": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js"
   },
   "keywords": [

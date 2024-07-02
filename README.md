@@ -4,7 +4,7 @@ Installation
 To use the OSCAL CLI, follow these steps:
 Install the dependencies:
 ```
-npm install oscal
+npm install oscal -g
 ```
 
 # Usage
@@ -12,25 +12,25 @@ The OSCAL CLI provides the following commands:
 ### Validate
 To validate an OSCAL document, use the validate command:
 ```
-npm run validate -f <path_to_oscal_document>
+oscal validate -f <path_to_oscal_document>
 ```
 Replace <path_to_oscal_document> with the path to the OSCAL document you want to validate.
 ### Convert
 To convert an OSCAL document between XML and JSON formats, use the convert command:
 ```
-npm run convert -f <path_to_input_file> -o <path_to_output_file>
+oscal convert -f <path_to_input_file> -o <path_to_output_file>
 ```
 Replace <path_to_input_file> with the path to the input OSCAL document and <path_to_output_file> with the desired path for the converted output file.
 ### Scaffold
 To scaffold an OSCAL package, use the scaffold command:
 ```
-npm run scaffold 
+oscal scaffold 
 ```
 Replace <path_to_output_directory> with the path where you want to create the scaffolded OSCAL package.
 ### Scaffold
 To generate an OSCAL item, use the scaffold command:
 ```
-npm run generate -t <oscal type> -p <describe details>
+oscal generate -t <oscal type> -p <describe details>
 ```
 ### Testing
 The OSCAL CLI includes a test suite using Jest. To run the tests, use the following command:
@@ -38,9 +38,9 @@ The OSCAL CLI includes a test suite using Jest. To run the tests, use the follow
 npm test
 ```
 ### Resolve
-To resolve an OSCAL package, use the scaffold command:
+To resolve an OSCAL package, use the resolve command:
 ```
-npm run resolve -i <paths>  -o <path_to_output_directory>
+oscal resolve -i <paths>  -o <path_to_output_directory>
 ```
 Replace <paths> with the path paths to the profiles to resolve.
 Replace <path_to_output_directory> with the path where you want to create the resolved OSCAL package.

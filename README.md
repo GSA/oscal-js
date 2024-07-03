@@ -13,6 +13,9 @@ The OSCAL CLI provides the following commands:
 To validate an OSCAL document, use the validate command:
 ```
 oscal validate -f <path_to_oscal_document>
+
+oscal validate -f <path_to_oscal_document> -e fedramp
+
 ```
 Replace <path_to_oscal_document> with the path to the OSCAL document you want to validate.
 ### Convert
@@ -60,3 +63,5 @@ The OSCAL CLI relies on the following dependencies:
 Contributions to the OSCAL CLI are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the GitHub repository.
 License
 The OSCAL CLI is open-source software licensed under the MIT License.
+
+[![Cucumber Report](https://github.com/GSA/oscal-js/actions/workflows/cucumber-report.yaml/badge.svg)](https://github.com/GSA/oscal-js/actions/workflows/cucumber-report.yaml)

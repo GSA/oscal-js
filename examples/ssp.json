@@ -1,5 +1,6 @@
 {
   "system-security-plan" : {
+    "uuid" : "cff8385f-108e-40a5-8f7a-82f3dc0eaba8",
     "control-implementation" : {
       "description" : "This is the control implementation for the system.",
       "implemented-requirements" : [ {
@@ -117,8 +118,8 @@
     },
     "system-characteristics" : {
       "system-ids" : [ {
-        "identifier-type" : "https://ietf.org/rfc/rfc4122",
-        "id" : "d7456980-9277-4dcb-83cf-f8ff0442623b"
+        "id" : "d7456980-9277-4dcb-83cf-f8ff0442623b",
+        "identifier-type" : "https://ietf.org/rfc/rfc4122"
       } ],
       "description" : "This is an example of a system that provides enterprise logging and log auditing capabilities.",
       "authorization-boundary" : {
@@ -133,10 +134,13 @@
       "system-name" : "Enterprise Logging and Auditing System",
       "system-information" : {
         "information-types" : [ {
+          "integrity-impact" : {
+            "base" : "fips-199-moderate"
+          },
           "description" : "This system maintains historical logging and auditing information for all client devices connected to this system.",
           "categorizations" : [ {
-            "information-type-ids" : [ "C.3.5.8" ],
-            "system" : "https://doi.org/10.6028/NIST.SP.800-60v2r1"
+            "system" : "https://doi.org/10.6028/NIST.SP.800-60v2r1",
+            "information-type-ids" : [ "C.3.5.8" ]
           } ],
           "title" : "System and Network Monitoring",
           "uuid" : "7d28ac6e-5970-4f4c-a508-5a3715f0f02b",
@@ -145,9 +149,6 @@
           },
           "availability-impact" : {
             "base" : "fips-199-low"
-          },
-          "integrity-impact" : {
-            "base" : "fips-199-moderate"
           }
         } ]
       },
@@ -159,8 +160,8 @@
         "value" : "iaas"
       } ],
       "status" : {
-        "state" : "other",
-        "remarks" : "This is an example, and is not intended to be implemented as a system"
+        "remarks" : "This is an example, and is not intended to be implemented as a system",
+        "state" : "other"
       }
     },
     "back-matter" : {
@@ -224,6 +225,13 @@
     },
     "system-implementation" : {
       "inventory-items" : [ {
+        "responsible-parties" : [ {
+          "party-uuids" : [ "833ac398-5c9a-4e6b-acba-2a9c11399da0" ],
+          "role-id" : "asset-administrator"
+        }, {
+          "party-uuids" : [ "3b2a5599-cc37-403f-ae36-5708fa804b27" ],
+          "role-id" : "asset-owner"
+        } ],
         "implemented-components" : [ {
           "component-uuid" : "e00acdcf-911b-437d-a42f-b0b558cc4f03",
           "props" : [ {
@@ -242,14 +250,7 @@
           "name" : "asset-id",
           "value" : "asset-id-logging-server"
         } ],
-        "uuid" : "c9c32657-a0eb-4cf2-b5c1-20928983063c",
-        "responsible-parties" : [ {
-          "role-id" : "asset-administrator",
-          "party-uuids" : [ "833ac398-5c9a-4e6b-acba-2a9c11399da0" ]
-        }, {
-          "role-id" : "asset-owner",
-          "party-uuids" : [ "3b2a5599-cc37-403f-ae36-5708fa804b27" ]
-        } ]
+        "uuid" : "c9c32657-a0eb-4cf2-b5c1-20928983063c"
       } ],
       "users" : [ {
         "role-ids" : [ "asset-administrator" ],
@@ -294,32 +295,37 @@
       } ],
       "remarks" : "This is a partial implementation that addresses the logging server portion of the auditing system.",
       "components" : [ {
+        "type" : "this-system",
         "status" : {
           "state" : "operational"
         },
         "description" : "The system described by this SSP.",
         "uuid" : "74042245-3db1-4f4d-be9a-ceb62d81152c",
-        "title" : "This System",
-        "type" : "this-system"
+        "title" : "This System"
       }, {
+        "responsible-roles" : [ {
+          "party-uuids" : [ "96c362ee-a012-4e07-92f3-486ab303b0e7" ],
+          "role-id" : "provider"
+        }, {
+          "party-uuids" : [ "3b2a5599-cc37-403f-ae36-5708fa804b27" ],
+          "role-id" : "asset-owner"
+        }, {
+          "party-uuids" : [ "833ac398-5c9a-4e6b-acba-2a9c11399da0" ],
+          "role-id" : "asset-administrator"
+        } ],
+        "type" : "software",
         "status" : {
           "state" : "operational"
         },
         "description" : "Provides a means for hosts to publish logged events to a central server.",
         "uuid" : "e00acdcf-911b-437d-a42f-b0b558cc4f03",
-        "title" : "Logging Server",
-        "responsible-roles" : [ {
-          "role-id" : "provider",
-          "party-uuids" : [ "96c362ee-a012-4e07-92f3-486ab303b0e7" ]
-        }, {
-          "role-id" : "asset-owner",
-          "party-uuids" : [ "3b2a5599-cc37-403f-ae36-5708fa804b27" ]
-        }, {
-          "role-id" : "asset-administrator",
-          "party-uuids" : [ "833ac398-5c9a-4e6b-acba-2a9c11399da0" ]
-        } ],
-        "type" : "software"
+        "title" : "Logging Server"
       }, {
+        "responsible-roles" : [ {
+          "party-uuids" : [ "ec485dcf-2519-43f5-8e7d-014cc315332d" ],
+          "role-id" : "maintainer"
+        } ],
+        "type" : "policy",
         "props" : [ {
           "name" : "version",
           "value" : "2.1"
@@ -332,13 +338,13 @@
         },
         "description" : "Requires all components to send logs to the enterprise logging solution\n\n- Requires all components synchronize their time with the appropriate enterprise time service, and at what frequency.\n\n- Identifies the events that must be captured\n\n- Identifies who is responsible/accountable for performing these functions",
         "uuid" : "795533ab-9427-4abe-820f-0b571bacfe6d",
-        "title" : "Enterprise Logging, Monitoring, and Alerting Policy",
-        "responsible-roles" : [ {
-          "role-id" : "maintainer",
-          "party-uuids" : [ "ec485dcf-2519-43f5-8e7d-014cc315332d" ]
-        } ],
-        "type" : "policy"
+        "title" : "Enterprise Logging, Monitoring, and Alerting Policy"
       }, {
+        "responsible-roles" : [ {
+          "party-uuids" : [ "0f0c15ed-565e-4ce9-8670-b54853d0bf03" ],
+          "role-id" : "maintainer"
+        } ],
+        "type" : "process",
         "props" : [ {
           "name" : "release-date",
           "value" : "2018-10-15"
@@ -353,13 +359,13 @@
         },
         "description" : "Ensures proper integration into the enterprise as new systems are brought into production.",
         "uuid" : "941e2a87-46f4-4b3e-9e87-bbd187091ca1",
-        "title" : "System Integration Process",
-        "responsible-roles" : [ {
-          "role-id" : "maintainer",
-          "party-uuids" : [ "0f0c15ed-565e-4ce9-8670-b54853d0bf03" ]
-        } ],
-        "type" : "process"
+        "title" : "System Integration Process"
       }, {
+        "responsible-roles" : [ {
+          "party-uuids" : [ "0f0c15ed-565e-4ce9-8670-b54853d0bf03" ],
+          "role-id" : "maintainer"
+        } ],
+        "type" : "process",
         "props" : [ {
           "name" : "release-date",
           "value" : "2018-10-15"
@@ -374,13 +380,13 @@
         },
         "description" : "Describes how new components are introduced into the system - ensures monitoring teams know about every asset that should be producing logs, thus should be monitored.",
         "uuid" : "fa39eb84-3014-46b4-b6bc-7da10527c262",
-        "title" : "Inventory Management Process",
-        "responsible-roles" : [ {
-          "role-id" : "maintainer",
-          "party-uuids" : [ "0f0c15ed-565e-4ce9-8670-b54853d0bf03" ]
-        } ],
-        "type" : "process"
+        "title" : "Inventory Management Process"
       }, {
+        "responsible-roles" : [ {
+          "party-uuids" : [ "0f0c15ed-565e-4ce9-8670-b54853d0bf03" ],
+          "role-id" : "maintainer"
+        } ],
+        "type" : "guidance",
         "props" : [ {
           "name" : "release-date",
           "value" : "2018-10-15"
@@ -395,17 +401,11 @@
         },
         "description" : "Describes how to configure a component to ensure its logs are transmitted to Splunk in the appropriate format. Also describes how to configure time synchronization.",
         "uuid" : "4938767c-dd8b-4ea4-b74a-fafffd48ac99",
-        "title" : "Configuration Management Guidance",
-        "responsible-roles" : [ {
-          "role-id" : "maintainer",
-          "party-uuids" : [ "0f0c15ed-565e-4ce9-8670-b54853d0bf03" ]
-        } ],
-        "type" : "guidance"
+        "title" : "Configuration Management Guidance"
       } ]
     },
     "import-profile" : {
       "href" : "#b78aa3ec-915d-475b-8097-46813fae1825"
-    },
-    "uuid" : "cff8385f-108e-40a5-8f7a-82f3dc0eaba8"
+    }
   }
 }

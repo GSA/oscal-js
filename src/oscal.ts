@@ -21,7 +21,6 @@ type FileFormat = 'xml' | 'json';
 
 // Function to detect the OSCAL document type and file format
 export const detectOscalDocumentType = (filePath: string): Promise<[OscalDocumentType, FileFormat]> => {
-  console.log("Reading document at " + filePath);
   const fileExtension = path.extname(filePath).toLowerCase();
   let documentType: OscalDocumentType;
   let fileFormat: FileFormat;

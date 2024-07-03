@@ -12,6 +12,47 @@ interface Schema {
     [key: string]: any;
 }
 
+interface SchemaDefinition {
+    $id: string;
+    // Add other properties as needed
+}
+
+interface SchemaObject {
+    definitions: {
+        [key: string]: SchemaDefinition;
+    };
+    // Add other properties as needed
+}
+
+function findConflictingDefinitions(schema: SchemaObject): void {
+    const definitions = schema.definitions;
+    const groupedDefinitions: { [key: string]: SchemaDefinition[] } = {};
+
+    // Group definitions by the part after the colon in $id
+    for (const [key, def] of Object.entries(definitions)) {
+        if (def.$id) {
+            const name = def.$id.split(':').pop() || '';
+            if (!groupedDefinitions[name]) {
+                groupedDefinitions[name] = [];
+            }
+            groupedDefinitions[name].push(def);
+        }
+    }
+
+    // Find and print conflicting definitions
+    for (const [name, defs] of Object.entries(groupedDefinitions)) {
+        if (defs.length > 1) {
+            const namespaces = new Set(defs.map(def => def.$id.split(':')[0]));
+            if (namespaces.size > 1) {
+                console.log(`Conflicting definitions for "${name}":`);
+                defs.forEach(def => console.log(`  - ${def.$id}`));
+                console.log();
+            }
+        }
+    }
+    return JSON.parse(JSON.stringify(schema));
+}
+
 function transformSchema(schema: Schema): Schema {
     function processObject(obj: any): any {
         if (typeof obj !== 'object' || obj === null) return obj;
@@ -19,14 +60,6 @@ function transformSchema(schema: Schema): Schema {
         // Process $id
         if (obj.$id && typeof obj.$id === 'string') {
             obj.$id = obj.$id.replace(/#(assembly_)?(field_)?(oscal-complete-?)?(oscal-[a-zA-Z-]+[_:])?/, '#');
-            
-            if (obj.$id.startsWith('#')) {
-                const newPropertyName = obj.$id.substring(1);
-                if (schema.definitions && schema.definitions.hasOwnProperty(obj.$id)) {
-                    schema.definitions[newPropertyName] = schema.definitions[obj.$id];
-                    delete schema.definitions[obj.$id];
-                }
-            }
         }
 
         // Process $ref
@@ -80,7 +113,7 @@ function transformSchema(schema: Schema): Schema {
         });
     }
 
-    // Final pass to catch any remaining references, but preserve root OSCAL elements
+    // Final pass to catch any remaining references
     const schemaString = JSON.stringify(schema);
     const updatedSchemaString = schemaString
         .replace(/#(assembly_)?(field_)?(oscal-complete-?)?(oscal-[a-zA-Z-]+[_:])?/g, '#')
@@ -91,13 +124,14 @@ function transformSchema(schema: Schema): Schema {
 }
 
 // Read and parse the JSON file
-fs.readFile('./schema/oscal_complete_schema.json', 'utf8')
+fs.readFile('./src/schema/oscal.complete.json', 'utf8')
     .then(JSON.parse)
-    .then(transformSchema)
-    .then(ts => {
-        return fs.writeFile('oscal.complete.json', JSON.stringify(ts, null, 2))
-            .then(() => ts);
-    })
+    // .then(findConflictingDefinitions)
+    // .then(transformSchema)
+    // .then(ts => {
+    //     return fs.writeFile('oscal.complete.json', JSON.stringify(ts, null, 2))
+    //         .then(() => ts);
+    // })
     .then(schema => compile(schema, 'OSCAL', { bannerComment: '' }))
-    .then(ts => fs.writeFile('@types/index.d.ts', ts))
-    .catch(error => console.error('Error:', error));
+    .then(ts => fs.writeFile('./index.d.ts', ts))
+    // .catch(error => console.error('Error:', error));

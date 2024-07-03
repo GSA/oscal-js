@@ -1,0 +1,56 @@
+name: Cucumber Report
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Use Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run Cucumber tests
+      run: npm run test:cucumber
+
+    - name: Generate Cucumber HTML report
+      run: |
+        npm run report:cucumber
+        mv cucumber-report.html index.html
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
+        publish_branch: gh-pages
+        keep_files: false
+
+    - name: Update README with link to report
+      run: |
+        echo "## Cucumber Test Report" > temp_readme.md
+        echo "" >> temp_readme.md
+        echo "The latest Cucumber test report can be found [here](https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/})." >> temp_readme.md
+        echo "" >> temp_readme.md
+        echo "Last updated: $(date)" >> temp_readme.md
+        echo "" >> temp_readme.md
+        cat README.md >> temp_readme.md
+        mv temp_readme.md README.md
+
+    - name: Commit and push if README changed
+      run: |
+        git config --global user.name 'GitHub Action'
+        git config --global user.email 'action@github.com'
+        git add README.md
+        git diff --quiet && git diff --staged --quiet || (git commit -m "~ Update Cucumber Report" && git push)

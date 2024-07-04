@@ -23,7 +23,7 @@ jobs:
 
     - name: Generate Cucumber HTML report
       run: |
-        run: npm run report
+        npm run report
         mv cucumber-report.html index.html
 
     - name: Deploy to GitHub Pages
@@ -33,3 +33,4 @@ jobs:
         publish_dir: ./
         publish_branch: gh-pages
         keep_files: false
+

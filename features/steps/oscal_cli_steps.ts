@@ -16,7 +16,7 @@ import addFormats from "ajv-formats"
 import { validate, validateFile } from '../../src/validate.js';
 import { readFileSync } from 'fs';
 import { convert } from '../../src/convert.js';
-import { sarifSchema } from '../../dist/schema/sarif.js';
+import { sarifSchema } from '../../src/schema/sarif.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

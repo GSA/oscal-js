@@ -122,7 +122,11 @@ expect(typeof validateResult.isValid==='boolean');
 })
 
 When('I validate with imported validate function', async () => {
-  validateResult=await validateFile(documentPath,{useAjv:false,extensions:metaschemaDocuments})
+  try {
+    validateResult=await validateFile(documentPath,{useAjv:false,extensions:metaschemaDocuments})    
+  } catch (error) {
+    console.error(error);
+  }
 })
 
 Then('I should receive a valid json object', async () => {

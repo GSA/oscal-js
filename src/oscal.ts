@@ -201,9 +201,13 @@ export const validateWithSarif = async ( args: string[]): Promise<Log> => {
     await executeOscalCliCommand('validate', sarifArgs, false);
   } catch (error) {
     console.error("Error executing oscal cli command validate "+sarifArgs);
-    const sarifOutput = readFileSync(tempFile, 'utf8');
-    rmSync(tempFile);
-    return JSON.parse(sarifOutput) as Log;
+    try{
+      const sarifOutput = readFileSync(tempFile, 'utf8');
+      rmSync(tempFile);  
+      return JSON.parse(sarifOutput) as Log;
+    }catch{
+      return {runs:[],version:"2.1.0",$schema:""}
+    }
   }
   try {
     const sarifOutput = readFileSync(tempFile, 'utf8');

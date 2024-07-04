@@ -21,12 +21,9 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Run Cucumber tests
-      run: npm run report
-
     - name: Generate Cucumber HTML report
       run: |
-        npm run report:cucumber
+        run: npm run report
         mv cucumber-report.html index.html
 
     - name: Deploy to GitHub Pages

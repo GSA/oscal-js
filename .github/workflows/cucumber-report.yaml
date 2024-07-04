@@ -22,7 +22,7 @@ jobs:
       run: npm ci
 
     - name: Run Cucumber tests
-      run: npm run test:cucumber
+      run: npm run report
 
     - name: Generate Cucumber HTML report
       run: |

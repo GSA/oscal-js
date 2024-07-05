@@ -26,11 +26,16 @@ jobs:
         npm run report
         mv cucumber-report.html index.html
 
+    - name: Create temporary directory for report
+      run: mkdir out
+
+    - name: Move index.html to temporary directory
+      run: mv index.html out/
+
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./
+        publish_dir: ./out
         publish_branch: gh-pages
         keep_files: false
-

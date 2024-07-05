@@ -140,7 +140,7 @@ export const installOscalCli = (): void => {
 
 const execPromise = promisify(exec);
 
-export const executeOscalCliCommand = async (command: string, args: string[], showLoader: boolean = true): Promise<string> => {
+export const executeOscalCliCommand = async (command: string, args: string[], showLoader: boolean = false): Promise<string> => {
   return new Promise((resolve, reject) => {
     findOscalCliPath().then(oscalCliPath => {
       const fullArgs = [command, ...args];

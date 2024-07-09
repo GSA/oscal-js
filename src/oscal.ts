@@ -1,6 +1,6 @@
 import { program } from 'commander';
 import yaml from 'js-yaml'; // Make sure to import js-yaml
-import fs, { existsSync, readFileSync, rmSync } from 'fs';
+import fs, { existsSync, readFileSync, rmSync, symlinkSync, unlinkSync } from 'fs';
 import xml2js from 'xml2js';
 import { exec, spawn, ChildProcess } from 'child_process';
 import inquirer from 'inquirer';
@@ -107,26 +107,45 @@ export const isJavaInstalled = (): Promise<boolean> => {
     });
   });
 };
-
-// Function to install the OSCAL CLI
 export const installOscalCli = (): void => {
   const oscalCliInstallUrl = `https://codeload.github.com/wandmagic/oscal/zip/refs/heads/cli`;
-  const oscalCliInstallPath = './oscal-cli';
-  const zipFilePath = './oscal-cli.zip';
+  const homeDir = process.env.HOME || process.env.USERPROFILE;
+  const localPath = path.join(homeDir as string, '.local');
+  const localBinPath = path.join(localPath, 'bin');
+  const oscalCliPath = path.join(localPath, 'oscal-cli');
+  const extractedCliPath = path.join(oscalCliPath, 'oscal-cli');
+  const oscalCliExecutablePath = path.join(extractedCliPath, 'bin', 'oscal-cli');
+  const zipFilePath = path.join(localPath, 'oscal-cli.zip');
 
   try {
-    // Download the zip file
-    execSync(`curl -o ${zipFilePath} ${oscalCliInstallUrl}`);
+    // Create .local/bin and .local/oscal-cli directories if they don't exist
+    fs.mkdirSync(localBinPath, { recursive: true });
+    fs.mkdirSync(oscalCliPath, { recursive: true });
 
-    // Unzip the file
-    execSync(`unzip -o ${zipFilePath}`);
+    // Download the zip file
+    console.log(`Downloading OSCAL CLI...`);
+    execSync(`curl -L -o ${zipFilePath} ${oscalCliInstallUrl}`);
+
+    // Unzip the file to .local/oscal-cli
+    console.log(`Extracting OSCAL CLI...`);
+    execSync(`unzip -o ${zipFilePath} -d ${oscalCliPath}`);
 
     // Make the CLI executable
-    execSync(`chmod +x ${oscalCliInstallPath}/bin/oscal-cli`);
+    execSync(`chmod +x ${oscalCliExecutablePath}`);
+
+    // Create a symbolic link (alias) in .local/bin
+    const aliasPath = path.join(localBinPath, 'oscal-cli');
+    if (fs.existsSync(aliasPath)) {
+      fs.unlinkSync(aliasPath); // Remove existing symlink if it exists
+    }
+    fs.symlinkSync(oscalCliExecutablePath, aliasPath);
 
     // Delete the zip file
-    fs.unlinkSync(zipFilePath);
-  } catch (error:any) {
+    fs.unlinkSync(zipFilePath);    
+
+    console.log(`OSCAL CLI installed to ${extractedCliPath}`);
+    console.log(`Alias created at ${aliasPath}`);
+  } catch (error: any) {
     throw new Error(`Failed to install OSCAL CLI: ${error.message}`);
   }
 };
@@ -223,7 +242,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 // Commander.js configuration
 program
-  .version('1.1.3')
+  .version('1.1.6')
   .description('OSCAL CLI')
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document')

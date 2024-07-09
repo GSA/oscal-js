@@ -1,23 +1,21 @@
-import { Given, When, Then } from '@cucumber/cucumber';
-import { expect } from 'chai';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import { 
-  detectOscalDocumentType, 
-  executeOscalCliCommand, 
-  validateWithSarif, 
-  installOscalCli, 
-  isOscalCliInstalled 
-} from '../../src/oscal.js';
-import { Log } from 'sarif';
+import { Given, Then, When } from '@cucumber/cucumber';
 import Ajv from 'ajv';
-import addFormats from "ajv-formats"
-import { validate, validateDefinition, validateFile } from '../../src/validate.js';
+import addFormats from "ajv-formats";
+import { expect } from 'chai';
 import { readFileSync } from 'fs';
+import path, { dirname } from 'path';
+import { Log } from 'sarif';
+import { fileURLToPath } from 'url';
 import { convert } from '../../src/convert.js';
+import {
+  detectOscalDocumentType,
+  executeOscalCliCommand,
+  installOscalCli,
+  isOscalCliInstalled,
+  validateWithSarif
+} from '../../src/oscal.js';
 import { sarifSchema } from '../../src/schema/sarif.js';
-import { Control } from '../../src/types.js';
+import { validate, validateDefinition, validateFile } from '../../src/validate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -47,11 +45,11 @@ Given('I have an OSCAL document {string}', function (filename: string) {
 });
 
 Given('I have an Metaschema extensions document {string}', (filename: string) => {
-  metaschemaDocumentPath = path.join(__dirname, '..', '..', 'examples', filename);
+  metaschemaDocumentPath = path.join(__dirname, '..', '..', 'extensions', filename);
   metaschemaDocuments=[metaschemaDocumentPath];
 });
 Given('I have a second Metaschema extensions document {string}', (filename: string) => {
-  metaschemaDocuments = [metaschemaDocumentPath,path.join(__dirname, '..', '..', 'examples', filename)];
+  metaschemaDocuments = [metaschemaDocumentPath,path.join(__dirname, '..', '..', 'extensions', filename)];
 });
 When('I detect the document type', async function () {
   [documentType] = await detectOscalDocumentType(documentPath);
@@ -100,7 +98,7 @@ Then('I should receive the execution result', function () {
 When('I convert the document to JSON', async function () {
   const outputFile = path.join(__dirname, '..', '..', 'examples', 'ssp.json');
   [conversionResult,executionErrors] = await executeOscalCliCommand('convert', [documentPath,'--to=json', outputFile, '--overwrite']);
-  console.error(executionErrors);
+  executionErrors&&console.error(executionErrors);
 });
 
 Then('I should receive the conversion result', function () {
@@ -115,9 +113,9 @@ When('I validate with metaschema extensions and sarif output on the document', a
 Then('I should receive the sarif output', () => {
  const isValid=ajv.validate(sarifSchema,sarifResult)
   const errors = ajv.errors
-  console.error(errors);
-  // expect(errors).to.be.undefined
-  // expect(isValid).to.be.true;
+  errors&&console.error(errors);
+  expect(errors).to.be.undefined
+  expect(isValid).to.be.true;
 expect(sarifResult.runs).to.exist;
 expect(sarifResult.version).to.exist;
 })

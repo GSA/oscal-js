@@ -1,30 +1,38 @@
 ---
 system-security-plan:
+  uuid: cff8385f-108e-40a5-8f7a-82f3dc0eaba8
+  import-profile:
+    href: '#b78aa3ec-915d-475b-8097-46813fae1825'
   system-implementation:
     components:
-    - title: This System
+    - type: this-system
+      title: This System
       uuid: 74042245-3db1-4f4d-be9a-ceb62d81152c
       description: The system described by this SSP.
       status:
         state: operational
-      type: this-system
-    - title: Logging Server
+    - type: software
+      responsible-roles:
+      - party-uuids:
+        - 96c362ee-a012-4e07-92f3-486ab303b0e7
+        role-id: provider
+      - party-uuids:
+        - 3b2a5599-cc37-403f-ae36-5708fa804b27
+        role-id: asset-owner
+      - party-uuids:
+        - 833ac398-5c9a-4e6b-acba-2a9c11399da0
+        role-id: asset-administrator
+      title: Logging Server
       uuid: e00acdcf-911b-437d-a42f-b0b558cc4f03
       description: Provides a means for hosts to publish logged events to a central server.
       status:
         state: operational
-      type: software
+    - type: policy
       responsible-roles:
-      - role-id: provider
-        party-uuids:
-        - 96c362ee-a012-4e07-92f3-486ab303b0e7
-      - role-id: asset-owner
-        party-uuids:
-        - 3b2a5599-cc37-403f-ae36-5708fa804b27
-      - role-id: asset-administrator
-        party-uuids:
-        - 833ac398-5c9a-4e6b-acba-2a9c11399da0
-    - title: "Enterprise Logging, Monitoring, and Alerting Policy"
+      - party-uuids:
+        - ec485dcf-2519-43f5-8e7d-014cc315332d
+        role-id: maintainer
+      title: "Enterprise Logging, Monitoring, and Alerting Policy"
       uuid: 795533ab-9427-4abe-820f-0b571bacfe6d
       description: |-
         Requires all components to send logs to the enterprise logging solution
@@ -41,12 +49,12 @@ system-security-plan:
         name: version
       - value: 2018-10-15
         name: release-date
-      type: policy
+    - type: process
       responsible-roles:
-      - role-id: maintainer
-        party-uuids:
-        - ec485dcf-2519-43f5-8e7d-014cc315332d
-    - title: System Integration Process
+      - party-uuids:
+        - 0f0c15ed-565e-4ce9-8670-b54853d0bf03
+        role-id: maintainer
+      title: System Integration Process
       uuid: 941e2a87-46f4-4b3e-9e87-bbd187091ca1
       description: Ensures proper integration into the enterprise as new systems are brought into production.
       status:
@@ -58,12 +66,12 @@ system-security-plan:
       props:
       - value: 2018-10-15
         name: release-date
-      type: process
+    - type: process
       responsible-roles:
-      - role-id: maintainer
-        party-uuids:
+      - party-uuids:
         - 0f0c15ed-565e-4ce9-8670-b54853d0bf03
-    - title: Inventory Management Process
+        role-id: maintainer
+      title: Inventory Management Process
       uuid: fa39eb84-3014-46b4-b6bc-7da10527c262
       description: "Describes how new components are introduced into the system - ensures monitoring teams know about every asset that should be producing logs, thus should be monitored."
       status:
@@ -75,12 +83,12 @@ system-security-plan:
       props:
       - value: 2018-10-15
         name: release-date
-      type: process
+    - type: guidance
       responsible-roles:
-      - role-id: maintainer
-        party-uuids:
+      - party-uuids:
         - 0f0c15ed-565e-4ce9-8670-b54853d0bf03
-    - title: Configuration Management Guidance
+        role-id: maintainer
+      title: Configuration Management Guidance
       uuid: 4938767c-dd8b-4ea4-b74a-fafffd48ac99
       description: Describes how to configure a component to ensure its logs are transmitted to Splunk in the appropriate format. Also describes how to configure time synchronization.
       status:
@@ -92,48 +100,43 @@ system-security-plan:
       props:
       - value: 2018-10-15
         name: release-date
-      type: guidance
-      responsible-roles:
-      - role-id: maintainer
-        party-uuids:
-        - 0f0c15ed-565e-4ce9-8670-b54853d0bf03
     remarks: This is a partial implementation that addresses the logging server portion of the auditing system.
     users:
-    - uuid: 9824089b-322c-456f-86c4-4111c4200f69
+    - props:
+      - value: internal
+        name: type
+      uuid: 9824089b-322c-456f-86c4-4111c4200f69
       title: System Administrator
       role-ids:
       - asset-administrator
-      props:
+    - props:
       - value: internal
         name: type
-    - uuid: 9824089b-322c-456f-86c4-4111c4200f62
+      uuid: 9824089b-322c-456f-86c4-4111c4200f62
       title: System Maintainer
       role-ids:
       - maintainer
-      props:
+    - props:
       - value: internal
         name: type
-    - uuid: ae8de94c-835d-4303-83b1-114b6a117a07
+      uuid: ae8de94c-835d-4303-83b1-114b6a117a07
       title: Audit Team
       role-ids:
       - asset-owner
-      props:
+    - props:
       - value: internal
         name: type
-    - uuid: 372ce7a3-92b0-437e-a98c-24d29f9bfab8
+      uuid: 372ce7a3-92b0-437e-a98c-24d29f9bfab8
       title: Legal Department
       role-ids:
       - legal-officer
-      props:
+    - props:
       - value: internal
         name: type
-    - uuid: 372ce7a3-92b0-437e-a98c-55d29f9bfab8
+      uuid: 372ce7a3-92b0-437e-a98c-55d29f9bfab8
       title: Provider
       role-ids:
       - provider
-      props:
-      - value: internal
-        name: type
     inventory-items:
     - uuid: c9c32657-a0eb-4cf2-b5c1-20928983063c
       props:
@@ -150,12 +153,12 @@ system-security-plan:
           name: asset-id
         component-uuid: 795533ab-9427-4abe-820f-0b571bacfe6d
       responsible-parties:
-      - role-id: asset-administrator
-        party-uuids:
+      - party-uuids:
         - 833ac398-5c9a-4e6b-acba-2a9c11399da0
-      - role-id: asset-owner
-        party-uuids:
+        role-id: asset-administrator
+      - party-uuids:
         - 3b2a5599-cc37-403f-ae36-5708fa804b27
+        role-id: asset-owner
   metadata:
     parties:
     - type: organization
@@ -175,16 +178,16 @@ system-security-plan:
       uuid: 96c362ee-a012-4e07-92f3-486ab303b0e7
     version: "1.1"
     roles:
-    - title: Legal Officer
-      id: legal-officer
-    - title: System Maintainer
-      id: maintainer
-    - title: System Assets Owner
-      id: asset-owner
-    - title: System Provider
-      id: provider
-    - title: System Assets Admin
-      id: asset-administrator
+    - id: legal-officer
+      title: Legal Officer
+    - id: maintainer
+      title: System Maintainer
+    - id: asset-owner
+      title: System Assets Owner
+    - id: provider
+      title: System Provider
+    - id: asset-administrator
+      title: System Assets Admin
     title: Enterprise Logging and Auditing System Security Plan
     last-modified: 2024-02-01T13:57:28.355446-04:00
     oscal-version: 1.1.2
@@ -192,12 +195,12 @@ system-security-plan:
     resources:
     - uuid: b78aa3ec-915d-475b-8097-46813fae1825
       rlinks:
-      - href: ../../../nist.gov/SP800-53/rev4/xml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.xml
-        media-type: application/oscal.catalog+xml
-      - href: ../../../nist.gov/SP800-53/rev4/json/NIST_SP-800-53_rev4_MODERATE-baseline_profile.json
-        media-type: application/oscal.catalog+json
-      - href: ../../../nist.gov/SP800-53/rev4/yaml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.yaml
-        media-type: application/oscal.catalog+yaml
+      - media-type: application/oscal.catalog+xml
+        href: ../../../nist.gov/SP800-53/rev4/xml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.xml
+      - media-type: application/oscal.catalog+json
+        href: ../../../nist.gov/SP800-53/rev4/json/NIST_SP-800-53_rev4_MODERATE-baseline_profile.json
+      - media-type: application/oscal.catalog+yaml
+        href: ../../../nist.gov/SP800-53/rev4/yaml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.yaml
       description: "NIST Special Publication 800-53 Revision 4: Moderate Baseline Profile"
   system-characteristics:
     status:
@@ -217,28 +220,29 @@ system-security-plan:
         uuid: 7d28ac6e-5970-4f4c-a508-5a3715f0f02b
         title: System and Network Monitoring
         categorizations:
-        - system: https://doi.org/10.6028/NIST.SP.800-60v2r1
-          information-type-ids:
+        - information-type-ids:
           - C.3.5.8
+          system: https://doi.org/10.6028/NIST.SP.800-60v2r1
         description: This system maintains historical logging and auditing information for all client devices connected to this system.
         integrity-impact:
           base: fips-199-moderate
     system-name: Enterprise Logging and Auditing System
     security-impact-level:
+      security-objective-confidentiality: fips-199-moderate
       security-objective-availability: fips-199-low
       security-objective-integrity: fips-199-moderate
-      security-objective-confidentiality: fips-199-moderate
     security-sensitivity-level: moderate
     authorization-boundary:
       description: The description of the authorization boundary would go here.
     description: This is an example of a system that provides enterprise logging and log auditing capabilities.
     system-ids:
-    - id: d7456980-9277-4dcb-83cf-f8ff0442623b
-      identifier-type: https://ietf.org/rfc/rfc4122
+    - identifier-type: https://ietf.org/rfc/rfc4122
+      id: d7456980-9277-4dcb-83cf-f8ff0442623b
   control-implementation:
     description: This is the control implementation for the system.
     implemented-requirements:
-    - uuid: aaadb3ff-6ae8-4332-92db-211468c52af2
+    - control-id: au-1
+      uuid: aaadb3ff-6ae8-4332-92db-211468c52af2
       statements:
       - uuid: 7ad47329-dc55-4196-a19d-178a8fe7438d
         statement-id: au-1_smt
@@ -291,9 +295,9 @@ system-security-plan:
         - description: "This process aligns with the enterprise Logging, Monitoring, and Alerting Policy, Version 2.1, October 15, 2018. The following processes work together to fully implement the policy: System Integration Process, Inventory Management Process, Configuration Management, Log Review Process, and Monitoring and Alerting Process"
           component-uuid: 4938767c-dd8b-4ea4-b74a-fafffd48ac99
           uuid: 226ee2a2-cbdb-498f-8182-94dfa013476c
-      - uuid: b1773cd6-afc5-4c87-84a7-f182e6be5af9
+      - remarks: N/A
+        uuid: b1773cd6-afc5-4c87-84a7-f182e6be5af9
         statement-id: au-1_smt.b
-        remarks: N/A
       - uuid: 75873308-f37d-4e89-9c27-29f3dee4b314
         statement-id: au-1_smt.b.1
         by-components:
@@ -328,7 +332,3 @@ system-security-plan:
             values:
             - "annually, and other times as necessary in response to regulatory or organizational changes"
           uuid: 7ec8b7ec-d931-4055-ac74-6d288d636787
-      control-id: au-1
-  uuid: cff8385f-108e-40a5-8f7a-82f3dc0eaba8
-  import-profile:
-    href: '#b78aa3ec-915d-475b-8097-46813fae1825'

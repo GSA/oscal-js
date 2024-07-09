@@ -243,28 +243,50 @@ const findOscalCliPath = async (): Promise<string> => {
     return './oscal-cli/bin/oscal-cli';
   }
 };
-// Commander.js configuration
+
 program
-  .version('1.1.7')
+  .version('1.1.9')
   .description('OSCAL CLI')
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document')
+  .option('-e, --extensions <extensions>', 'List of extension namespaces')
   .description('Validate the OSCAL document')
-  .action((options: { file?: string }) => {
-    const { file } = options;
+  .action((options: { file?: string, extensions?: string }) => {
+    const { file, extensions } = options;
     if (typeof file === 'undefined') {
       console.log("use -f or --file to specify the file");
       return;
     }
-    console.log('Begining OSCAL document validation at ', file);
+
+    console.log('Beginning OSCAL document validation at', file);
 
     detectOscalDocumentType(file)
       .then(async ([documentType, fileType]) => {
         console.log("Detected " + documentType + " " + fileType);
-        // Execute the OSCAL CLI command
+
+        // Prepare arguments for the OSCAL CLI command
         const args = [file, "--as=" + fileType];
-        const [output,errors] = await executeOscalCliCommand('validate', args);
-        errors&&console.error(errors);
+
+        // Handle FedRAMP extensions
+        if (extensions === 'fedramp' || extensions === 'https://fedramp.gov/ns/oscal') {
+          const fedrampExtensionsPath = findFedrampExtensionsFile();
+          if (fedrampExtensionsPath) {
+            args.push('-c', fedrampExtensionsPath);
+          } else {
+            console.warn('FedRAMP extensions file not found. Proceeding without it.');
+          }
+        } else if (extensions) {
+          // Handle other extensions
+          const extensionsList = extensions.split(',');
+          args.push(...extensionsList.flatMap(x => ['-c', x]));
+        }
+
+        try {
+          const result = await validateWithSarif(args);
+          console.log('Validation result:', result);
+        } catch (error) {
+          console.error('Error during validation:', error);
+        }
       })
       .catch((error) => {
         console.error('Error detecting OSCAL document type:', error);
@@ -272,6 +294,23 @@ program
       });
   });
 
+function findFedrampExtensionsFile(): string | null {
+  // Get the directory of the current script
+  const currentDir = path.dirname(require.main?.filename || '');
+  
+  // Go up one directory (assuming we're in a 'dist' folder)
+  const parentDir = path.dirname(currentDir);
+  
+  // Construct the path to the extensions file
+  const extensionsPath = path.join(parentDir, 'extensions', 'fedramp-external-constraints.xml');
+  
+  // Check if the file exists
+  if (fs.existsSync(extensionsPath)) {
+    return extensionsPath;
+  } else {
+    return null;
+  }
+}
 program.command('convert')
   .description('Convert an OSCAL document (XML,JSON,YAML)')
   .option('-f, --file <path>', 'Path to the OSCAL document')

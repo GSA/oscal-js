@@ -22,5 +22,5 @@ jobs:
       run: npm ci
 
     - name: Generate Cucumber HTML report
-      run: npm run report
+      run: npm run test
 

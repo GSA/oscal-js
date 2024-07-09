@@ -240,7 +240,7 @@ program
       .then(async ([documentType, fileType]) => {
         console.log("Detected " + documentType + " " + fileType);
         // Execute the OSCAL CLI command
-        const args = [documentType, file, "--as=" + fileType];
+        const args = [file, "--as=" + fileType];
         console.error(args);
         const output = await executeOscalCliCommand('validate', args);
       })
@@ -251,7 +251,7 @@ program
   });
 
 program.command('convert')
-  .description('Convert an OSCAL document (XML,JSON)')
+  .description('Convert an OSCAL document (XML,JSON,YAML)')
   .option('-f, --file <path>', 'Path to the OSCAL document')
   .option('-o, --output <path>', 'Path to the output')
   .option('-v, --verbosity <level>', 'logging level [debug,info,warning,error,silent]')

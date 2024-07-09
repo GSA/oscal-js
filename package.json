@@ -1,10 +1,10 @@
 {
   "name": "oscal",
-  "version": "1.1.1",
+  "version": "1.1.3",
   "description": "oscal",
-  "main": "./dist/cli.js",
+  "main": "./dist/index.js",
   "bin": {
-    "oscal": "node ./dist/cli.js"
+    "oscal": "./dist/cli.js"
   },
   "types": "dist/index.d.ts",
   "scripts": {
@@ -31,6 +31,7 @@
     "child_process": "^1.0.2",
     "commander": "^12.1.0",
     "inquirer": "^9.2.23",
+    "js-yaml": "^4.1.0",
     "openai": "^4.51.0",
     "run-func": "^3.0.0",
     "tsc": "^2.0.4",

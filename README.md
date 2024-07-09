@@ -128,4 +128,4 @@ Contributions to the OSCAL CLI are welcome! If you find any issues or have sugge
 License
 The OSCAL CLI is open-source software licensed under the MIT License.
 
-[![Cucumber Report](https://github.com/GSA/oscal-js/actions/workflows/cucumber-report.yaml/badge.svg)](https://github.com/GSA/oscal-js/actions/workflows/cucumber-report.yaml)
+[![Cucumber Report](https://github.com/GSA/oscal-js/actions/workflows/cucumber-report.yaml/badge.svg)](https://github.com/GSA/oscal-js/actions/workflows/cucumber-tests.yaml)

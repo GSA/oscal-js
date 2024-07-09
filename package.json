@@ -1,10 +1,10 @@
 {
   "name": "oscal",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "oscal",
-  "main": "./dist/cli.js",
+  "main": "./dist/index.js",
   "bin": {
-    "oscal": "node ./dist/cli.js"
+    "oscal": "./dist/cli.js"
   },
   "types": "dist/index.d.ts",
   "scripts": {

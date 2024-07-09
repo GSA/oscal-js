@@ -24,6 +24,11 @@ Feature: OSCAL CLI Wrapper
     When I convert the document to JSON
     Then I should receive the conversion result
 
+  Scenario: Convert OSCAL document from XML to YAML
+    Given I have an OSCAL document "ssp.xml"
+    When I convert the document to YAML
+    Then I should receive the conversion result
+
   Scenario: Get sarif output invalid xml
     Given I have an OSCAL document "bad-ssp.xml"
     When I validate with sarif output on the document

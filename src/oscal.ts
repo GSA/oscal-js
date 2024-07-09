@@ -1,4 +1,5 @@
 import { program } from 'commander';
+import yaml from 'js-yaml'; // Make sure to import js-yaml
 import fs, { existsSync, readFileSync, rmSync } from 'fs';
 import xml2js from 'xml2js';
 import { exec, spawn, ChildProcess } from 'child_process';
@@ -16,25 +17,40 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 type OscalDocumentType = 'catalog' | 'profile' | 'component-definition' | 'ssp' | 'metaschema';
-type FileFormat = 'xml' | 'json';
+type FileFormat = 'xml' | 'json'|'yaml';
 
 
 export async function detectOscalDocumentType(filePath: string): Promise<[OscalDocumentType, FileFormat]> {
   const fileExtension = path.extname(filePath).toLowerCase();
   
-  if (!['.xml', '.json'].includes(fileExtension)) {
-    throw new Error('Unsupported file format. Only XML and JSON are supported.');
+  if (!['.xml', '.json','.yaml','.yml'].includes(fileExtension)) {
+    throw new Error('Unsupported file format. Only XML YAML and JSON are supported.');
   }
 
   const fileContent = (await readFileSync(filePath)).toString();
 
   if (fileExtension === '.xml') {
     return parseXmlDocument(fileContent);
+  } else if (fileExtension ===".json") {
+    return parseJsonDocument(fileContent);  
   } else {
-    return parseJsonDocument(fileContent);
+    return parseYamlDocument(fileContent);
   }
 }
-
+async function parseYamlDocument(fileContent: string): Promise<[OscalDocumentType, FileFormat]> {
+  return new Promise((resolve, reject) => {
+    try {
+      const yamlData = yaml.load(fileContent);
+      if (typeof yamlData !== 'object' || yamlData === null) {
+        reject(new Error('Invalid YAML structure'));
+      }
+      const rootElement = Object.keys(yamlData)[0];
+      resolve([getDocumentType(rootElement), 'yaml']);
+    } catch (error) {
+      reject(new Error(`Failed to parse YAML: ${error}`));
+    }
+  });
+}
 async function parseXmlDocument(fileContent: string): Promise<[OscalDocumentType, FileFormat]> {
   const parser = new xml2js.Parser();
   try {
@@ -207,7 +223,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 // Commander.js configuration
 program
-  .version('1.0.0')
+  .version('1.1.3')
   .description('OSCAL CLI')
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document')

@@ -177,5 +177,11 @@ if (definitionToValidate==="control"){
 }
 })
 
+When('I convert the document to YAML', async () => {
+  const outputFile = path.join(__dirname, '..', '..', 'examples', 'ssp.json');
+  [conversionResult,executionErrors] = await executeOscalCliCommand('convert', [documentPath,'--to=yaml', outputFile, '--overwrite']);
+  console.error(executionErrors);
+})
+
 
 

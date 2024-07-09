@@ -1,6 +1,6 @@
 {
   "name": "oscal",
-  "version": "1.0.9",
+  "version": "1.1.1",
   "description": "oscal",
   "main": "./dist/cli.js",
   "bin": {
@@ -11,6 +11,7 @@
     "build": "tsc",
     "types": "node ./dist/scripts/generateTypes.js",
     "test": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js",
+    "test:lib": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @lib",
     "report": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --format html:cucumber-report.html --publish-quiet || true"
   },
   "keywords": [

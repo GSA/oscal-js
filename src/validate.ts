@@ -5,7 +5,7 @@ import path from 'path';
 import { v4 } from 'uuid';
 import { installOscalCli, isJavaInstalled, isOscalCliInstalled, validateWithSarif } from './oscal.js';
 import { oscalSchema } from './schema/oscal.complete.js';
-import { OscalJsonPackage, ResourceHypertextReference } from './types.js';
+import { AssessmentPart, ImportAssessmentPlan, LocalDefinitions, OscalJsonPackage, POAMItem, PlanOfActionAndMilestonesPOAM, ResourceHypertextReference } from './types.js';
 
 export type OscalValidationOptions = {
     extensions: ResourceHypertextReference[],
@@ -16,6 +16,7 @@ export const fedrampValidationOptions: OscalValidationOptions = {
     extensions: ["./examples/fedramp-external-constraints.xml", "./oscal-external-constraints.xml"],
     useAjv: false
 };
+let ajv: Ajv | null = null;
 
 export async function validate(
   document: OscalJsonPackage,
@@ -143,3 +144,143 @@ function validateWithJsonSchema(
 
   return { isValid: true };
 }
+
+type OscalDefinition = 
+| "catalog"
+| "group"
+| "control"
+| "part"
+| "parameter"
+| "parameter-constraint"
+| "parameter-guideline"
+| "parameter-value"
+| "parameter-selection"
+| "include-all"
+| "metadata"
+| "location-uuid"
+| "party-uuid"
+| "role-id"
+| "back-matter"
+| "property"
+| "link"
+| "responsible-party"
+| "action"
+| "responsible-role"
+| "hash"
+| "remarks"
+| "published"
+| "last-modified"
+| "version"
+| "oscal-version"
+| "email-address"
+| "telephone-number"
+| "address"
+| "addr-line"
+| "document-id"
+| "profile"
+| "import"
+| "merge"
+| "modify"
+| "insert-controls"
+| "select-control-by-id"
+| "select-profile-control-by-id"
+| "with-id"
+| "matching"
+| "component-definition"
+| "import-component-definition"
+| "defined-component"
+| "capability"
+| "incorporates-component"
+| "control-implementation"
+| "implemented-requirement"
+| "statement"
+| "system-component"
+| "protocol"
+| "port-range"
+| "implementation-status"
+| "system-user"
+| "authorized-privilege"
+| "function-performed"
+| "inventory-item"
+| "set-parameter"
+| "system-id"
+| "system-security-plan"
+| "import-profile"
+| "system-characteristics"
+| "system-information"
+| "impact"
+| "base"
+| "selected"
+| "adjustment-justification"
+| "security-impact-level"
+| "status"
+| "date-authorized"
+| "authorization-boundary"
+| "diagram"
+| "network-architecture"
+| "data-flow"
+| "system-implementation"
+| "by-component"
+| "assessment-plan"
+| "import-ssp"
+| "local-objective"
+| "assessment-method"
+| "activity"
+| "task"
+| "reviewed-controls"
+| "select-objective-by-id"
+| "assessment-subject-placeholder"
+| "assessment-subject"
+| "select-subject-by-id"
+| "subject-reference"
+| "assessment-assets"
+| "finding-target"
+| "finding"
+| "observation"
+| "origin"
+| "origin-actor"
+| "related-task"
+| "threat-id"
+| "risk"
+| "logged-by"
+| "risk-status"
+| "characterization"
+| "response"
+| "assessment-part"
+| "assessment-results"
+| "result"
+| "import-ap"
+| "plan-of-action-and-milestones"
+| "local-definitions"
+| "poam-item";
+export function validateDefinition(
+  definitionName: OscalDefinition,
+  document: any,
+): { isValid: boolean; errors?: string[]; } {
+  const ajv = new Ajv({
+    allErrors: true,
+    verbose: true,
+  });
+  addFormats(ajv);
+  ajv.addSchema(oscalSchema,);
+
+  const validateFn = ajv.getSchema(oscalSchema.$id+"#/definitions/"+definitionName);
+  if (!validateFn) {
+    console.log(validateFn)
+    return { 
+      isValid: false, 
+      errors: [`Definition not found: ${definitionName}`] 
+    };
+  }
+  const isValid = (validateFn as any)!(document);
+
+  if (!isValid) {
+    return {
+      isValid: false,
+      errors: validateFn.errors?.map((error: any) => `${error.message} at ${error.instancePath}`)
+    };
+  }
+
+  return { isValid: true };
+}
+

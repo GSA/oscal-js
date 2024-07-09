@@ -16,7 +16,7 @@ import { execSync } from 'child_process';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-type OscalDocumentType = 'catalog' | 'profile' | 'component-definition' | 'ssp' | 'metaschema';
+type OscalDocumentType = 'catalog' | 'profile' | 'component-definition' | 'ssp' | 'metaschema'|'poam'|'ar'|'ap';
 type FileFormat = 'xml' | 'json'|'yaml';
 
 
@@ -76,8 +76,11 @@ function getDocumentType(rootElement: string): OscalDocumentType {
   switch (rootElement) {
     case 'catalog': return 'catalog';
     case 'profile': return 'profile';
+    case 'plan-of-action-and-milestones': return 'poam';
     case 'component-definition': return 'component-definition';
     case 'system-security-plan': return 'ssp';
+    case 'assessment-results': return 'ar';
+    case 'assessment-plan': return 'ap';
     default: return 'metaschema';
   }
 }
@@ -242,7 +245,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 // Commander.js configuration
 program
-  .version('1.1.6')
+  .version('1.1.7')
   .description('OSCAL CLI')
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document')
@@ -260,8 +263,8 @@ program
         console.log("Detected " + documentType + " " + fileType);
         // Execute the OSCAL CLI command
         const args = [file, "--as=" + fileType];
-        console.error(args);
-        const output = await executeOscalCliCommand('validate', args);
+        const [output,errors] = await executeOscalCliCommand('validate', args);
+        errors&&console.error(errors);
       })
       .catch((error) => {
         console.error('Error detecting OSCAL document type:', error);
@@ -281,10 +284,11 @@ program.command('convert')
       return;
     }
     // Execute the OSCAL CLI conversion command
-    detectOscalDocumentType(file).then(async ([command, fileType]) => {
-      const args = [command, "--to=" + fileType, file, output];
-      const result = await executeOscalCliCommand("convert", args);
-      console.log(result);
+    detectOscalDocumentType(file).then(async ([documentType, fileType]) => {
+
+      const args = [ "--to=" + fileType, file, output];
+      const [result,errors] = await executeOscalCliCommand("convert", args);
+      errors&&console.error(errors);
     });
   });
 

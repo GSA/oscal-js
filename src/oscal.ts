@@ -245,7 +245,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 
 program
-  .version('1.1.9')
+  .version('1.2.1')
   .description('OSCAL CLI')
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document')
@@ -315,7 +315,6 @@ program.command('convert')
   .description('Convert an OSCAL document (XML,JSON,YAML)')
   .option('-f, --file <path>', 'Path to the OSCAL document')
   .option('-o, --output <path>', 'Path to the output')
-  .option('-v, --verbosity <level>', 'logging level [debug,info,warning,error,silent]')
   .action((options: { file?: string; output?: string }) => {
     const { file, output } = options;
     if (!file || !output) {
@@ -325,7 +324,7 @@ program.command('convert')
     // Execute the OSCAL CLI conversion command
     detectOscalDocumentType(file).then(async ([documentType, fileType]) => {
 
-      const args = [ "--to=" + fileType, file, output];
+      const args = [ "--to=" + fileType, file, output,"--overwrite"];
       const [result,errors] = await executeOscalCliCommand("convert", args);
       errors&&console.error(errors);
     });

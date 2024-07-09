@@ -48,6 +48,70 @@ oscal resolve -i <paths>  -o <path_to_output_directory>
 Replace <paths> with the path paths to the profiles to resolve.
 Replace <path_to_output_directory> with the path where you want to create the resolved OSCAL package.
 
+
+
+# Using the validate Function
+
+You can also use the `validate` function directly in your JavaScript or TypeScript code by importing it from the package. Here's an example:
+
+```javascript
+import { validate, fedrampValidationOptions } from 'oscal';
+
+const document = {
+  // Your OSCAL JSON document here
+};
+
+async function validateDocument() {
+  try {
+    const result = await validate(document, fedrampValidationOptions);
+    if (result.isValid) {
+      console.log('The document is valid.');
+    } else {
+      console.log('The document is invalid. Errors:');
+      result.errors?.forEach(error => console.log(error));
+    }
+  } catch (error) {
+    console.error('An error occurred during validation:', error);
+  }
+}
+
+validateDocument();
+```
+
+# Using the validateDefinition Function
+
+The `validateDefinition` function allows you to validate a specific OSCAL definition within your document. This is useful when you want to check the validity of a particular part of your OSCAL document. Here's an example of how to use it:
+
+```javascript
+import { validateDefinition } from 'oscal';
+
+const catalogDefinition = {
+  // Your OSCAL catalog definition here
+  uuid: "example-uuid",
+  metadata: {
+    title: "Example Catalog",
+    version: "1.0",
+    oscal_version: "1.0.0"
+    // ... other required metadata fields
+  },
+  groups: [
+    // ... catalog groups
+  ]
+};
+
+function validateCatalog() {
+  const result = validateDefinition("catalog", catalogDefinition);
+  
+  if (result.isValid) {
+    console.log('The catalog definition is valid.');
+  } else {
+    console.log('The catalog definition is invalid. Errors:');
+    result.errors?.forEach(error => console.log(error));
+  }
+}
+
+validateCatalog();
+```
 # Dependencies
 The OSCAL CLI relies on the following dependencies:
 

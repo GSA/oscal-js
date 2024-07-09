@@ -1,5 +1,5 @@
 import { program } from 'commander';
-import fs, { readFileSync, rmSync } from 'fs';
+import fs, { existsSync, readFileSync, rmSync } from 'fs';
 import xml2js from 'xml2js';
 import { exec, spawn, ChildProcess } from 'child_process';
 import inquirer from 'inquirer';
@@ -19,75 +19,52 @@ type OscalDocumentType = 'catalog' | 'profile' | 'component-definition' | 'ssp' 
 type FileFormat = 'xml' | 'json';
 
 
-// Function to detect the OSCAL document type and file format
-export const detectOscalDocumentType = (filePath: string): Promise<[OscalDocumentType, FileFormat]> => {
+export async function detectOscalDocumentType(filePath: string): Promise<[OscalDocumentType, FileFormat]> {
   const fileExtension = path.extname(filePath).toLowerCase();
-  let documentType: OscalDocumentType;
-  let fileFormat: FileFormat;
+  
+  if (!['.xml', '.json'].includes(fileExtension)) {
+    throw new Error('Unsupported file format. Only XML and JSON are supported.');
+  }
+
+  const fileContent = (await readFileSync(filePath)).toString();
 
   if (fileExtension === '.xml') {
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const parser = new xml2js.Parser();
+    return parseXmlDocument(fileContent);
+  } else {
+    return parseJsonDocument(fileContent);
+  }
+}
 
-    return new Promise((resolve, reject) => {
-      parser.parseString(fileContent, (err: Error | null, result: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          const rootElement = Object.keys(result)[0];
+async function parseXmlDocument(fileContent: string): Promise<[OscalDocumentType, FileFormat]> {
+  const parser = new xml2js.Parser();
+  try {
+    const result = await parser.parseStringPromise(fileContent);
+    const rootElement = Object.keys(result)[0];
+    return [getDocumentType(rootElement), 'xml'];
+  } catch (error) {
+    throw new Error(`Failed to parse XML: ${error}`);
+  }
+}
 
-          switch (rootElement) {
-            case 'catalog':
-              documentType = 'catalog';
-              break;
-            case 'profile':
-              documentType = 'profile';
-              break;
-            case 'component-definition':
-              documentType = 'component-definition';
-              break;
-            case 'system-security-plan':
-              documentType = 'ssp';
-              break;
-            default:
-              documentType = 'metaschema';
-              break;
-          }
-
-          fileFormat = 'xml';
-          resolve([documentType, fileFormat]);
-        }
-      });
-    });
-  } else if (fileExtension === '.json') {
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
+function parseJsonDocument(fileContent: string): [OscalDocumentType, FileFormat] {
+  try {
     const jsonData = JSON.parse(fileContent);
     const rootElement = Object.keys(jsonData)[0];
-
-    switch (rootElement) {
-      case 'catalog':
-        documentType = 'catalog';
-        break;
-      case 'profile':
-        documentType = 'profile';
-        break;
-      case 'component-definition':
-        documentType = 'component-definition';
-        break;
-      case 'system-security-plan':
-        documentType = 'ssp';
-        break;
-      default:
-        documentType = 'metaschema';
-        break;
-    }
-
-    fileFormat = 'json';
-    return Promise.resolve([documentType, fileFormat]);
-  } else {
-    return Promise.reject(new Error('Unsupported file format. Only XML and JSON are supported.'));
+    return [getDocumentType(rootElement), 'json'];
+  } catch (error) {
+    throw new Error(`Failed to parse JSON: ${error}`);
   }
-};
+}
+
+function getDocumentType(rootElement: string): OscalDocumentType {
+  switch (rootElement) {
+    case 'catalog': return 'catalog';
+    case 'profile': return 'profile';
+    case 'component-definition': return 'component-definition';
+    case 'system-security-plan': return 'ssp';
+    default: return 'metaschema';
+  }
+}
 
 // Function to check if the OSCAL CLI is installed
 export const isOscalCliInstalled = (): Promise<boolean> => {
@@ -139,11 +116,13 @@ export const installOscalCli = (): void => {
 };
 
 const execPromise = promisify(exec);
-
-export const executeOscalCliCommand = async (command: string, args: string[], showLoader: boolean = false): Promise<string> => {
+export type stdIn=string;
+export type stdErr=string;
+export const executeOscalCliCommand = async (command: string, args: string[], showLoader: boolean = false): Promise<[stdIn,stdErr]> => {
   return new Promise((resolve, reject) => {
     findOscalCliPath().then(oscalCliPath => {
       const fullArgs = [command, ...args];
+      console.log("oscal-cli "+fullArgs.join(" "))
       const oscalCliProcess: ChildProcess = spawn(oscalCliPath, fullArgs);
 
       let stdout = '';
@@ -176,7 +155,6 @@ export const executeOscalCliCommand = async (command: string, args: string[], sh
       oscalCliProcess.on('message', (message) => {
         stdout += message.toString();
       });
-
       oscalCliProcess.on('close', (code) => {
         if (loading) {
           clearInterval(loading);
@@ -184,9 +162,8 @@ export const executeOscalCliCommand = async (command: string, args: string[], sh
         }
 
         if (code === 0) {
-          resolve(stdout);
+          resolve([stdout,stderr]);
         } else {
-          console.error(stdout);
           reject(new Error(`OSCAL CLI process exited with code ${code}:\n${stderr}`));
         }
       });
@@ -195,26 +172,26 @@ export const executeOscalCliCommand = async (command: string, args: string[], sh
 };
 export const validateWithSarif = async ( args: string[]): Promise<Log> => {
   const tempFile = path.join(`oscal-cli-sarif-log-${v4()}.json`);
-  const sarifArgs = [...args, '-o', tempFile,"--sarif-include-pass"];
-
+  const sarifArgs = [...args, '-o', tempFile,"--sarif-include-pass",'--show-stack-trace'];
+  var consoleErr=""
   try {
-    await executeOscalCliCommand('validate', sarifArgs, false);
+    const [out,err]=await executeOscalCliCommand('validate', sarifArgs, false);
+    console.error(err);
+    consoleErr = err;
+    console.log(out);
   } catch (error) {
-    console.error("Error executing oscal cli command validate "+sarifArgs);
-    try{
-      const sarifOutput = readFileSync(tempFile, 'utf8');
-      rmSync(tempFile);  
-      return JSON.parse(sarifOutput) as Log;
-    }catch{
-      return {runs:[],version:"2.1.0",$schema:""}
+    if(!existsSync(tempFile)){
+      throw(consoleErr)
     }
+    const sarifOutput = readFileSync(tempFile, 'utf8');
+    rmSync(tempFile);  
+    return JSON.parse(sarifOutput) as Log;
   }
   try {
     const sarifOutput = readFileSync(tempFile, 'utf8');
     rmSync(tempFile);
     return JSON.parse(sarifOutput) as Log;
   } catch (error) {
-    console.error("ERRORING",error);
     throw new Error(`Failed to read or parse SARIF output: ${error}`);
   }
 };

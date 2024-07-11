@@ -4,7 +4,7 @@ import fs, { existsSync, lstatSync, readFileSync, rmSync, symlinkSync, unlinkSyn
 import xml2js from 'xml2js';
 import { exec, spawn, ChildProcess } from 'child_process';
 import inquirer from 'inquirer';
-import path from 'path';
+import path, { join } from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { Log, Run } from "sarif"
@@ -248,7 +248,7 @@ const findOscalCliPath = async (): Promise<string> => {
 
 
 program
-  .version('1.2.7')
+  .version('1.2.8')
   .description('OSCAL CLI')
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
@@ -323,22 +323,26 @@ async function validateFile(filePath: string, extensions?: string) {
 }
 
 
-function findFedrampExtensionsFile(): string | null {
+
+function findFedrampExtensionsFile() {
   try {
-    // Find the root of your package
-    const packageRoot = path.dirname(require.resolve('oscal'));
-    
+    // Get the directory of the current module
+    const currentFileUrl = import.meta.url;
+    const currentFilePath = fileURLToPath(currentFileUrl);
+    const currentDir = dirname(currentFilePath);
+
     // Construct the path to the extensions file
-    const extensionsPath = path.join(packageRoot, 'extensions', 'fedramp-external-constraints.xml');
-    
+    // Adjust this path based on your package structure
+    const extensionsPath = join(currentDir, '..', '..', 'extensions', 'fedramp-external-constraints.xml');
+
     // Check if the file exists
-    if (fs.existsSync(extensionsPath)) {
+    if (existsSync(extensionsPath)) {
       return extensionsPath;
     }
   } catch (error) {
-    console.error('Error finding package:', error);
+    console.error('Error finding extensions file:', error);
   }
-  
+
   // If we couldn't find the file, return null
   return null;
 }

@@ -1,6 +1,6 @@
 {
   "name": "oscal",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "oscal",
   "main": "./dist/index.js",
   "bin": "./dist/cli.js",

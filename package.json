@@ -1,17 +1,17 @@
 {
   "name": "oscal",
-  "version": "1.2.1",
+  "version": "1.2.3",
   "description": "oscal",
   "main": "./dist/index.js",
-  "bin": {
-    "oscal": "./dist/cli.js"
-  },
+  "bin": "./dist/cli.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "types": "node ./dist/scripts/generateTypes.js",
     "test": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js",
     "test:lib": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @lib",
+    "test:constraints": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @lib",
+    "test:ssp": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @ssp",
     "report": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --format html:cucumber-report.html --publish-quiet || true"
   },
   "keywords": [
@@ -20,13 +20,10 @@
   "author": "GSA",
   "license": "MIT",
   "dependencies": {
-    "@babel/core": "^7.24.7",
-    "@babel/preset-env": "^7.24.7",
     "@terascope/fetch-github-release": "^0.8.10",
     "@types/sarif": "^2.1.7",
     "ajv": "^8.16.0",
     "ajv-formats": "^3.0.1",
-    "babel-jest": "^29.7.0",
     "chai": "^5.1.1",
     "child_process": "^1.0.2",
     "commander": "^12.1.0",
@@ -34,25 +31,19 @@
     "js-yaml": "^4.1.0",
     "openai": "^4.51.0",
     "oscal": "^1.1.7",
-    "run-func": "^3.0.0",
     "tsc": "^2.0.4",
     "uuid": "^10.0.0",
     "xml2js": "^0.6.2",
     "yaml": "^2.4.3"
   },
   "type": "module",
-  "presets": [
-    "@babel/preset-env"
-  ],
   "devDependencies": {
-    "@babel/preset-typescript": "^7.24.7",
     "@cucumber/cucumber": "^10.8.0",
     "@types/chai": "^4.3.16",
     "@types/inquirer": "^9.0.7",
     "@types/node": "^20.14.9",
     "@types/xml2js": "^0.4.14",
     "json-schema-to-typescript": "^14.1.0",
-    "ts-jest": "^29.1.5",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.5.2"

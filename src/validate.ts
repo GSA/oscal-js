@@ -3,7 +3,7 @@ import addFormats from "ajv-formats";
 import { readFileSync, rmSync, writeFileSync } from 'fs';
 import path from 'path';
 import { v4 } from 'uuid';
-import { installOscalCli, isJavaInstalled, isOscalCliInstalled, validateWithSarif } from './oscal.js';
+import { installOscalCli, isJavaInstalled, isOscalCliInstalled, validateWithSarif } from './commands.js';
 import { oscalSchema } from './schema/oscal.complete.js';
 import { AssessmentPart, ImportAssessmentPlan, LocalDefinitions, OscalJsonPackage, POAMItem, PlanOfActionAndMilestonesPOAM, ResourceHypertextReference } from './types.js';
 

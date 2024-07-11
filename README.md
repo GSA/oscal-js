@@ -23,6 +23,22 @@ To convert an OSCAL document between XML and JSON formats, use the convert comma
 ```
 oscal convert -f <path_to_input_file> -o <path_to_output_file>
 ```
+
+Replace `<path_to_input_file_or_folder>` with the path to the input OSCAL document or folder containing multiple OSCAL documents. Replace `<path_to_output_file_or_folder>` with the desired path for the converted output.
+
+The convert command now supports the following scenarios:
+
+1. Single file conversion:
+   - If the output path has a valid extension (.xml, .json, or .yaml), it will convert the input file to that specific format.
+   - If the output path doesn't have a valid extension, it will create a folder and convert the input file to all three formats (XML, JSON, and YAML), organizing them into subfolders.
+
+2. Folder conversion:
+   - If the input is a folder, it will convert all OSCAL documents in the folder to all three formats, creating subfolders for each format in the output directory.
+
+Examples:
+
+- Convert a single file to JSON:
+
 Replace <path_to_input_file> with the path to the input OSCAL document and <path_to_output_file> with the desired path for the converted output file.
 ### Scaffold
 To scaffold an OSCAL package, use the scaffold command:
@@ -118,8 +134,7 @@ The OSCAL CLI relies on the following dependencies:
 - commander: For parsing command-line arguments
 - xml2js: For parsing and converting XML
 - inquirer: For interactive prompts
-- jest: For running tests
-- babel: For transpiling JavaScript code
+- cucumber: For running tests
 - java: For running oscal-cli 
 
 

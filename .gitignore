@@ -3,3 +3,5 @@ oscal-cli
 /dist
 .DS_Store
 /reports
+/.yarn
+@rerun.txt

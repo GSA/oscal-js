@@ -1,4 +1,4 @@
-import { executeOscalCliCommand, installOscalCli, isOscalCliInstalled } from './oscal.js';
+import { executeOscalCliCommand, installOscalCli, isOscalCliInstalled } from './commands.js';
 
 export async function convert(
     document: string,

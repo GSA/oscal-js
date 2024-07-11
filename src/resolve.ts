@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import { v4 } from 'uuid';
-import { executeOscalCliCommand, installOscalCli, isOscalCliInstalled } from './oscal.js';
+import { executeOscalCliCommand, installOscalCli, isOscalCliInstalled } from './commands.js';
 import { Catalog, Profile } from './types.js';
 
 const execAsync = promisify(exec);

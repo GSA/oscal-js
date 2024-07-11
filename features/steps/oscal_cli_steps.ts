@@ -13,7 +13,7 @@ import {
   installOscalCli,
   isOscalCliInstalled,
   validateWithSarif
-} from '../../src/oscal.js';
+} from '../../src/commands.js';
 import { sarifSchema } from '../../src/schema/sarif.js';
 import { validate, validateDefinition, validateFile } from '../../src/validate.js';
 

@@ -1,0 +1,35 @@
+name: Cucumber Report
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Use Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '20'
+
+    - name: Install cli
+      run: npm install oscal -g
+
+    - name: produce artifacts in all formats
+      run: oscal convert -f ./src/contentrev5/baselines/xml -o artifacts
+
+    - name: produce artifacts for ssp
+      run: oscal convert -f ./src/content/rev5/templates/ssp/xml -o dist/content/templates/ssp
+    - name: produce artifacts for poam
+      run: oscal convert -f ./src/contentrev5/templates/poam/xml -o dist/content/templates/poam
+    - name: produce artifacts for sap
+      run: oscal convert -f ./src/contentrev5/templates/sap/xml -o dist/content/templates/sap
+    - name: produce artifacts for sar
+      run: oscal convert -f ./src/contentrev5/templates/sar/xml -o dist/content/templates/sar
+    

@@ -16,11 +16,14 @@ import {
 } from '../../src/commands.js';
 import { sarifSchema } from '../../src/schema/sarif.js';
 import { validate, validateDefinition, validateFile } from '../../src/validate.js';
+import { parseString } from 'xml2js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let documentPath: string;
+let constraintId: string;
+let constraintExists: boolean;
 let outputPath: string;
 let metaschemaDocumentPath: string;
 let metaschemaDocuments:string[];
@@ -116,8 +119,8 @@ Then('I should receive the sarif output', () => {
   errors&&console.error(errors);
   expect(errors).to.be.undefined
   expect(isValid).to.be.true;
-expect(sarifResult.runs).to.exist;
-expect(sarifResult.version).to.exist;
+  expect(sarifResult.runs).to.exist;
+  expect(sarifResult.version).to.exist;
 })
 
 Then('I should receive a validation object', () => {
@@ -133,9 +136,9 @@ When('I validate with imported validate function', async () => {
 })
 
 Then('I should receive a valid json object', async () => {
-  // Write code here that turns the phrase above into concrete actions
   const document=JSON.parse(readFileSync(outputPath).toString());
   const {isValid,errors}=await validate( document)
+  errors&& console.error(errors);
  expect(isValid).to.be.true;
 })
 
@@ -154,17 +157,14 @@ Then('the validation result should be valid', () => {
 
 When('I validate with imported validateDefinition function', () => {
   validateResult=validateDefinition(definitionToValidate as any,exampleObject)
-  // Write code here that turns the phrase above into concrete actions
 })
 
 
 Given('I have an example OSCAL definition {string}', (s: string) => {
-  // Write code here that turns the phrase above into concrete actions
 definitionToValidate = s;
 })
 
 Given('I have an example OSCAL object {string}', (s: string) => {
-  // Write code here that turns the phrase above into concrete actions
 if (definitionToValidate==="control"){
   exampleObject={
     id:"psych_101",
@@ -178,8 +178,39 @@ if (definitionToValidate==="control"){
 When('I convert the document to YAML', async () => {
   const outputFile = path.join(__dirname, '..', '..', 'examples', 'ssp.json');
   [conversionResult,executionErrors] = await executeOscalCliCommand('convert', [documentPath,'--to=yaml', outputFile, '--overwrite']);
-  console.error(executionErrors);
 })
 
+When('I look for a constraint by ID {string}', function (id:string) {
+  // Write code here that turns the phrase above into concrete actions
+  constraintId = id;
+});
 
+Then('I should Find a node in the constraint file', function (done) {
+  const xmlContent = readFileSync(metaschemaDocumentPath, 'utf-8');
+  
+  parseString(xmlContent, (err, result) => {
+    if (err) {
+      done(err);
+      return;
+    }
+
+    function searchForConstraint(obj: any): boolean {
+      if (typeof obj !== 'object') return false;
+      
+      if (Array.isArray(obj)) {
+        return obj.some(item => searchForConstraint(item));
+      }
+      
+      if (obj.$ && obj.$.id === constraintId) {
+        return true;
+      }
+      
+      return Object.values(obj).some(value => searchForConstraint(value));
+    }
+
+    constraintExists = searchForConstraint(result);
+    expect(constraintExists).to.be.true;
+    done();
+  });
+});
 

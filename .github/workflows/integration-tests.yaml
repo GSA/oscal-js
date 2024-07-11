@@ -32,41 +32,28 @@ jobs:
       run: oscal convert -f ./src/content/rev5/templates/sap/xml -o artifacts/content/templates/sap
     - name: produce artifacts for sar
       run: oscal convert -f ./src/content/rev5/templates/sar/xml -o artifacts/content/templates/sar
+
     - name: Resolve FedRAMP HIGH baseline profile
-      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml
 
     - name: Resolve FedRAMP MODERATE baseline profile
-      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_MODERATE-baseline_profile.xml -o ./artifacts/xml/FedRAMP_rev5_MODERATE-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_MODERATE-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_MODERATE-baseline-resolved-profile_catalog.xml
 
     - name: Resolve FedRAMP LOW baseline profile
-      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_LOW-baseline_profile.xml -o ./artifacts/xml/FedRAMP_rev5_LOW-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_LOW-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_LOW-baseline-resolved-profile_catalog.xml
 
     - name: Resolve FedRAMP LI-SaaS baseline profile
-      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_LI-SaaS-baseline_profile.xml -o ./artifacts/xml/FedRAMP_rev5_LI-SaaS-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_LI-SaaS-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_LI-SaaS-baseline-resolved-profile_catalog.xml
 
-    - name: Convert FedRAMP HIGH resolved profile to JSON
-      run: oscal convert -f ./artifacts/json/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.json -o ./artifacts/json/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.json
+    - name: Convert Profiles to JSON
+      run: oscal convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/json/ -t JSON
 
-    - name: Convert FedRAMP MODERATE resolved profile to JSON
-      run: oscal convert -f ./artifacts/json/FedRAMP_rev5_MODERATE-baseline-resolved-profile_catalog.xml -o ./artifacts/json/FedRAMP_rev5_MODERATE-baseline-resolved-profile_catalog.json
+    - name: Convert Profiles to YAML
+      run: oscal convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML
 
-    - name: Convert FedRAMP LOW resolved profile to JSON
-      run: oscal convert -f ./artifacts/json/FedRAMP_rev5_LOW-baseline-resolved-profile_catalog.xml -o ./artifacts/json/FedRAMP_rev5_LOW-baseline-resolved-profile_catalog.json
+    - name: Validate xml baselines
+      run: oscal validate -f ./artifacts/content/rev5/baselines/xml/ -e fedramp
 
-    - name: Convert FedRAMP LI-SaaS resolved profile to JSON
-      run: oscal convert -f ./artifacts/json/FedRAMP_rev5_LI-SaaS-baseline-resolved-profile_catalog.xml -o ./artifacts/json/FedRAMP_rev5_LI-SaaS-baseline-resolved-profile_catalog.json
-
-    - name: Convert FedRAMP HIGH resolved profile to YAML
-      run: oscal convert -f ./artifacts/json/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml -o ./artifacts/yaml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.yaml
-
-    - name: Convert FedRAMP MODERATE resolved profile to YAML
-      run: oscal convert -f ./artifacts/json/FedRAMP_rev5_MODERATE-baseline-resolved-profile_catalog.xml -o ./artifacts/yaml/FedRAMP_rev5_MODERATE-baseline-resolved-profile_catalog.yaml
-
-    - name: Convert FedRAMP LOW resolved profile to YAML
-      run: oscal convert -f ./artifacts/json/FedRAMP_rev5_LOW-baseline-resolved-profile_catalog.xml -o ./artifacts/yaml/FedRAMP_rev5_LOW-baseline-resolved-profile_catalog.yaml
-
-    - name: Convert FedRAMP LI-SaaS resolved profile to YAML
-      run: oscal convert -f ./artifacts/json/FedRAMP_rev5_LI-SaaS-baseline-resolved-profile_catalog.xml -o ./artifacts/yaml/FedRAMP_rev5_LI-SaaS-baseline-resolved-profile_catalog.yaml
     - name: Generate Cucumber HTML report
       run: |
         npm run report

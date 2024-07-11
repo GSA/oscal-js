@@ -244,13 +244,14 @@ const findOscalCliPath = async (): Promise<string> => {
   }
 };
 
+
 program
-  .version('1.2.2')
+  .version('1.2.5')
   .description('OSCAL CLI')
   .command('validate')
-  .option('-f, --file <path>', 'Path to the OSCAL document')
+  .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')
-  .description('Validate the OSCAL document')
+  .description('Validate the OSCAL document(s)')
   .action(async (options: { file?: string, extensions?: string }) => {
     let { file, extensions } = options;
 
@@ -258,42 +259,66 @@ program
       const answer = await inquirer.prompt<{ file: string }>([{
         type: 'input',
         name: 'file',
-        message: 'Enter the path to the OSCAL document:',
+        message: 'Enter the path to the OSCAL document or directory:',
         validate: (input: string) => input.trim() !== '' ? true : 'This field is required'
       }]);
       file = answer.file;
     }
 
-    console.log('Beginning OSCAL document validation at', file);
+    console.log('Beginning OSCAL document validation for', file);
 
     try {
-      const [documentType, fileType] = await detectOscalDocumentType(file);
-      console.log("Detected " + documentType + " " + fileType);
-
-      // Prepare arguments for the OSCAL CLI command
-      const args = [file, "--as=" + fileType];
-
-      // Handle FedRAMP extensions
-      if (extensions === 'fedramp' || extensions === 'https://fedramp.gov/ns/oscal') {
-        const fedrampExtensionsPath = findFedrampExtensionsFile();
-        if (fedrampExtensionsPath) {
-          args.push('-c', fedrampExtensionsPath);
-        } else {
-          console.warn('FedRAMP extensions file not found. Proceeding without it.');
-        }
-      } else if (extensions) {
-        // Handle other extensions
-        const extensionsList = extensions.split(',');
-        args.push(...extensionsList.flatMap(x => ['-c', x]));
+      const stats = fs.statSync(file);
+      if (stats.isDirectory()) {
+        await validateDirectory(file, extensions);
+      } else {
+        await validateFile(file, extensions);
       }
-
-      const result = await validateWithSarif(args);
-      console.log('Validation result:', result);
     } catch (error) {
       console.error('Error during validation:', error);
       process.exit(1);
     }
   });
+
+async function validateDirectory(dirPath: string, extensions?: string) {
+  const files = fs.readdirSync(dirPath);
+  for (const file of files) {
+    const filePath = path.join(dirPath, file);
+    const stats = fs.statSync(filePath);
+    if (stats.isDirectory()) {
+      await validateDirectory(filePath, extensions);
+    } else {
+      await validateFile(filePath, extensions);
+    }
+  }
+}
+
+async function validateFile(filePath: string, extensions?: string) {
+  console.log(`Validating file: ${filePath}`);
+  try {
+    const [documentType, fileType] = await detectOscalDocumentType(filePath);
+    console.log(`Detected ${documentType} ${fileType}`);
+
+    const args = [filePath, `--as=${fileType}`];
+
+    if (extensions === 'fedramp' || extensions === 'https://fedramp.gov/ns/oscal') {
+      const fedrampExtensionsPath = findFedrampExtensionsFile();
+      if (fedrampExtensionsPath) {
+        args.push('-c', fedrampExtensionsPath);
+      } else {
+        console.warn('FedRAMP extensions file not found. Proceeding without it.');
+      }
+    } else if (extensions) {
+      const extensionsList = extensions.split(',');
+      args.push(...extensionsList.flatMap(x => ['-c', x]));
+    }
+
+    const result = await validateWithSarif(args);
+    console.log(`Validation result for ${filePath}:`, result);
+  } catch (error) {
+    console.error(`Error validating ${filePath}:`, error);
+  }
+}
 
 function findFedrampExtensionsFile(): string | null {
   // Get the directory of the current script
@@ -317,8 +342,9 @@ program.command('convert')
   .description('Convert an OSCAL document (XML, JSON, YAML)')
   .option('-f, --file <path>', 'Path to the OSCAL document or folder')
   .option('-o, --output <path>', 'Path to the output file or folder')
-  .action(async (options: { file?: string; output?: string }) => {
-    let { file, output } = options;
+  .option('-t, --type <type>', 'JSON, YAML, or XML type setting when converting a directory')
+  .action(async (options: { file?: string; output?: string; type?: string }) => {
+    let { file, output, type } = options;
 
     if (!file) {
       const answer = await inquirer.prompt<{ file: string }>([{
@@ -339,19 +365,25 @@ program.command('convert')
       }]);
       output = answer.output;
     }
-    console.log(fs.lstatSync(file).isDirectory())
+
     if (fs.lstatSync(file).isDirectory()) {
-      await handleFolderConversion(file, output);
+      await handleFolderConversion(file, output, type);
     } else {
       await handleSingleFileConversion(file, output);
     }
   });
 
-async function handleFolderConversion(inputFolder: string, outputFolder: string): Promise<void> {
-  console.log("converting folder");
-  const outputFormats = ['json', 'yaml', 'xml'];
+async function handleFolderConversion(inputFolder: string, outputFolder: string, type?: string): Promise<void> {
+  console.log("Converting folder");
+  const validTypes = ['json', 'yaml', 'xml'];
+  const outputFormats = type && validTypes.includes(type.toLowerCase()) 
+    ? [type.toLowerCase()]
+    : validTypes;
+
   for (const format of outputFormats) {
-    const formatOutputFolder = path.join(outputFolder, format);
+    const formatOutputFolder = type 
+      ? outputFolder
+      : path.join(outputFolder, format);
     fs.mkdirSync(formatOutputFolder, { recursive: true });
     
     const files = fs.readdirSync(inputFolder);
@@ -359,7 +391,7 @@ async function handleFolderConversion(inputFolder: string, outputFolder: string)
       const inputPath = path.join(inputFolder, inputFile);
       const outputPath = path.join(formatOutputFolder, `${path.parse(inputFile).name}.${format}`);
       const inputFileExtension = path.extname(inputPath).toLowerCase().slice(1);
-      if(outputFormats.includes(inputFileExtension)){
+      if (validTypes.includes(inputFileExtension)) {
         await convertFile(inputPath, outputPath, format);
       }
     }

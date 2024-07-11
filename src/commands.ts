@@ -110,6 +110,7 @@ export const isJavaInstalled = (): Promise<boolean> => {
     });
   });
 };
+
 export const installOscalCli = (): void => {
   const oscalCliInstallUrl = `https://codeload.github.com/wandmagic/oscal/zip/refs/heads/cli`;
   const homeDir = process.env.HOME || process.env.USERPROFILE;
@@ -127,7 +128,7 @@ export const installOscalCli = (): void => {
 
     // Download the zip file
     console.log(`Downloading OSCAL CLI...`);
-    execSync(`curl -L -o ${zipFilePath} ${oscalCliInstallUrl}`);
+    execSync(`curl -sSLo ${zipFilePath} ${oscalCliInstallUrl}`);
 
     // Unzip the file to .local/oscal-cli
     console.log(`Extracting OSCAL CLI...`);
@@ -148,6 +149,7 @@ export const installOscalCli = (): void => {
 
     console.log(`OSCAL CLI installed to ${extractedCliPath}`);
     console.log(`Alias created at ${aliasPath}`);
+
   } catch (error: any) {
     throw new Error(`Failed to install OSCAL CLI: ${error.message}`);
   }
@@ -246,7 +248,7 @@ const findOscalCliPath = async (): Promise<string> => {
 
 
 program
-  .version('1.2.5')
+  .version('1.2.6')
   .description('OSCAL CLI')
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
@@ -321,21 +323,29 @@ async function validateFile(filePath: string, extensions?: string) {
 }
 
 function findFedrampExtensionsFile(): string | null {
-  // Get the directory of the current script
-  const currentDir = path.dirname(require.main?.filename || '');
+  // Start from the current working directory
+  let currentDir = process.cwd();
   
-  // Go up one directory (assuming we're in a 'dist' folder)
-  const parentDir = path.dirname(currentDir);
-  
-  // Construct the path to the extensions file
-  const extensionsPath = path.join(parentDir, 'extensions', 'fedramp-external-constraints.xml');
-  
-  // Check if the file exists
-  if (fs.existsSync(extensionsPath)) {
-    return extensionsPath;
-  } else {
-    return null;
+  // Keep going up the directory tree until we find node_modules or reach the root
+  while (currentDir !== path.parse(currentDir).root) {
+    const nodeModulesDir = path.join(currentDir, 'node_modules');
+    
+    if (fs.existsSync(nodeModulesDir)) {
+      // Construct the path to the extensions file
+      const extensionsPath = path.join(nodeModulesDir, 'oscal', 'extensions', 'fedramp-external-constraints.xml');
+      
+      // Check if the file exists
+      if (fs.existsSync(extensionsPath)) {
+        return extensionsPath;
+      }
+    }
+    
+    // Move up one directory
+    currentDir = path.dirname(currentDir);
   }
+  
+  // If we couldn't find the file, return null
+  return null;
 }
 
 program.command('convert')

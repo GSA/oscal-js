@@ -248,7 +248,7 @@ const findOscalCliPath = async (): Promise<string> => {
 
 
 program
-  .version('1.2.8')
+  .version('1.2.9')
   .description('OSCAL CLI')
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
@@ -315,8 +315,9 @@ async function validateFile(filePath: string, extensions?: string) {
       args.push(...extensionsList.flatMap(x => ['-c', x]));
     }
 
-    const result = await validateWithSarif(args);
-    console.log(`Validation result for ${filePath}:`, result);
+    //const result =
+    await validateWithSarif(args);
+    // console.log(`Validation result for ${filePath}:`, result);
   } catch (error) {
     console.error(`Error validating ${filePath}:`, error);
   }
@@ -333,7 +334,7 @@ function findFedrampExtensionsFile() {
 
     // Construct the path to the extensions file
     // Adjust this path based on your package structure
-    const extensionsPath = join(currentDir, '..', '..', 'extensions', 'fedramp-external-constraints.xml');
+    const extensionsPath = join(currentDir, '..', 'extensions', 'fedramp-external-constraints.xml');
 
     // Check if the file exists
     if (existsSync(extensionsPath)) {
@@ -464,7 +465,7 @@ export async function generateOSCALDocument(options: GenerateOptions) {
   if (!prompt || !type || !format) {
     console.log("Missing parameters");
     !type && console.log("Please enter oscal -type (ssp,etc)");
-    !format && console.log("Please enter oscal -format (xml,json)");
+    !format && console.log("Please enter oscal -format (xml,json,yaml)");
     !prompt && console.log("Describe your oscal item -prompt");
     return;
   }
@@ -490,13 +491,13 @@ export async function generateOSCALDocument(options: GenerateOptions) {
   }
 }
 
-program
-  .command('generate')
-  .description('Generate an OSCAL document using OpenAI API')
-  .option('-t, --type <oscal-type>', 'OSCAL-TYPE to generate')
-  .option('-f, --format <oscal-format>', 'OSCAL-FORMAT (XML,JSON) to generate')
-  .option('-p, --prompt <path>', 'Prompt for generating the document')
-  .action(generateOSCALDocument);
+// program
+//   .command('generate')
+//   .description('Generate an OSCAL document using OpenAI API')
+//   .option('-t, --type <oscal-type>', 'OSCAL-TYPE to generate')
+//   .option('-f, --format <oscal-format>', 'OSCAL-FORMAT (XML,JSON) to generate')
+//   .option('-p, --prompt <path>', 'Prompt for generating the document')
+//   .action(generateOSCALDocument);
 
 
 
@@ -601,10 +602,10 @@ export const scaffold = async (options: ScaffoldOptions) => {
   console.log(`OSCAL template "${template}" scaffolded successfully at "${destinationPath}".`);
 };
 
-program.command('scaffold')
-  .option('-o, --output <path>', 'Path to the output')
-  .description('Scaffold an OSCAL package')
-  .action(scaffold);
+// program.command('scaffold')
+//   .option('-o, --output <path>', 'Path to the output')
+//   .description('Scaffold an OSCAL package')
+//   .action(scaffold);
 
 export const run = () => {
   isOscalCliInstalled()

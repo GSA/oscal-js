@@ -40,19 +40,8 @@ Examples:
 - Convert a single file to JSON:
 
 Replace <path_to_input_file> with the path to the input OSCAL document and <path_to_output_file> with the desired path for the converted output file.
-### Scaffold
-To scaffold an OSCAL package, use the scaffold command:
-```
-oscal scaffold 
-```
-Replace <path_to_output_directory> with the path where you want to create the scaffolded OSCAL package.
-### Scaffold
-To generate an OSCAL item, use the scaffold command:
-```
-oscal generate -t <oscal type> -p <describe details>
-```
 ### Testing
-The OSCAL CLI includes a test suite using Jest. To run the tests, use the following command:
+The OSCAL CLI includes a test suite using cucumber. To run the tests, use the following command:
 ```
 npm test
 ```

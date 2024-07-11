@@ -248,7 +248,7 @@ const findOscalCliPath = async (): Promise<string> => {
 
 
 program
-  .version('1.2.6')
+  .version('1.2.7')
   .description('OSCAL CLI')
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
@@ -322,26 +322,21 @@ async function validateFile(filePath: string, extensions?: string) {
   }
 }
 
+
 function findFedrampExtensionsFile(): string | null {
-  // Start from the current working directory
-  let currentDir = process.cwd();
-  
-  // Keep going up the directory tree until we find node_modules or reach the root
-  while (currentDir !== path.parse(currentDir).root) {
-    const nodeModulesDir = path.join(currentDir, 'node_modules');
+  try {
+    // Find the root of your package
+    const packageRoot = path.dirname(require.resolve('oscal'));
     
-    if (fs.existsSync(nodeModulesDir)) {
-      // Construct the path to the extensions file
-      const extensionsPath = path.join(nodeModulesDir, 'oscal', 'extensions', 'fedramp-external-constraints.xml');
-      
-      // Check if the file exists
-      if (fs.existsSync(extensionsPath)) {
-        return extensionsPath;
-      }
+    // Construct the path to the extensions file
+    const extensionsPath = path.join(packageRoot, 'extensions', 'fedramp-external-constraints.xml');
+    
+    // Check if the file exists
+    if (fs.existsSync(extensionsPath)) {
+      return extensionsPath;
     }
-    
-    // Move up one directory
-    currentDir = path.dirname(currentDir);
+  } catch (error) {
+    console.error('Error finding package:', error);
   }
   
   // If we couldn't find the file, return null

@@ -22,28 +22,28 @@ jobs:
       run: npm install oscal -g
 
     - name: produce artifacts in all formats
-      run: oscal convert -f ./src/content/rev5/baselines/xml -o artifacts
+      run: oscal convert -f ./content/rev5/baselines/xml -o artifacts
 
     - name: produce artifacts for ssp
-      run: oscal convert -f ./src/content/rev5/templates/ssp/xml -o artifacts/content/templates/ssp
+      run: oscal convert -f ./content/rev5/templates/ssp/xml -o artifacts/content/templates/ssp
     - name: produce artifacts for poam
-      run: oscal convert -f ./src/content/rev5/templates/poam/xml -o artifacts/content/templates/poam
+      run: oscal convert -f ./content/rev5/templates/poam/xml -o artifacts/content/templates/poam
     - name: produce artifacts for sap
-      run: oscal convert -f ./src/content/rev5/templates/sap/xml -o artifacts/content/templates/sap
+      run: oscal convert -f ./content/rev5/templates/sap/xml -o artifacts/content/templates/sap
     - name: produce artifacts for sar
-      run: oscal convert -f ./src/content/rev5/templates/sar/xml -o artifacts/content/templates/sar
+      run: oscal convert -f ./content/rev5/templates/sar/xml -o artifacts/content/templates/sar
 
     - name: Resolve FedRAMP HIGH baseline profile
-      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml
 
     - name: Resolve FedRAMP MODERATE baseline profile
-      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_MODERATE-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_MODERATE-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_MODERATE-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_MODERATE-baseline-resolved-profile_catalog.xml
 
     - name: Resolve FedRAMP LOW baseline profile
-      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_LOW-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_LOW-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_LOW-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_LOW-baseline-resolved-profile_catalog.xml
 
     - name: Resolve FedRAMP LI-SaaS baseline profile
-      run: oscal resolve -f ./src/content/rev5/baselines/xml/FedRAMP_rev5_LI-SaaS-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_LI-SaaS-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_LI-SaaS-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_LI-SaaS-baseline-resolved-profile_catalog.xml
 
     - name: Convert Profiles to JSON
       run: oscal convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/json/ -t JSON
@@ -53,11 +53,6 @@ jobs:
 
     - name: Validate xml baselines
       run: oscal validate -f ./artifacts/content/rev5/baselines/xml/ -e fedramp
-
-    - name: Generate Cucumber HTML report
-      run: |
-        npm run report
-        mv cucumber-report.html ./artifacts/cucumber-report.html
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3

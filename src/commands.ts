@@ -109,51 +109,56 @@ export const isJavaInstalled = (): Promise<boolean> => {
     });
   });
 };
-
-
 export const installOscalCli = (): void => {
   const oscalCliInstallUrl = `https://codeload.github.com/wandmagic/oscal/zip/refs/heads/cli`;
   const isWindows = process.platform === 'win32';
   
   // Use AppData for Windows, or .local for other systems
-  const homeDir = process.env.APPDATA || process.env.HOME || process.env.USERPROFILE;
-  const localPath = isWindows ? path.join(homeDir as string, 'oscal-cli') : path.join(homeDir as string, '.local');
+  const homeDir = isWindows ? process.env.APPDATA : (process.env.HOME || process.env.USERPROFILE);
+  const localPath = isWindows ? path.join(homeDir as string, 'OSCAL-CLI') : path.join(homeDir as string, '.local');
   
-  const localBinPath = path.join(localPath, 'bin');
+  const localBinPath = isWindows ? path.join(process.env.USERPROFILE as string, 'AppData', 'Local', 'Microsoft', 'WindowsApps') : path.join(localPath, 'bin');
   const oscalCliPath = path.join(localPath, 'oscal-cli');
   const extractedCliPath = path.join(oscalCliPath, 'oscal-cli');
   const oscalCliExecutablePath = path.join(extractedCliPath, 'bin', 'oscal-cli');
   const zipFilePath = path.join(localPath, 'oscal-cli.zip');
 
   try {
-    // Create bin and oscal-cli directories if they don't exist
-    fs.mkdirSync(localBinPath, { recursive: true });
+    // Create necessary directories
     fs.mkdirSync(oscalCliPath, { recursive: true });
+    if (!isWindows) {
+      fs.mkdirSync(localBinPath, { recursive: true });
+    }
 
     // Download the zip file
     console.log(`Downloading OSCAL CLI...`);
-    execSync(`curl -sSLo ${zipFilePath} ${oscalCliInstallUrl}`);
+    execSync(`curl -sSLo "${zipFilePath}" "${oscalCliInstallUrl}"`);
 
     // Unzip the file to oscal-cli directory
     console.log(`Extracting OSCAL CLI...`);
-    execSync(isWindows ? `expand ${zipFilePath} -F:* ${oscalCliPath}` : `unzip -o ${zipFilePath} -d ${oscalCliPath}`);
+    if (isWindows) {
+      execSync(`powershell -command "Expand-Archive -Path '${zipFilePath}' -DestinationPath '${oscalCliPath}' -Force"`);
+    } else {
+      execSync(`unzip -o "${zipFilePath}" -d "${oscalCliPath}"`);
+    }
 
     // Make the CLI executable (for non-Windows systems)
     if (!isWindows) {
-      execSync(`chmod +x ${oscalCliExecutablePath}`);
+      execSync(`chmod +x "${oscalCliExecutablePath}"`);
     }
 
-    // Create a symbolic link (alias) in bin
+    // Create a shortcut (Windows) or symbolic link (other systems)
     const sourceFile = isWindows ? `${oscalCliExecutablePath}.bat` : oscalCliExecutablePath;
     const aliasPath = path.join(localBinPath, 'oscal-cli' + (isWindows ? '.bat' : ''));
     
     if (fs.existsSync(aliasPath)) {
-      fs.unlinkSync(aliasPath); // Remove existing symlink if it exists
+      fs.unlinkSync(aliasPath); // Remove existing alias if it exists
     }
 
     if (isWindows) {
-      // For Windows, use mklink command to create a symbolic link
-      execSync(`mklink "${aliasPath}" "${sourceFile}"`, { shell: 'cmd.exe' });
+      // For Windows, create a .bat file in WindowsApps directory
+      const batchContent = `@echo off\n"${sourceFile}" %*`;
+      fs.writeFileSync(aliasPath, batchContent);
     } else {
       fs.symlinkSync(sourceFile, aliasPath);
     }

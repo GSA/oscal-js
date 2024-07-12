@@ -3,7 +3,6 @@
 <system-security-plan xmlns="http://csrc.nist.gov/ns/oscal/1.0"
     uuid="cff8385f-108e-40a5-8f7a-82f3dc0eaba8">
     <metadata>
-<title>tttt</title>
         <role id="legal-officer">
             <title>Legal Officer</title>
         </role>
@@ -37,7 +36,8 @@
     </metadata>
     <import-profile href="#b78aa3ec-915d-475b-8097-46813fae1825" />
     <system-characteristics>
-        <system-id identifier-type="https://ietf.org/rfc/rfc4122">d7456980-9277-4dcb-83cf-f8ff0442623b</system-id>
+        <system-id identifier-type="https://ietf.org/rfc/rfc4122">
+            d7456980-9277-4dcb-83cf-f8ff0442623b</system-id>
         <system-name>Enterprise Logging and Auditing System</system-name>
         <description>
             <p>This is an example of a system that provides enterprise logging and log auditing
@@ -112,10 +112,10 @@
         <component type="this-system" uuid="74042245-3db1-4f4d-be9a-ceb62d81152c">
             <title>This System</title>
             <description>
-               <p>The system described by this SSP.</p>
+                <p>The system described by this SSP.</p>
             </description>
-            <status state="operational"/>
-         </component>
+            <status state="operational" />
+        </component>
         <component uuid="e00acdcf-911b-437d-a42f-b0b558cc4f03" type="software">
             <title>Logging Server</title>
             <description>
@@ -139,7 +139,7 @@
                 <ul>
                     <li>
                         <p>Requires all components synchronize their time with the appropriate
-                            enterprise time service, and at what frequency.</p>
+                        enterprise time service, and at what frequency.</p>
                     </li>
                     <li>
                         <p>Identifies the events that must be captured</p>
@@ -218,13 +218,13 @@
             <responsible-party role-id="asset-owner">
                 <party-uuid>3b2a5599-cc37-403f-ae36-5708fa804b27</party-uuid>
             </responsible-party>
-            <implemented-component component-uuid="e00acdcf-911b-437d-a42f-b0b558cc4f03" >
-            <prop name="asset-id" value="logging-server"></prop>    
+            <implemented-component component-uuid="e00acdcf-911b-437d-a42f-b0b558cc4f03">
+                <prop name="asset-id" value="logging-server"></prop>
             </implemented-component>
 
             <implemented-component component-uuid="795533ab-9427-4abe-820f-0b571bacfe6d">
                 <prop name="asset-id" value="legal policy"></prop>
-                </implemented-component>
+            </implemented-component>
         </inventory-item>
         <remarks>
             <p>This is a partial implementation that addresses the logging server portion of the
@@ -256,7 +256,8 @@
                             staff member is assigned and annually through training.</p>
                     </description>
                     <set-parameter param-id="au-1_prm_1">
-                        <value>all IT staff who administer this system when the staff member is assigned and annually through training</value>
+                        <value>all IT staff who administer this system when the staff member is
+                            assigned and annually through training</value>
                     </set-parameter>
                 </by-component>
                 <by-component component-uuid="fa39eb84-3014-46b4-b6bc-7da10527c262"
@@ -267,7 +268,8 @@
                             staff member is assigned and annually through training.</p>
                     </description>
                     <set-parameter param-id="au-1_prm_1">
-                        <value>all IT staff who administer this system when the staff member is assigned and annually through training</value>
+                        <value>all IT staff who administer this system when the staff member is
+                            assigned and annually through training</value>
                     </set-parameter>
                 </by-component>
                 <by-component component-uuid="4938767c-dd8b-4ea4-b74a-fafffd48ac99"
@@ -278,7 +280,8 @@
                             staff member is assigned and annually through training.</p>
                     </description>
                     <set-parameter param-id="au-1_prm_1">
-                        <value>all IT staff who administer this system when the staff member is assigned and annually through training</value>
+                        <value>all IT staff who administer this system when the staff member is
+                            assigned and annually through training</value>
                     </set-parameter>
                 </by-component>
             </statement>
@@ -340,7 +343,8 @@
                             department updates the policy as needed based on these reviews.</p>
                     </description>
                     <set-parameter param-id="au-1_prm_2">
-                        <value>annually, and other times as necessary in response to regulatory or organizational changes</value>
+                        <value>annually, and other times as necessary in response to regulatory or
+                            organizational changes</value>
                     </set-parameter>
                 </by-component>
             </statement>
@@ -353,7 +357,8 @@
                             department updates the policy as needed based on these reviews.</p>
                     </description>
                     <set-parameter param-id="au-1_prm_3">
-                        <value>annually, and other times as necessary in response to regulatory or organizational changes</value>
+                        <value>annually, and other times as necessary in response to regulatory or
+                            organizational changes</value>
                     </set-parameter>
                 </by-component>
                 <by-component component-uuid="fa39eb84-3014-46b4-b6bc-7da10527c262"
@@ -364,7 +369,8 @@
                             department updates the policy as needed based on these reviews.</p>
                     </description>
                     <set-parameter param-id="au-1_prm_3">
-                        <value>annually, and other times as necessary in response to regulatory or organizational changes</value>
+                        <value>annually, and other times as necessary in response to regulatory or
+                            organizational changes</value>
                     </set-parameter>
                 </by-component>
                 <by-component component-uuid="4938767c-dd8b-4ea4-b74a-fafffd48ac99"
@@ -375,7 +381,8 @@
                             department updates the policy as needed based on these reviews</p>
                     </description>
                     <set-parameter param-id="au-1_prm_3">
-                        <value>annually, and other times as necessary in response to regulatory or organizational changes</value>
+                        <value>annually, and other times as necessary in response to regulatory or
+                            organizational changes</value>
                     </set-parameter>
                 </by-component>
             </statement>
@@ -383,12 +390,15 @@
     </control-implementation>
     <back-matter>
         <resource uuid="b78aa3ec-915d-475b-8097-46813fae1825">
-           <description>
-              <p>NIST Special Publication 800-53 Revision 4: Moderate Baseline Profile</p>
-           </description>
-           <rlink media-type="application/oscal.catalog+xml" href="../../../nist.gov/SP800-53/rev4/xml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.xml"/>
-           <rlink media-type="application/oscal.catalog+json" href="../../../nist.gov/SP800-53/rev4/json/NIST_SP-800-53_rev4_MODERATE-baseline_profile.json"/>
-           <rlink media-type="application/oscal.catalog+yaml" href="../../../nist.gov/SP800-53/rev4/yaml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.yaml"/>
+            <description>
+                <p>NIST Special Publication 800-53 Revision 4: Moderate Baseline Profile</p>
+            </description>
+            <rlink media-type="application/oscal.catalog+xml"
+                href="../../../nist.gov/SP800-53/rev4/xml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.xml" />
+            <rlink media-type="application/oscal.catalog+json"
+                href="../../../nist.gov/SP800-53/rev4/json/NIST_SP-800-53_rev4_MODERATE-baseline_profile.json" />
+            <rlink media-type="application/oscal.catalog+yaml"
+                href="../../../nist.gov/SP800-53/rev4/yaml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.yaml" />
         </resource>
-     </back-matter>
+    </back-matter>
 </system-security-plan>

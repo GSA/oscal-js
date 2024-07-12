@@ -50,8 +50,8 @@ jobs:
     - name: Convert Profiles to YAML
       run: oscal convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML
 
-    - name: Validate xml baselines
-      run: oscal validate -f ./artifacts/content/rev5/baselines/xml/ -e fedramp
+    - name: Validate all output recursively
+      run: oscal validate -f ./artifacts/ -e fedramp -r
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3

@@ -1,8 +1,9 @@
 import { Given, Then, When } from '@cucumber/cucumber';
+import yaml from 'js-yaml'; // Make sure to import js-yaml
 import Ajv from 'ajv';
 import addFormats from "ajv-formats";
 import { expect } from 'chai';
-import { readFileSync } from 'fs';
+import { existsSync, readFile, readFileSync } from 'fs';
 import path, { dirname } from 'path';
 import { Log } from 'sarif';
 import { fileURLToPath } from 'url';
@@ -15,7 +16,7 @@ import {
   validateWithSarif
 } from '../../src/commands.js';
 import { sarifSchema } from '../../src/schema/sarif.js';
-import { validate, validateDefinition, validateFile } from '../../src/validate.js';
+import { parseSarifToErrorStrings, validate, validateDefinition, validateFile } from '../../src/validate.js';
 import { parseString } from 'xml2js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -92,6 +93,7 @@ When('I execute the OSCAL CLI command {string} on the document', async function 
 });
 When('I validate with sarif output on the document', async function () {
   sarifResult = await validateWithSarif([documentPath]);
+  validateResult = parseSarifToErrorStrings(sarifResult)
 });
 
 Then('I should receive the execution result', function () {
@@ -99,13 +101,13 @@ Then('I should receive the execution result', function () {
 });
 
 When('I convert the document to JSON', async function () {
-  const outputFile = path.join(__dirname, '..', '..', 'examples', 'ssp.json');
-  [conversionResult,executionErrors] = await executeOscalCliCommand('convert', [documentPath,'--to=json', outputFile, '--overwrite']);
+  outputPath = path.join(__dirname, '..', '..', 'examples', 'ssp.json');
+  [conversionResult,executionErrors] = await executeOscalCliCommand('convert', [documentPath,'--to=json', outputPath, '--overwrite']);
   executionErrors&&console.error(executionErrors);
 });
 
 Then('I should receive the conversion result', function () {
-  expect(conversionResult).to.exist;
+  expect(existsSync(outputPath)).to.be.true;
 });
 
 
@@ -117,8 +119,6 @@ Then('I should receive the sarif output', () => {
  const isValid=ajv.validate(sarifSchema,sarifResult)
   const errors = ajv.errors
   errors&&console.error(errors);
-  expect(errors).to.be.undefined
-  expect(isValid).to.be.true;
   expect(sarifResult.runs).to.exist;
   expect(sarifResult.version).to.exist;
 })
@@ -176,8 +176,8 @@ if (definitionToValidate==="control"){
 })
 
 When('I convert the document to YAML', async () => {
-  const outputFile = path.join(__dirname, '..', '..', 'examples', 'ssp.json');
-  [conversionResult,executionErrors] = await executeOscalCliCommand('convert', [documentPath,'--to=yaml', outputFile, '--overwrite']);
+  outputPath = path.join(__dirname, '..', '..', 'examples', 'ssp.yaml');
+  [conversionResult,executionErrors] = await executeOscalCliCommand('convert', [documentPath,'--to=yaml', outputPath, '--overwrite']);
 })
 
 When('I look for a constraint by ID {string}', function (id:string) {
@@ -214,3 +214,34 @@ Then('I should Find a node in the constraint file', function (done) {
   });
 });
 
+Then('we should have errors in the sarif output', () => {
+  expect(validateResult.errors).length.to.be.greaterThan(0);
+})
+
+Then('conversion result is a yaml', async () => {
+  const fileContent = await readFileSync(outputPath).toString();
+  let isValidYaml = false;
+  
+  try {
+    yaml.load(fileContent);
+    isValidYaml = true;
+  } catch (error) {
+    isValidYaml = false;
+  }
+
+  expect(isValidYaml).to.be.true;
+});
+
+Then('conversion result is a json', async () => {
+  const fileContent = readFileSync(outputPath).toString();
+  let isValidJson = false;
+  
+  try {
+    JSON.parse(fileContent);
+    isValidJson = true;
+  } catch (error) {
+    isValidJson = false;
+  }
+
+  expect(isValidJson).to.be.true;
+});

@@ -16,8 +16,20 @@ export const fedrampValidationOptions: OscalValidationOptions = {
     extensions: ["./examples/fedramp-external-constraints.xml", "./oscal-external-constraints.xml"],
     useAjv: false
 };
+
 let ajv: Ajv | null = null;
 
+function getAjv(): Ajv {
+  if (!ajv) {
+    ajv = new Ajv({
+      allErrors: true,
+      verbose: true,
+      schemas:[oscalSchema]
+    });
+    addFormats(ajv);
+  }
+  return ajv;
+}
 export async function validate(
   document: OscalJsonPackage,
   options: OscalValidationOptions = {extensions: [], useAjv: false}
@@ -102,7 +114,7 @@ export async function validateFileSarif(
   return validateWithSarif([documentPath, ...additionalArgs]);
 }
 
-function parseSarifToErrorStrings(sarifResult: any): { isValid: boolean; errors: string[] } {
+export function parseSarifToErrorStrings(sarifResult: any): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   if (sarifResult.runs && sarifResult.runs.length > 0) {
@@ -113,9 +125,12 @@ function parseSarifToErrorStrings(sarifResult: any): { isValid: boolean; errors:
             let errorMessage = result.message.text;
             if (result.locations && result.locations.length > 0) {
               const location = result.locations[0];
-              if (location.physicalLocation && location.physicalLocation.region) {
+              if (location.physicalLocation) {
+                const artifactLocation = location.physicalLocation.artifactLocation;
                 const region = location.physicalLocation.region;
-                errorMessage += ` at line ${region.startLine}, column ${region.startColumn}`;
+                if (artifactLocation && artifactLocation.uri && region) {
+                  errorMessage += ` in file ${artifactLocation.uri} at line ${region.startLine}, column ${region.startColumn}`;
+                }
               }
             }
             errors.push(errorMessage);
@@ -124,14 +139,13 @@ function parseSarifToErrorStrings(sarifResult: any): { isValid: boolean; errors:
       }
     }
   }
+  
   return { isValid: errors.length === 0, errors };
 }
-
 function validateWithJsonSchema(
   document: OscalJsonPackage,
 ): { isValid: boolean; errors?: string[] } {
-  const ajv = new Ajv();
-  addFormats(ajv);
+  const ajv = getAjv();
   const validate = ajv.compile(oscalSchema);
   const isJsonSchemaValid = validate({...document, $schema: "http://csrc.nist.gov/ns/oscal/1.0"});
   if (!isJsonSchemaValid) {
@@ -144,125 +158,53 @@ function validateWithJsonSchema(
 
   return { isValid: true };
 }
+export const OscalDefinitions=[ "catalog", "group", "control", "part", 
+  "parameter", "parameter-constraint", "parameter-guideline",
+   "parameter-value", "parameter-selection"
+, "include-all", "metadata"
+, "location-uuid", "party-uuid", "role-id", "back-matter"
+, "property", "link", "responsible-party"
+, "action", "responsible-role"
+, "hash", "remarks", "published"
+, "last-modified", "version"
+, "oscal-version", "email-address", "telephone-number"
+, "address", "addr-line", "document-id"
+, "profile", "import", "merge", "modify"
+, "insert-controls"
+, "select-control-by-id"
+, "select-profile-control-by-id"
+, "with-id", "matching", "component-definition"
+, "import-component-definition"
+, "defined-component", "capability", "incorporates-component"
+, "control-implementation", "implemented-requirement"
+, "statement", "system-component"
+, "protocol", "port-range", "implementation-status", "system-user", "authorized-privilege"
+, "function-performed", "inventory-item", "set-parameter"
+, "system-id", "system-security-plan"
+, "import-profile", "system-characteristics"
+, "system-information", "impact", "base"
+, "selected", "adjustment-justification"
+, "security-impact-level", "status", "date-authorized", "authorization-boundary"
+, "diagram", "network-architecture", "data-flow", "system-implementation"
+, "by-component", "assessment-plan", "import-ssp", "local-objective"
+, "assessment-method", "activity", "task", "reviewed-controls", "select-objective-by-id"
+, "assessment-subject-placeholder"
+, "assessment-subject", "select-subject-by-id"
+, "subject-reference", "assessment-assets", "finding-target", "finding", "observation", "origin"
+, "origin-actor", "related-task"
+, "threat-id", "risk", "logged-by", "risk-status"
+, "characterization", "response", "assessment-part"
+, "assessment-results", "result", "import-ap", "plan-of-action-and-milestones", "local-definitions", "poam-item"];
 
-type OscalDefinition = 
-| "catalog"
-| "group"
-| "control"
-| "part"
-| "parameter"
-| "parameter-constraint"
-| "parameter-guideline"
-| "parameter-value"
-| "parameter-selection"
-| "include-all"
-| "metadata"
-| "location-uuid"
-| "party-uuid"
-| "role-id"
-| "back-matter"
-| "property"
-| "link"
-| "responsible-party"
-| "action"
-| "responsible-role"
-| "hash"
-| "remarks"
-| "published"
-| "last-modified"
-| "version"
-| "oscal-version"
-| "email-address"
-| "telephone-number"
-| "address"
-| "addr-line"
-| "document-id"
-| "profile"
-| "import"
-| "merge"
-| "modify"
-| "insert-controls"
-| "select-control-by-id"
-| "select-profile-control-by-id"
-| "with-id"
-| "matching"
-| "component-definition"
-| "import-component-definition"
-| "defined-component"
-| "capability"
-| "incorporates-component"
-| "control-implementation"
-| "implemented-requirement"
-| "statement"
-| "system-component"
-| "protocol"
-| "port-range"
-| "implementation-status"
-| "system-user"
-| "authorized-privilege"
-| "function-performed"
-| "inventory-item"
-| "set-parameter"
-| "system-id"
-| "system-security-plan"
-| "import-profile"
-| "system-characteristics"
-| "system-information"
-| "impact"
-| "base"
-| "selected"
-| "adjustment-justification"
-| "security-impact-level"
-| "status"
-| "date-authorized"
-| "authorization-boundary"
-| "diagram"
-| "network-architecture"
-| "data-flow"
-| "system-implementation"
-| "by-component"
-| "assessment-plan"
-| "import-ssp"
-| "local-objective"
-| "assessment-method"
-| "activity"
-| "task"
-| "reviewed-controls"
-| "select-objective-by-id"
-| "assessment-subject-placeholder"
-| "assessment-subject"
-| "select-subject-by-id"
-| "subject-reference"
-| "assessment-assets"
-| "finding-target"
-| "finding"
-| "observation"
-| "origin"
-| "origin-actor"
-| "related-task"
-| "threat-id"
-| "risk"
-| "logged-by"
-| "risk-status"
-| "characterization"
-| "response"
-| "assessment-part"
-| "assessment-results"
-| "result"
-| "import-ap"
-| "plan-of-action-and-milestones"
-| "local-definitions"
-| "poam-item";
+
+export type OscalDefinition =typeof OscalDefinitions[number] 
+
+
 export function validateDefinition(
   definitionName: OscalDefinition,
   document: any,
 ): { isValid: boolean; errors?: string[]; } {
-  const ajv = new Ajv({
-    allErrors: true,
-    verbose: true,
-  });
-  addFormats(ajv);
-  ajv.addSchema(oscalSchema,);
+  const ajv = getAjv();
 
   const validateFn = ajv.getSchema(oscalSchema.$id+"#/definitions/"+definitionName);
   if (!validateFn) {

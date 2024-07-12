@@ -1,17 +1,15 @@
+import { ChildProcess, exec, execSync, spawn } from 'child_process';
 import { program } from 'commander';
-import yaml from 'js-yaml'; // Make sure to import js-yaml
-import fs, { existsSync, lstatSync, readFileSync, rmSync, symlinkSync, unlinkSync } from 'fs';
-import xml2js from 'xml2js';
-import { exec, spawn, ChildProcess } from 'child_process';
+import fs, { existsSync, readFileSync, rmSync } from 'fs';
 import inquirer from 'inquirer';
-import path, { join } from 'path';
-import { dirname } from 'path';
+import yaml from 'js-yaml'; // Make sure to import js-yaml
+import path, { dirname, join } from 'path';
+import { Log } from "sarif";
 import { fileURLToPath } from 'url';
-import { Log, Run } from "sarif"
-import { OpenAI } from 'openai';
 import { promisify } from 'util';
-import { v4 as uuidv4, v4 } from 'uuid';
-import { execSync } from 'child_process';
+import { v4 } from 'uuid';
+import xml2js from 'xml2js';
+import { scaffold } from './scaffold.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -246,16 +244,15 @@ const findOscalCliPath = async (): Promise<string> => {
   }
 };
 
-
 program
-  .version('1.2.9')
-  .description('OSCAL CLI')
+.version("1.2.9")
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')
+  .option('-r, --recursive', 'Recursively validate files in directories')
   .description('Validate the OSCAL document(s)')
-  .action(async (options: { file?: string, extensions?: string }) => {
-    let { file, extensions } = options;
+  .action(async (options: { file?: string, extensions?: string, recursive?: boolean }) => {
+    let { file, extensions, recursive } = options;
 
     if (typeof file === 'undefined') {
       const answer = await inquirer.prompt<{ file: string }>([{
@@ -272,8 +269,15 @@ program
     try {
       const stats = fs.statSync(file);
       if (stats.isDirectory()) {
-        await validateDirectory(file, extensions);
+        if (recursive) {
+          await validateDirectoryRecursively(file, extensions);
+        } else {
+          await validateDirectory(file, extensions);
+        }
       } else {
+        if (recursive) {
+          console.warn('The --recursive option is ignored for single files.');
+        }
         await validateFile(file, extensions);
       }
     } catch (error) {
@@ -282,18 +286,35 @@ program
     }
   });
 
-async function validateDirectory(dirPath: string, extensions?: string) {
+async function validateDirectoryRecursively(dirPath: string, extensions?: string) {
   const files = fs.readdirSync(dirPath);
   for (const file of files) {
     const filePath = path.join(dirPath, file);
     const stats = fs.statSync(filePath);
     if (stats.isDirectory()) {
-      await validateDirectory(filePath, extensions);
-    } else {
+      await validateDirectoryRecursively(filePath, extensions);
+    } else if (isValidFileType(filePath)) {
       await validateFile(filePath, extensions);
     }
   }
 }
+
+function isValidFileType(filePath: string): boolean {
+  const validExtensions = ['.xml', '.json', '.yaml', '.yml'];
+  return validExtensions.includes(path.extname(filePath).toLowerCase());
+}
+
+async function validateDirectory(dirPath: string, extensions?: string) {
+  const files = fs.readdirSync(dirPath);
+  for (const file of files) {
+    const filePath = path.join(dirPath, file);
+    const stats = fs.statSync(filePath);
+    if (!stats.isDirectory() && isValidFileType(filePath)) {
+      await validateFile(filePath, extensions);
+    }
+  }
+}
+
 
 async function validateFile(filePath: string, extensions?: string) {
   console.log(`Validating file: ${filePath}`);
@@ -435,61 +456,6 @@ async function convertFile(inputFile: string, outputFile: string, outputFormat: 
   const [result, errors] = await executeOscalCliCommand("convert", args);
   if (errors) console.error(errors);
 }
-export async function getOpenAIKey(): Promise<string> {
-  const openaiKey = process.env.OPENAI_KEY;
-
-  if (openaiKey) {
-    return openaiKey;
-  } else {
-    console.log("inquiring");
-    const answers = await inquirer.prompt([
-      {
-        type: 'password',
-        name: 'apiKey',
-        message: 'Please enter your OpenAI API key:',
-      },
-    ]);
-    return answers.apiKey;
-  }
-}
-
-interface GenerateOptions {
-  prompt?: string;
-  type?: string;
-  format?: string;
-}
-
-export async function generateOSCALDocument(options: GenerateOptions) {
-  const { prompt, type, format } = options;
-  console.log("Generating " + type);
-  if (!prompt || !type || !format) {
-    console.log("Missing parameters");
-    !type && console.log("Please enter oscal -type (ssp,etc)");
-    !format && console.log("Please enter oscal -format (xml,json,yaml)");
-    !prompt && console.log("Describe your oscal item -prompt");
-    return;
-  }
-  try {
-    const apiKey = await getOpenAIKey();
-
-    // Set up OpenAI API configuration
-    const openAi = new OpenAI({
-      apiKey: apiKey,
-    });
-
-    // Call the OpenAI API to generate the document
-    const stream = await openAi.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: `Please generate an oscal ${type} in ${format} with content: ${prompt}` }],
-      stream: true,
-    });
-    for await (const chunk of stream) {
-      process.stdout.write(chunk.choices[0]?.delta?.content || '');
-    }
-  } catch (error) {
-    console.error('Error generating OSCAL document:', error);
-  }
-}
 
 // program
 //   .command('generate')
@@ -554,58 +520,10 @@ export async function generateOSCALDocument(options: GenerateOptions) {
   });
 
 
-interface ScaffoldOptions {
-  output?: string;
-}
-
-export const scaffold = async (options: ScaffoldOptions) => {
-  console.log('Scaffolding OSCAL document');
-
-  const { template } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'template',
-      message: 'Select the OSCAL template:',
-      choices: ['fedramp', 'nist'],
-    },
-  ]);
-  const { baseline } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'baseline',
-      message: 'Select the OSCAL baseline:',
-      choices: ['HIGH', 'MODERATE', 'LOW'],
-    },
-  ]);
-
-  let outputPath = options.output as string;
-  if (!outputPath) {
-    const { output } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'output',
-        message: 'Enter the output path:',
-        default: './',
-      },
-    ]);
-    outputPath = output;
-  }
-
-  if (!fs.existsSync(outputPath)) {
-    fs.mkdirSync(outputPath, { recursive: true });
-  }
-
-  const templatePath = path.join(__dirname, 'content', template);
-  const destinationPath = path.join(outputPath, template);
-  console.log(`Copying "${templatePath}" => "${destinationPath}".`);
-  fs.cpSync(templatePath, destinationPath, { recursive: true });
-  console.log(`OSCAL template "${template}" scaffolded successfully at "${destinationPath}".`);
-};
-
-// program.command('scaffold')
-//   .option('-o, --output <path>', 'Path to the output')
-//   .description('Scaffold an OSCAL package')
-//   .action(scaffold);
+program.command('scaffold')
+  .option('-o, --output <path>', 'Path to the output')
+  .description('Scaffold an OSCAL package')
+  .action(scaffold);
 
 export const run = () => {
   isOscalCliInstalled()

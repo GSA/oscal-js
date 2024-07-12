@@ -1,5 +1,6 @@
 export  type * from "./types.js";
-export  type * from "./validate.js";
-export  type * from "./convert.js";
-export  type * from "./resolve.js";
-export {detectOscalDocumentType,executeOscalCliCommand,generateOSCALDocument,installOscalCli,isOscalCliInstalled,scaffold} from './commands.js';
+export * from "./validate.js";
+export * from "./convert.js";
+export * from "./resolve.js";
+export * from "./generate.js";
+export {detectOscalDocumentType,executeOscalCliCommand,installOscalCli,isOscalCliInstalled} from './commands.js';

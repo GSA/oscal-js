@@ -23,16 +23,19 @@ Feature: OSCAL CLI Wrapper
     Given I have an OSCAL document "ssp.xml"
     When I convert the document to JSON
     Then I should receive the conversion result
+    And conversion result is a json
 
   Scenario: Convert OSCAL document from XML to YAML
     Given I have an OSCAL document "ssp.xml"
     When I convert the document to YAML
     Then I should receive the conversion result
+    And conversion result is a yaml
 
   Scenario: Get sarif output invalid xml
     Given I have an OSCAL document "bad-ssp.xml"
     When I validate with sarif output on the document
     Then I should receive the sarif output
+    And we should have errors in the sarif output
 
   Scenario: Get sarif output for valid xml
     Given I have an OSCAL document "ssp.xml"

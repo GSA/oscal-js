@@ -10,6 +10,7 @@ import { promisify } from 'util';
 import { v4 } from 'uuid';
 import xml2js from 'xml2js';
 import { scaffold } from './scaffold.js';
+import { platform } from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -118,7 +119,7 @@ export const installOscalCli = (): void => {
   const extractedCliPath = path.join(oscalCliPath, 'oscal-cli');
   const oscalCliExecutablePath = path.join(extractedCliPath, 'bin', 'oscal-cli');
   const zipFilePath = path.join(localPath, 'oscal-cli.zip');
-
+  const isWindows = process.platform === 'win32';
   try {
     // Create .local/bin and .local/oscal-cli directories if they don't exist
     fs.mkdirSync(localBinPath, { recursive: true });
@@ -130,7 +131,7 @@ export const installOscalCli = (): void => {
 
     // Unzip the file to .local/oscal-cli
     console.log(`Extracting OSCAL CLI...`);
-    execSync(`unzip -o ${zipFilePath} -d ${oscalCliPath}`);
+    execSync(isWindows?`expand ${zipFilePath} -F:* ${oscalCliPath}`:`unzip -o ${zipFilePath} -d ${oscalCliPath}`);
 
     // Make the CLI executable
     execSync(`chmod +x ${oscalCliExecutablePath}`);

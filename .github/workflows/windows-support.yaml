@@ -26,8 +26,8 @@ jobs:
 
     - name: Install dependencies
       run: npm i 
-    - name: Install dev dependencies
-      run: npm i --only=dev
+    - name: Install tsc
+      run: npm install --save-dev typescript
     
     - name: Produce artifacts baselines in all formats
       run: npm run build

@@ -120,6 +120,7 @@ export const installOscalCli = (): void => {
   const oscalCliExecutablePath = path.join(extractedCliPath, 'bin', 'oscal-cli');
   const zipFilePath = path.join(localPath, 'oscal-cli.zip');
   const isWindows = process.platform === 'win32';
+
   try {
     // Create .local/bin and .local/oscal-cli directories if they don't exist
     fs.mkdirSync(localBinPath, { recursive: true });
@@ -131,17 +132,27 @@ export const installOscalCli = (): void => {
 
     // Unzip the file to .local/oscal-cli
     console.log(`Extracting OSCAL CLI...`);
-    execSync(isWindows?`expand ${zipFilePath} -F:* ${oscalCliPath}`:`unzip -o ${zipFilePath} -d ${oscalCliPath}`);
+    execSync(isWindows ? `expand ${zipFilePath} -F:* ${oscalCliPath}` : `unzip -o ${zipFilePath} -d ${oscalCliPath}`);
 
-    // Make the CLI executable
-    execSync(`chmod +x ${oscalCliExecutablePath}`);
+    // Make the CLI executable (for non-Windows systems)
+    if (!isWindows) {
+      execSync(`chmod +x ${oscalCliExecutablePath}`);
+    }
 
     // Create a symbolic link (alias) in .local/bin
-    const aliasPath = path.join(localBinPath, 'oscal-cli');
+    const sourceFile = isWindows ? `${oscalCliExecutablePath}.bat` : oscalCliExecutablePath;
+    const aliasPath = path.join(localBinPath, 'oscal-cli' + (isWindows ? '.bat' : ''));
+    
     if (fs.existsSync(aliasPath)) {
       fs.unlinkSync(aliasPath); // Remove existing symlink if it exists
     }
-    fs.symlinkSync(oscalCliExecutablePath, aliasPath);
+
+    if (isWindows) {
+      // For Windows, use mklink command to create a symbolic link
+      execSync(`mklink "${aliasPath}" "${sourceFile}"`, { shell: 'cmd.exe' });
+    } else {
+      fs.symlinkSync(sourceFile, aliasPath);
+    }
 
     // Delete the zip file
     fs.unlinkSync(zipFilePath);    

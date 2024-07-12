@@ -24,20 +24,20 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Install cli
-      run: npm install oscal -g
+    - name: Install 
+      run: npm install
 
     - name: Produce artifacts baselines in all formats
-      run: oscal convert -f ./content/rev5/baselines/xml -o artifacts/content/rev5/baselines/
+      run: npm run build
 
     - name: Resolve FedRAMP HIGH baseline profile
-      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml
+      run: node ./dist/cli.js resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml
 
     - name: Convert Profiles to JSON
-      run: oscal convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/json/ -t JSON
+      run: node ./dist/cli.js convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/json/ -t JSON
 
     - name: Convert Profiles to YAML
-      run: oscal convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML
+      run: node ./dist/cli.js convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML
 
     - name: Validate all output recursively
-      run: oscal validate -f ./artifacts/ -e fedramp -r
+      run: node ./dist/cli.js validate -f ./artifacts/ -e fedramp -r

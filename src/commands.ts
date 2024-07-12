@@ -256,12 +256,31 @@ export const validateWithSarif = async ( args: string[]): Promise<Log> => {
 };
 
 const findOscalCliPath = async (): Promise<string> => {
-  try {
-    const { stdout } = await execPromise('which oscal-cli');
-    return stdout.trim();
-  } catch (error) {
-    // If 'which' command fails, fall back to the local path
-    return './oscal-cli/bin/oscal-cli';
+  if (process.platform === 'win32') {
+    // Windows-specific logic
+    const windowsPaths = [
+      './oscal-cli/bin/oscal-cli.exe',
+      join(process.env.ProgramFiles || '', 'oscal-cli/bin/oscal-cli.exe'),
+      join(process.env['ProgramFiles(x86)'] || '', 'oscal-cli/bin/oscal-cli.exe')
+    ];
+
+    for (const path of windowsPaths) {
+      if (existsSync(path)) {
+        return path;
+      }
+    }
+
+    // If not found, return the local path as a fallback
+    throw ("Oscal CLI not found")
+  } else {
+    // Unix-like systems (Linux, macOS)
+    try {
+      const { stdout } = await execPromise('which oscal-cli');
+      return stdout.trim();
+    } catch (error) {
+      // If 'which' command fails, fall back to the local path
+      throw ("Oscal CLI not found")
+    }
   }
 };
 

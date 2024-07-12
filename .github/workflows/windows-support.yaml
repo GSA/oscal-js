@@ -29,7 +29,7 @@ jobs:
     - name: Install tsc
       run: npm install --save-dev typescript
     
-    - name: Produce artifacts baselines in all formats
+    - name: Build javacsript distribution
       run: npm run build
 
     - name: Resolve FedRAMP HIGH baseline profile

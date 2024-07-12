@@ -110,19 +110,23 @@ export const isJavaInstalled = (): Promise<boolean> => {
   });
 };
 
+
 export const installOscalCli = (): void => {
   const oscalCliInstallUrl = `https://codeload.github.com/wandmagic/oscal/zip/refs/heads/cli`;
-  const homeDir = process.env.HOME || process.env.USERPROFILE;
-  const localPath = path.join(homeDir as string, '.local');
+  const isWindows = process.platform === 'win32';
+  
+  // Use AppData for Windows, or .local for other systems
+  const homeDir = process.env.APPDATA || process.env.HOME || process.env.USERPROFILE;
+  const localPath = isWindows ? path.join(homeDir as string, 'oscal-cli') : path.join(homeDir as string, '.local');
+  
   const localBinPath = path.join(localPath, 'bin');
   const oscalCliPath = path.join(localPath, 'oscal-cli');
   const extractedCliPath = path.join(oscalCliPath, 'oscal-cli');
   const oscalCliExecutablePath = path.join(extractedCliPath, 'bin', 'oscal-cli');
   const zipFilePath = path.join(localPath, 'oscal-cli.zip');
-  const isWindows = process.platform === 'win32';
 
   try {
-    // Create .local/bin and .local/oscal-cli directories if they don't exist
+    // Create bin and oscal-cli directories if they don't exist
     fs.mkdirSync(localBinPath, { recursive: true });
     fs.mkdirSync(oscalCliPath, { recursive: true });
 
@@ -130,7 +134,7 @@ export const installOscalCli = (): void => {
     console.log(`Downloading OSCAL CLI...`);
     execSync(`curl -sSLo ${zipFilePath} ${oscalCliInstallUrl}`);
 
-    // Unzip the file to .local/oscal-cli
+    // Unzip the file to oscal-cli directory
     console.log(`Extracting OSCAL CLI...`);
     execSync(isWindows ? `expand ${zipFilePath} -F:* ${oscalCliPath}` : `unzip -o ${zipFilePath} -d ${oscalCliPath}`);
 
@@ -139,7 +143,7 @@ export const installOscalCli = (): void => {
       execSync(`chmod +x ${oscalCliExecutablePath}`);
     }
 
-    // Create a symbolic link (alias) in .local/bin
+    // Create a symbolic link (alias) in bin
     const sourceFile = isWindows ? `${oscalCliExecutablePath}.bat` : oscalCliExecutablePath;
     const aliasPath = path.join(localBinPath, 'oscal-cli' + (isWindows ? '.bat' : ''));
     

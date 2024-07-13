@@ -8,11 +8,11 @@
   "scripts": {
     "build": "npx tsc",
     "types": "node ./dist/scripts/generateTypes.js",
-    "test": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js",
-    "test:lib": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @lib",
-    "test:constraints": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @lib",
-    "test:ssp": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @ssp",
-    "report": "NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --format html:cucumber-report.html --publish-quiet || true"
+    "test": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js",
+    "test:lib": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @lib",
+    "test:constraints": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @lib",
+    "test:ssp": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @ssp",
+    "report": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --format html:cucumber-report.html --publish-quiet || (exit 0)"
   },
   "keywords": [
     "oscal"
@@ -30,7 +30,6 @@
     "inquirer": "^9.2.23",
     "js-yaml": "^4.1.0",
     "openai": "^4.51.0",
-    "tsc": "^2.0.4",
     "uuid": "^10.0.0",
     "xml2js": "^0.6.2",
     "yaml": "^2.4.3"
@@ -42,6 +41,7 @@
     "@types/inquirer": "^9.0.7",
     "@types/node": "^20.14.9",
     "@types/xml2js": "^0.4.14",
+    "cross-env": "^7.0.3",
     "json-schema-to-typescript": "^14.1.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

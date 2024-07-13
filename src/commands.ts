@@ -15,14 +15,14 @@ import { platform } from 'os';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-type OscalDocumentType = 'catalog' | 'profile' | 'component-definition' | 'ssp' | 'metaschema'|'poam'|'ar'|'ap';
-type FileFormat = 'xml' | 'json'|'yaml';
+type OscalDocumentType = 'catalog' | 'profile' | 'component-definition' | 'ssp' | 'metaschema' | 'poam' | 'ar' | 'ap';
+type FileFormat = 'xml' | 'json' | 'yaml';
 
 
 export async function detectOscalDocumentType(filePath: string): Promise<[OscalDocumentType, FileFormat]> {
   const fileExtension = path.extname(filePath).toLowerCase();
-  
-  if (!['.xml', '.json','.yaml','.yml'].includes(fileExtension)) {
+
+  if (!['.xml', '.json', '.yaml', '.yml'].includes(fileExtension)) {
     throw new Error('Unsupported file format. Only XML YAML and JSON are supported.');
   }
 
@@ -30,8 +30,8 @@ export async function detectOscalDocumentType(filePath: string): Promise<[OscalD
 
   if (fileExtension === '.xml') {
     return parseXmlDocument(fileContent);
-  } else if (fileExtension ===".json") {
-    return parseJsonDocument(fileContent);  
+  } else if (fileExtension === ".json") {
+    return parseJsonDocument(fileContent);
   } else {
     return parseYamlDocument(fileContent);
   }
@@ -84,39 +84,41 @@ function getDocumentType(rootElement: string): OscalDocumentType {
   }
 }
 
-// Function to check if the OSCAL CLI is installed
-export const isOscalCliInstalled = (): Promise<boolean> => {
+const checkCommand = (command: string): Promise<boolean> => {
   return new Promise((resolve) => {
-    exec('which oscal-cli', (error) => {
-      if (!error) {
-        resolve(true);
-      } else {
-        const oscalCliInstallPath = './oscal-cli/';
-        resolve(fs.existsSync(oscalCliInstallPath));
-      }
+    exec(command, (error) => {
+      resolve(!error);
     });
   });
 };
 
-export const isJavaInstalled = (): Promise<boolean> => {
-  return new Promise((resolve) => {
-    exec('which java', (error) => {
-      if (!error) {
-        resolve(true);
-      } else {
-        resolve(false);
-      }
-    });
-  });
+export const isOscalCliInstalled = async (): Promise<boolean> => {
+  const command = process.platform === 'win32' 
+    ? 'where oscal-cli'
+    : 'which oscal-cli';
+  
+  const isInPath = await checkCommand(command);
+  if (isInPath) return true;
+
+  const oscalCliInstallPath = path.join('.', 'oscal-cli');
+  return fs.existsSync(oscalCliInstallPath);
+};
+
+export const isJavaInstalled = async (): Promise<boolean> => {
+  const command = process.platform === 'win32'
+    ? 'where java'
+    : 'which java';
+  
+  return checkCommand(command);
 };
 export const installOscalCli = (): void => {
   const oscalCliInstallUrl = `https://codeload.github.com/wandmagic/oscal/zip/refs/heads/cli`;
   const isWindows = process.platform === 'win32';
-  
+
   // Use AppData for Windows, or .local for other systems
   const homeDir = isWindows ? process.env.APPDATA : (process.env.HOME || process.env.USERPROFILE);
   const localPath = isWindows ? path.join(homeDir as string, 'OSCAL-CLI') : path.join(homeDir as string, '.local');
-  
+
   const localBinPath = isWindows ? path.join(process.env.USERPROFILE as string, 'AppData', 'Local', 'Microsoft', 'WindowsApps') : path.join(localPath, 'bin');
   const oscalCliPath = path.join(localPath, 'oscal-cli');
   const extractedCliPath = path.join(oscalCliPath, 'oscal-cli');
@@ -150,7 +152,7 @@ export const installOscalCli = (): void => {
     // Create a shortcut (Windows) or symbolic link (other systems)
     const sourceFile = isWindows ? `${oscalCliExecutablePath}.bat` : oscalCliExecutablePath;
     const aliasPath = path.join(localBinPath, 'oscal-cli' + (isWindows ? '.bat' : ''));
-    
+
     if (fs.existsSync(aliasPath)) {
       fs.unlinkSync(aliasPath); // Remove existing alias if it exists
     }
@@ -164,7 +166,7 @@ export const installOscalCli = (): void => {
     }
 
     // Delete the zip file
-    fs.unlinkSync(zipFilePath);    
+    fs.unlinkSync(zipFilePath);
 
     console.log(`OSCAL CLI installed to ${extractedCliPath}`);
     console.log(`Alias created at ${aliasPath}`);
@@ -175,13 +177,13 @@ export const installOscalCli = (): void => {
 };
 
 const execPromise = promisify(exec);
-export type stdIn=string;
-export type stdErr=string;
-export const executeOscalCliCommand = async (command: string, args: string[], showLoader: boolean = false): Promise<[stdIn,stdErr]> => {
+export type stdIn = string;
+export type stdErr = string;
+export const executeOscalCliCommand = async (command: string, args: string[], showLoader: boolean = false): Promise<[stdIn, stdErr]> => {
   return new Promise((resolve, reject) => {
     findOscalCliPath().then(oscalCliPath => {
       const fullArgs = [command, ...args];
-      console.log("oscal-cli "+fullArgs.join(" "))
+      console.log("oscal-cli " + fullArgs.join(" "))
       const oscalCliProcess: ChildProcess = spawn(oscalCliPath, fullArgs);
 
       let stdout = '';
@@ -208,7 +210,7 @@ export const executeOscalCliCommand = async (command: string, args: string[], sh
 
       oscalCliProcess.on('disconnect', () => {
         if (loading) clearInterval(loading);
-        reject(new Error(`OSCAL CLI process disconnected`+stderr));
+        reject(new Error(`OSCAL CLI process disconnected` + stderr));
       });
 
       oscalCliProcess.on('message', (message) => {
@@ -221,7 +223,7 @@ export const executeOscalCliCommand = async (command: string, args: string[], sh
         }
 
         if (code === 0) {
-          resolve([stdout,stderr]);
+          resolve([stdout, stderr]);
         } else {
           reject(new Error(`OSCAL CLI process exited with code ${code}:\n${stderr}`));
         }
@@ -229,21 +231,22 @@ export const executeOscalCliCommand = async (command: string, args: string[], sh
     }).catch(error => reject(error));
   });
 };
-export const validateWithSarif = async ( args: string[]): Promise<Log> => {
+export const validateWithSarif = async (args: string[]): Promise<Log> => {
   const tempFile = path.join(`oscal-cli-sarif-log-${v4()}.json`);
-  const sarifArgs = [...args, '-o', tempFile,"--sarif-include-pass",'--show-stack-trace'];
-  var consoleErr=""
+  const sarifArgs = [...args, '-o', tempFile, "--sarif-include-pass", '--show-stack-trace'];
+  var consoleErr = ""
   try {
-    const [out,err]=await executeOscalCliCommand('validate', sarifArgs, false);
+    const [out, err] = await executeOscalCliCommand('validate', sarifArgs, false);
     console.error(err);
     consoleErr = err;
     console.log(out);
   } catch (error) {
-    if(!existsSync(tempFile)){
-      throw(consoleErr)
+    console.error(error);
+    if (!existsSync(tempFile)) {
+      throw (consoleErr)
     }
     const sarifOutput = readFileSync(tempFile, 'utf8');
-    rmSync(tempFile);  
+    rmSync(tempFile);
     return JSON.parse(sarifOutput) as Log;
   }
   try {
@@ -256,36 +259,23 @@ export const validateWithSarif = async ( args: string[]): Promise<Log> => {
 };
 
 const findOscalCliPath = async (): Promise<string> => {
-  if (process.platform === 'win32') {
-    // Windows-specific logic
-    const windowsPaths = [
-      './oscal-cli/bin/oscal-cli.exe',
-      join(process.env.ProgramFiles || '', 'oscal-cli/bin/oscal-cli.exe'),
-      join(process.env['ProgramFiles(x86)'] || '', 'oscal-cli/bin/oscal-cli.exe')
-    ];
+  const command = process.platform === 'win32' ? 'where oscal-cli' : 'which oscal-cli';
 
-    for (const path of windowsPaths) {
-      if (existsSync(path)) {
-        return path;
-      }
+  try {
+    const { stdout } = await execPromise(command);
+    const paths = stdout.trim().split('\n');
+    if (paths.length > 0) {
+      return paths[0]; // Return the first found path
     }
-
-    // If not found, return the local path as a fallback
-    throw ("Oscal CLI not found")
-  } else {
-    // Unix-like systems (Linux, macOS)
-    try {
-      const { stdout } = await execPromise('which oscal-cli');
-      return stdout.trim();
-    } catch (error) {
-      // If 'which' command fails, fall back to the local path
-      throw ("Oscal CLI not found")
-    }
+  } catch (error) {
+    // Command failed or oscal-cli not found
   }
+
+  throw new Error("OSCAL CLI not found");
 };
 
 program
-.version("1.3.0")
+  .version("1.3.0")
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')
@@ -380,7 +370,9 @@ async function validateFile(filePath: string, extensions?: string) {
     await validateWithSarif(args);
     // console.log(`Validation result for ${filePath}:`, result);
   } catch (error) {
+
     console.error(`Error validating ${filePath}:`, error);
+    console.error(JSON.stringify(error));
   }
 }
 
@@ -447,16 +439,16 @@ program.command('convert')
 async function handleFolderConversion(inputFolder: string, outputFolder: string, type?: string): Promise<void> {
   console.log("Converting folder");
   const validTypes = ['json', 'yaml', 'xml'];
-  const outputFormats = type && validTypes.includes(type.toLowerCase()) 
+  const outputFormats = type && validTypes.includes(type.toLowerCase())
     ? [type.toLowerCase()]
     : validTypes;
 
   for (const format of outputFormats) {
-    const formatOutputFolder = type 
+    const formatOutputFolder = type
       ? outputFolder
       : path.join(outputFolder, format);
     fs.mkdirSync(formatOutputFolder, { recursive: true });
-    
+
     const files = fs.readdirSync(inputFolder);
     for (const inputFile of files) {
       const inputPath = path.join(inputFolder, inputFile);
@@ -479,11 +471,11 @@ async function handleSingleFileConversion(inputFile: string, output: string): Pr
     // If output doesn't have a valid extension, treat it as a folder
     const [_, inputFormat] = await detectOscalDocumentType(inputFile);
     const outputFormats = ['json', 'yaml', 'xml'];
-    
+
     for (const format of outputFormats) {
       const outputFolder = path.join(output, format);
       fs.mkdirSync(outputFolder, { recursive: true });
-      
+
       const outputFile = path.join(outputFolder, `${path.parse(inputFile).name}.${format}`);
       await convertFile(inputFile, outputFile, format);
     }
@@ -507,7 +499,7 @@ async function convertFile(inputFile: string, outputFile: string, outputFormat: 
 
 
 
-  program.command('resolve')
+program.command('resolve')
   .description('Resolve an OSCAL profile (XML, JSON, YAML)')
   .option('-f, --file <path>', 'Path to the OSCAL profile document')
   .option('-o, --output <path>', 'Path to the output file')
@@ -538,15 +530,15 @@ async function convertFile(inputFile: string, outputFile: string, outputFormat: 
 
     try {
       const [_, fileType] = await detectOscalDocumentType(file);
-      
+
       // Determine output file type
       const outputFileType = path.extname(output).toLowerCase().slice(1);
       const validOutputTypes = ['json', 'xml', 'yaml'];
       const outputType = validOutputTypes.includes(outputFileType) ? outputFileType : fileType;
 
-      const args = ["--to=" + outputType, file, output,"--overwrite"];
+      const args = ["--to=" + outputType, file, output, "--overwrite"];
       const [result, errors] = await executeOscalCliCommand("resolve-profile", args);
-      
+
       if (errors) {
         console.error('Errors during profile resolution:', errors);
       } else {

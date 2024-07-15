@@ -179,15 +179,31 @@ export const installOscalCli = (): void => {
 const execPromise = promisify(exec);
 export type stdIn = string;
 export type stdErr = string;
+
 export const executeOscalCliCommand = async (command: string, args: string[], showLoader: boolean = false): Promise<[stdIn, stdErr]> => {
   return new Promise((resolve, reject) => {
     findOscalCliPath().then(oscalCliPath => {
+      const isWindows = process.platform === 'win32';
       const fullArgs = [command, ...args];
-      console.log("oscal-cli " + fullArgs.join(" "))
-      const oscalCliProcess: ChildProcess = spawn(oscalCliPath, fullArgs);
+      console.log("oscal-cli " + fullArgs.join(" "));
+
+      let spawnArgs: [string, string[], object];
+      if (isWindows) {
+        // On Windows, we need to spawn cmd.exe and pass the command as an argument
+        spawnArgs = [
+          'cmd.exe',
+          ['/c', oscalCliPath, ...fullArgs],
+          { windowsVerbatimArguments: true }
+        ];
+      } else {
+        spawnArgs = [oscalCliPath, fullArgs, {}];
+      }
+
+      const oscalCliProcess = spawn(...spawnArgs);
 
       let stdout = '';
       let stderr = '';
+
       // Indeterminate loading glyph
       const loadingGlyph = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
       let loadingIndex = 0;
@@ -208,14 +224,11 @@ export const executeOscalCliCommand = async (command: string, args: string[], sh
         stderr += data.toString();
       });
 
-      oscalCliProcess.on('disconnect', () => {
+      oscalCliProcess.on('error', (error) => {
         if (loading) clearInterval(loading);
-        reject(new Error(`OSCAL CLI process disconnected` + stderr));
+        reject(new Error(`Failed to start OSCAL CLI process: ${error.message}`));
       });
 
-      oscalCliProcess.on('message', (message) => {
-        stdout += message.toString();
-      });
       oscalCliProcess.on('close', (code) => {
         if (loading) {
           clearInterval(loading);

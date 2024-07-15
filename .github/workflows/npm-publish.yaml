@@ -13,20 +13,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Verify NPM_TOKEN secret
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "ERROR: NODE_AUTH_TOKEN is not set"
+            exit 1
+          else
+            echo "NODE_AUTH_TOKEN is set and its length is ${#NODE_AUTH_TOKEN} characters"
+          fi
+      
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "20"
       
       - name: Configure npm
-        run: |
-          echo "//registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN" >> .npmrc
-          echo "registry=https://registry.npmjs.org/" >> .npmrc
-          echo "always-auth=true" >> .npmrc
+        run: npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
       
       - name: Install dependencies
         run: npm ci
-            
+      
+      - name: Run tests
+        run: npm test
+      
       - name: Build (if needed)
         run: npm run build
       

@@ -5,42 +5,26 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "20"
       
       - name: Install dependencies
         run: npm ci
-            
-      - name: Build
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build (if needed)
         run: npm run build
-      - name: Build
-        run: npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
-
-      - name: Verify npm config
-        run: |
-          npm config list
-          npm whoami
-          PACKAGE_NAME=$(node -p "require('./package.json').name")
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          PUBLISHED_VERSION=$(npm view $PACKAGE_NAME version || echo "0.0.0")
-          if [ "$(printf '%s\n' "$PUBLISHED_VERSION" "$PACKAGE_VERSION" | sort -V | tail -n1)" = "$PACKAGE_VERSION" ]; then
-            if [ "$PACKAGE_VERSION" != "$PUBLISHED_VERSION" ]; then
-              echo "Publishing new version $PACKAGE_VERSION"
-              npm publish
-            else
-              echo "Version $PACKAGE_VERSION is already published. Skipping."
-            fi
-          else
-            echo "Local version $PACKAGE_VERSION is not newer than published version $PUBLISHED_VERSION. Skipping."
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-  
+      
+      - name: Publish to NPM
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}

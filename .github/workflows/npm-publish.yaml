@@ -10,22 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Check secrets presence
-        id: checksecrets
-        shell: bash
-        run: |
-          if [ "$NODE_AUTH_TOKEN" == "" ]; then
-            echo "secretspresent=NO" >> $GITHUB_OUTPUT
-          else
-            echo "secretspresent=YES" >> $GITHUB_OUTPUT
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN}}
-      - name: run step if secret is present
-        if: (steps.checksecrets.outputs.secretspresent == 'YES')
-        run: echo secret is present
-      
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -39,9 +23,21 @@ jobs:
       
       - name: Run tests
         run: npm test
-      
+       
       - name: Build (if needed)
         run: npm run build
-      
+
+      - name: Check secrets presence
+        id: checksecrets
+        shell: bash
+        run: |
+          if [ "$NODE_AUTH_TOKEN" == "" ]; then
+            echo "secretspresent=NO" >> $GITHUB_OUTPUT
+          else
+            echo "secretspresent=YES" >> $GITHUB_OUTPUT
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN}}
       - name: Publish to NPM
-        run: npm publish
+        if: (steps.checksecrets.outputs.secretspresent == 'YES')
+        run: npm publish     

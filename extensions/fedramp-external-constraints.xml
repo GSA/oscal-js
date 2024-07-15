@@ -15,14 +15,63 @@
 
             <constraints>
                 <matches id="prop-response-point-matches-string" target="." datatype="string"/>
-                <!-- TODO: fix scope of enforcement for the prop -->
                 <has-cardinality id="prop-response-point-has-cardinality-one" target="." max-occurs="1"/>
                 <remarks>
                     <p>This appears in FedRAMP profiles and resolved profile catalogs.</p>
                     <p>For control statements, it signals to the CSP which statements require a response in the SSP.</p>
                     <p>For control objectives, it signals to the assessor which control objectives must appear in the assessment results, which aligns with the FedRAMP test case workbook.</p>
-                 </remarks>
+                </remarks>
             </constraints>
         </context>
+    </context>
+
+    <!-- New constraints -->
+    <context>
+        <metapath target="/system-security-plan/system-characteristics/system-information/information-type/categorization/information-type-id[@system='https://doi.org/10.6028/NIST.SP.800-60v2r1']"/>
+        <constraints>
+            <matches id="address-type" target="." datatype="string"/>
+        </constraints>
+    </context>
+
+    <context>
+        <metapath target="/system-security-plan/system-characteristics/authorization-boundary/diagram/@uuid"/>
+        <constraints>
+            <matches id="authorization-type" target="." datatype="uuid"/>
+        </constraints>
+    </context>
+
+    <context>
+        <metapath target="/system-security-plan/system-characteristics/system-information/props[@name='deployment-model']"/>
+        <constraints>
+            <matches id="deployment-model" target="." datatype="string"/>
+            <allowed-values target=".">
+                <enum value="government-only"/>
+                <enum value="hybrid"/>
+                <enum value="private"/>
+                <enum value="public"/>
+            </allowed-values>
+        </constraints>
+    </context>
+
+    <context>
+        <metapath target="/system-security-plan/system-characteristics/system-information/props[@name='security-level']"/>
+        <constraints>
+            <matches id="security-level" target="." datatype="string"/>
+            <allowed-values target=".">
+                <enum value="low"/>
+                <enum value="moderate"/>
+                <enum value="high"/>
+            </allowed-values>
+        </constraints>
+    </context>
+
+    <context>
+        <metapath target="/system-security-plan/metadata/props[@name='fedramp-version']"/>
+        <constraints>
+            <matches id="fedramp-version" target="." datatype="string"/>
+            <allowed-values target=".">
+                <enum value="1.0"/>
+            </allowed-values>
+        </constraints>
     </context>
 </metaschema-meta-constraints>

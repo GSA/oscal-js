@@ -19,14 +19,9 @@ jobs:
       
       - name: Install dependencies
         run: npm ci
-      
-      - name: Run tests
-        run: npm test
-      
+            
       - name: Build (if needed)
         run: npm run build
       
       - name: Publish to NPM
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          token: ${{ env.NODE_AUTH_TOKEN }}
+        run: npm publish

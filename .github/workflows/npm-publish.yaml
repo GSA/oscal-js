@@ -3,6 +3,8 @@ name: Publish to NPM
 on:
   push:
     branches: [main]
+env:
+  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 jobs:
   publish:
@@ -25,6 +27,6 @@ jobs:
         run: npm run build
       
       - name: Publish to NPM
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ env.NODE_AUTH_TOKEN }}

@@ -6,14 +6,16 @@
     "strict": true,
     "target": "ES2015",
     "outDir": "./dist",
-    "resolveJsonModule":true,
+    "resolveJsonModule": true,
     "rootDir": "./src/",
     "allowJs": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "declaration": true,
+    "declarationDir": "./dist"
   },
   "ts-node": {
     "esm": true,
     "experimentalSpecifierResolution": "node"
   },
-  "exclude": ["node_modules","features/","examples","dist"]
+  "exclude": ["node_modules", "features/", "examples", "dist"]
 }

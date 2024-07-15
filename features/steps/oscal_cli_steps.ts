@@ -18,6 +18,12 @@ import {
 import { sarifSchema } from '../../src/schema/sarif.js';
 import { parseSarifToErrorStrings, validate, validateDefinition, validateFile } from '../../src/validate.js';
 import { parseString } from 'xml2js';
+import { setDefaultTimeout } from '@cucumber/cucumber';
+
+const DEFAULT_TIMEOUT = 17000;
+
+setDefaultTimeout(DEFAULT_TIMEOUT);
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

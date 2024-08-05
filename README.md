@@ -1,6 +1,10 @@
 # OSCAL CLI
+
 The OSCAL CLI is a command-line interface tool for working with OSCAL (Open Security Controls Assessment Language) documents. It provides functionality to validate, convert, and scaffold OSCAL documents.
-Installation
+
+This tool currently serves as a wrapper around the Java-based OSCAL CLI, but future versions will transition to a fully JavaScript-native implementation using transpilation.
+
+## Installation
 To use the OSCAL CLI, follow these steps:
 Install the dependencies:
 ```

@@ -113,9 +113,17 @@ export const isJavaInstalled = async (): Promise<boolean> => {
   
   return checkCommand(command);
 };
-export const installOscalCli = (): void => {
-  const oscalCliInstallUrl = `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/2.0.0/oscal-cli-enhanced-2.0.0-oscal-cli.zip`;
+export const installOscalCli = (version= "oscal-cli-enhanced-2.0.0"): void => {
+  const versions = {
+    "oscal-cli-enhanced-2.0.0":
+    `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/2.0.0/oscal-cli-enhanced-2.0.0-oscal-cli.zip`
+  }
+  const oscalCliInstallUrl = versions[version];
+  const url = new URL(oscalCliInstallUrl);
+  const host = url.hostname;
+  console.log("Installing version:", version, "from", host);
   const isWindows = process.platform === 'win32';
+  const zipfilename = oscalCliInstallUrl.split('/').pop()!;
 
   // Use AppData for Windows, or .local for other systems
   const homeDir = isWindows ? process.env.APPDATA : (process.env.HOME || process.env.USERPROFILE);
@@ -123,9 +131,9 @@ export const installOscalCli = (): void => {
 
   const localBinPath = isWindows ? path.join(process.env.USERPROFILE as string, 'AppData', 'Local', 'Microsoft', 'WindowsApps') : path.join(localPath, 'bin');
   const oscalCliPath = path.join(localPath, 'oscal-cli');
-  const extractedCliPath = path.join(oscalCliPath, 'oscal-cli');
+  const extractedCliPath = path.join(oscalCliPath, 'oscal-cli-enhanced-2.0.0'); // Updated this line
   const oscalCliExecutablePath = path.join(extractedCliPath, 'bin', 'oscal-cli');
-  const zipFilePath = path.join(localPath, 'oscal-cli-enhanced-2.0.0-oscal-cli.zip');
+  const zipFilePath = path.join(localPath, zipfilename);
 
   try {
     // Create necessary directories

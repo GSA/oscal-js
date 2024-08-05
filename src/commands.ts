@@ -125,7 +125,7 @@ export const installOscalCli = (): void => {
   const oscalCliPath = path.join(localPath, 'oscal-cli');
   const extractedCliPath = path.join(oscalCliPath, 'oscal-cli');
   const oscalCliExecutablePath = path.join(extractedCliPath, 'bin', 'oscal-cli');
-  const zipFilePath = path.join(localPath, 'oscal-cli.zip');
+  const zipFilePath = path.join(localPath, 'oscal-cli-enhanced-2.0.0-oscal-cli.zip');
 
   try {
     // Create necessary directories

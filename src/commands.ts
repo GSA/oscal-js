@@ -1,4 +1,5 @@
 import { ChildProcess, exec, execSync, spawn } from 'child_process';
+import chalk from 'chalk';
 import { program } from 'commander';
 import fs, { existsSync, readFileSync, rmSync } from 'fs';
 import inquirer from 'inquirer';
@@ -6,11 +7,12 @@ import yaml from 'js-yaml'; // Make sure to import js-yaml
 import path, { dirname, join } from 'path';
 import { Log } from "sarif";
 import { fileURLToPath } from 'url';
-import { promisify } from 'util';
+import { promisify, styleText } from 'util';
 import { v4 } from 'uuid';
 import xml2js from 'xml2js';
 import { scaffold } from './scaffold.js';
 import { platform } from 'os';
+import { parseSarifToErrorStrings } from './validate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -185,7 +187,8 @@ export const executeOscalCliCommand = async (command: string, args: string[], sh
     findOscalCliPath().then(oscalCliPath => {
       const isWindows = process.platform === 'win32';
       const fullArgs = [command, ...args];
-      console.log("oscal-cli " + fullArgs.join(" "));
+
+      console.log(chalk.green("oscal-cli ") + chalk.blue(command)+' '+(args.join(" ")));
 
       let spawnArgs: [string, string[], object];
       if (isWindows) {
@@ -250,11 +253,11 @@ export const validateWithSarif = async (args: string[]): Promise<Log> => {
   var consoleErr = ""
   try {
     const [out, err] = await executeOscalCliCommand('validate', sarifArgs, false);
-    console.error(err);
     consoleErr = err;
     console.log(out);
+    console.error(chalk.red(err));
   } catch (error) {
-    console.error(error);
+    console.error(chalk.red(error));
     if (!existsSync(tempFile)) {
       throw (consoleErr)
     }
@@ -288,7 +291,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 
 program
-  .version("1.3.2")
+  .version("1.3.4")
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')
@@ -329,18 +332,21 @@ program
     }
   });
 
-async function validateDirectoryRecursively(dirPath: string, extensions?: string) {
-  const files = fs.readdirSync(dirPath);
-  for (const file of files) {
-    const filePath = path.join(dirPath, file);
-    const stats = fs.statSync(filePath);
-    if (stats.isDirectory()) {
-      await validateDirectoryRecursively(filePath, extensions);
-    } else if (isValidFileType(filePath)) {
-      await validateFile(filePath, extensions);
+  async function validateDirectoryRecursively(dirPath: string, extensions?: string): Promise<boolean> {
+    const files = fs.readdirSync(dirPath);
+    for (const file of files) {
+      const filePath = path.join(dirPath, file);
+      const stats = fs.statSync(filePath);
+      if (stats.isDirectory()) {
+        const subdirResult = await validateDirectoryRecursively(filePath, extensions);
+        if (!subdirResult) return false; // Stop if validation failed in subdirectory
+      } else if (isValidFileType(filePath)) {
+        const fileResult = await validateFile(filePath, extensions);
+        if (!fileResult) return false; // Stop if validation failed for this file
+      }
     }
+    return true; // All validations passed
   }
-}
 
 function isValidFileType(filePath: string): boolean {
   const validExtensions = ['.xml', '.json', '.yaml', '.yml'];
@@ -359,11 +365,11 @@ async function validateDirectory(dirPath: string, extensions?: string) {
 }
 
 
-async function validateFile(filePath: string, extensions?: string) {
-  console.log(`Validating file: ${filePath}`);
+async function validateFile(filePath: string, extensions?: string): Promise<boolean> {
+  console.log(chalk.cyan(`Validating file: ${filePath}`));
   try {
     const [documentType, fileType] = await detectOscalDocumentType(filePath);
-    console.log(`Detected ${documentType} ${fileType}`);
+    console.log(chalk.cyan(`Detected ${documentType} ${fileType}`));
 
     const args = [filePath, `--as=${fileType}`];
 
@@ -372,20 +378,27 @@ async function validateFile(filePath: string, extensions?: string) {
       if (fedrampExtensionsPath) {
         args.push('-c', fedrampExtensionsPath);
       } else {
-        console.warn('FedRAMP extensions file not found. Proceeding without it.');
+        console.warn(chalk.yellow('FedRAMP extensions file not found. Proceeding without it.'));
       }
     } else if (extensions) {
       const extensionsList = extensions.split(',');
       args.push(...extensionsList.flatMap(x => ['-c', x]));
     }
 
-    //const result =
-    await validateWithSarif(args);
-    // console.log(`Validation result for ${filePath}:`, result);
+    const result = await validateWithSarif(args) as any;
+    if (result.runs[0].results.some(r => r.level === 'error')) {
+      console.error(`Validation failed for ${filePath}`);
+      parseSarifToErrorStrings(result).errors.forEach((error)=>{
+        console.error(chalk.red(error));
+      })
+      return false;
+    }
+    console.log(`Validation passed for ${filePath}`);
+    return true;
   } catch (error) {
-
     console.error(`Error validating ${filePath}:`, error);
     console.error(JSON.stringify(error));
+    return false;
   }
 }
 

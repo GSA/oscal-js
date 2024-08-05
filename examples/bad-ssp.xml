@@ -36,8 +36,7 @@
     </metadata>
     <import-profile href="#b78aa3ec-915d-475b-8097-46813fae1825" />
     <system-characteristics>
-        <system-id identifier-type="https://ietf.org/rfc/rfc4122">
-            d7456980-9277-4dcb-83cf-f8ff0442623b</system-id>
+        <system-id identifier-type="https://ietf.org/rfc/rfc4122">d7456980-9277-4dcb-83cf-f8ff0442623b</system-id>
         <system-name>Enterprise Logging and Auditing System</system-name>
         <description>
             <p>This is an example of a system that provides enterprise logging and log auditing

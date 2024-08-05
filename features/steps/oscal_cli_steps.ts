@@ -119,6 +119,7 @@ Then('I should receive the conversion result', function () {
 
 When('I validate with metaschema extensions and sarif output on the document', async () => {
   sarifResult = await validateWithSarif([documentPath,"-c",metaschemaDocumentPath]);
+console.log(sarifResult);
 })
 
 Then('I should receive the sarif output', () => {

@@ -53,6 +53,12 @@ Feature: OSCAL CLI Wrapper
     When I validate with metaschema extensions and sarif output on the document
     Then I should receive the sarif output
 
+  Scenario: Get sarif output for valid xml
+    Given I have an OSCAL document "bad-ssp.xml"
+    Given I have an Metaschema extensions document "fedramp-external-constraints.xml"
+    When I validate with metaschema extensions and sarif output on the document
+    Then I should receive the sarif output
+
   Scenario: validate javascript object inline
     Given I have an OSCAL document "ssp.json"
     When I validate with imported validate function

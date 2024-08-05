@@ -114,7 +114,7 @@ export const isJavaInstalled = async (): Promise<boolean> => {
   return checkCommand(command);
 };
 export const installOscalCli = (): void => {
-  const oscalCliInstallUrl = `https://codeload.github.com/wandmagic/oscal/zip/refs/heads/cli`;
+  const oscalCliInstallUrl = `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/2.0.0/oscal-cli-enhanced-2.0.0-oscal-cli.zip`;
   const isWindows = process.platform === 'win32';
 
   // Use AppData for Windows, or .local for other systems
@@ -291,7 +291,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 
 program
-  .version("1.3.4")
+  .version("1.3.5")
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')

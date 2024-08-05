@@ -310,7 +310,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 
 program
-  .version("1.3.5")
+  .version("1.3.7")
   .command('validate')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')
@@ -581,7 +581,7 @@ program.command('resolve')
       const validOutputTypes = ['json', 'xml', 'yaml'];
       const outputType = validOutputTypes.includes(outputFileType) ? outputFileType : fileType;
 
-      const args = ["--to=" + outputType, file, output, "--overwrite"];
+      const args = ["--to=" + outputType, file, output, "--overwrite","--show-stack-trace"];
       const [result, errors] = await executeOscalCliCommand("resolve-profile", args);
 
       if (errors) {

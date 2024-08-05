@@ -25,7 +25,7 @@ export async function resolveProfile(
       const tempFile = path.join(`./oscal-cli-tmp-input-${v4()}.json`);
       writeFileSync(tempFile,JSON.stringify(document));
       const tempOutput = path.join(`./oscal-cli-tmp-outout-${v4()}.json`);
-      const args = ["--to=JSON", tempFile, tempOutput];
+      const args = ["--to=JSON", tempFile, tempOutput,'--show-stack-trace'];
       await executeOscalCliCommand("resolve-profile", args);
       const result=JSON.parse(readFileSync(tempOutput).toString());
       return result as Catalog;

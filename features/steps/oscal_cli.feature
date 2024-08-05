@@ -69,3 +69,9 @@ Feature: OSCAL CLI Wrapper
     Given I want an OSCAL document "profile.json"
     When I convert it with imported convert function
     Then I should receive a valid json object
+
+  Scenario: resolve an XML profile
+    Given I have an OSCAL document "profile.xml"
+    Given I want to resolve the profile
+    When I resolve it with imported resolve function
+    Then I should receive the resolved profile

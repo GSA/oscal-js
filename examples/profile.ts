@@ -1,7 +1,6 @@
-import { OscalJsonPackage } from "../src/types";
+import { OscalJsonPackage, Profile } from "../src/types";
 
-export const profile:OscalJsonPackage={
-  "profile" : {
+export const profile:Profile={
     "merge" : {
       "as-is" : true
     },
@@ -48,17 +47,6 @@ export const profile:OscalJsonPackage={
       "resources" : [ {
         "description" : "NIST Special Publication 800-53 Revision 5: Security and Privacy Controls for Federal Information Systems and Organizations",
         "uuid" : "84cbf061-eb87-4ec1-8112-1f529232e907",
-        "rlinks" : [ {
-          "href" : "../../../../nist.gov/SP800-53/rev5/xml/NIST_SP-800-53_rev5_catalog.xml",
-          "media-type" : "application/oscal.catalog+xml"
-        }, {
-          "href" : "../../../../nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json",
-          "media-type" : "application/oscal.catalog+json"
-        }, {
-          "href" : "../../../../nist.gov/SP800-53/rev5/yaml/NIST_SP-800-53_rev5_catalog.yaml",
-          "media-type" : "application/oscal.catalog+yaml"
-        } ]
       } ]
     }
   }
-}

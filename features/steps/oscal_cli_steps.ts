@@ -6,6 +6,8 @@ import { expect } from 'chai';
 import { existsSync, readFile, readFileSync } from 'fs';
 import path, { dirname } from 'path';
 import { Log } from 'sarif';
+import { profile} from '../../examples/profile.js'
+import {resolveProfile} from '../../src/resolve.js'
 import { fileURLToPath } from 'url';
 import { convert } from '../../src/convert.js';
 import {
@@ -19,6 +21,7 @@ import { sarifSchema } from '../../src/schema/sarif.js';
 import { parseSarifToErrorStrings, validate, validateDefinition, validateFile } from '../../src/validate.js';
 import { parseString } from 'xml2js';
 import { setDefaultTimeout } from '@cucumber/cucumber';
+import { Catalog, OscalJsonPackage } from '../../src/types.js';
 
 const DEFAULT_TIMEOUT = 17000;
 
@@ -44,6 +47,7 @@ let exampleObject: any;
 let sarifResult: Log;
 let validateResult: { isValid: boolean; errors?: string[] | undefined; };
 let conversionResult: string;
+let resolutionResult: Catalog|undefined;
 
 const ajv = new Ajv()
 addFormats(ajv);
@@ -252,3 +256,22 @@ Then('conversion result is a json', async () => {
 
   expect(isValidJson).to.be.true;
 });
+
+Given('I want to resolve the profile', async () => {
+  executionErrors && console.error(executionErrors);
+})
+Then('I should receive the resolved profile', function () {
+  expect(existsSync(outputPath)).to.be.true;
+  expect(resolutionResult).to.exist;
+});
+Then('the resolved profile should be valid', async function () {
+  if(typeof resolutionResult==='undefined'){
+    throw("Resolution failed");
+  }
+  const {isValid,errors}=await validate({catalog:resolutionResult} as OscalJsonPackage);
+  expect(isValid).to.be.true
+});
+
+When('I resolve it with imported resolve function', async () => {
+  resolutionResult =await resolveProfile(profile);
+})

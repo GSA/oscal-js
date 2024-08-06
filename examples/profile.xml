@@ -8,7 +8,7 @@
       <version>5.1.1+u4</version>
       <oscal-version>1.1.2</oscal-version>
       <role id="creator">
-         <title>Document Creator</title>
+         <title>Creator</title>
       </role>
       <role id="contact">
          <title>Contact</title>
@@ -26,6 +26,7 @@
             <postal-code>20899-8930</postal-code>
          </address>
       </party>
+      
       <responsible-party role-id="creator">
          <party-uuid>c748c806-1d77-4695-bb40-e117b2afa82e</party-uuid>
       </responsible-party>
@@ -415,9 +416,7 @@
          <description>
             <p>NIST Special Publication 800-53 Revision 5: Security and Privacy Controls for Federal Information Systems and Organizations</p>
          </description>
-         <rlink media-type="application/oscal.catalog+xml" href="../../../../nist.gov/SP800-53/rev5/xml/NIST_SP-800-53_rev5_catalog.xml"/>
-         <rlink media-type="application/oscal.catalog+json" href="../../../../nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json"/>
-         <rlink media-type="application/oscal.catalog+yaml" href="../../../../nist.gov/SP800-53/rev5/yaml/NIST_SP-800-53_rev5_catalog.yaml"/>
-      </resource>
+         <rlink media-type="application/oscal.catalog+xml" href="https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/xml/NIST_SP-800-53_rev5_catalog.xml"/>
+     </resource>
    </back-matter>
 </profile>

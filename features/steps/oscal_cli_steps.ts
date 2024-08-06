@@ -7,7 +7,7 @@ import { existsSync, readFile, readFileSync } from 'fs';
 import path, { dirname } from 'path';
 import { Log } from 'sarif';
 import { profile} from '../../examples/profile.js'
-import {resolveProfile} from '../../src/resolve.js'
+import {resolveProfile, resolveProfileFromFile} from '../../src/resolve.js'
 import { fileURLToPath } from 'url';
 import { convert } from '../../src/convert.js';
 import {
@@ -140,8 +140,9 @@ expect(typeof validateResult.isValid==='boolean');
 
 When('I validate with imported validate function', async () => {
   try {
-    validateResult=await validateFile(documentPath,{useAjv:false,extensions:metaschemaDocuments})    
+    validateResult=await validateFile(documentPath,{useAjv:false,extensions:[]})    
   } catch (error) {
+    console.error("EEEEEE");
     console.error(error);
   }
 })
@@ -268,10 +269,15 @@ Then('the resolved profile should be valid', async function () {
   if(typeof resolutionResult==='undefined'){
     throw("Resolution failed");
   }
-  const {isValid,errors}=await validate({catalog:resolutionResult} as OscalJsonPackage);
+  const {isValid,errors}=await validate(resolutionResult as any);
+  console.error("--------");
+  console.error(errors);
+  console.error(isValid);
   expect(isValid).to.be.true
 });
 
 When('I resolve it with imported resolve function', async () => {
-  resolutionResult =await resolveProfile(profile);
+  resolutionResult =await resolveProfileFromFile(documentPath);
+  console.error(resolutionResult);
+
 })

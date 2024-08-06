@@ -74,4 +74,4 @@ Feature: OSCAL CLI Wrapper
     Given I have an OSCAL document "profile.xml"
     Given I want to resolve the profile
     When I resolve it with imported resolve function
-    Then I should receive the resolved profile
+    Then the resolved profile should be valid

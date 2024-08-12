@@ -32,6 +32,9 @@ jobs:
     - name: Build javacsript distribution
       run: npm run build
 
+    - name: Use Stable oscal
+      run: node ./dist/cli.js use oscal-cli-1.1.0
+
     - name: Resolve FedRAMP HIGH baseline profile
       run: node ./dist/cli.js resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml
 

@@ -32,7 +32,7 @@ Feature: OSCAL CLI Wrapper
     And conversion result is a yaml
 
   Scenario: Get sarif output invalid xml
-    Given I have an OSCAL document "bad-ssp.xml"
+    Given I have an OSCAL document "invalid-ssp.xml"
     When I validate with sarif output on the document
     Then I should receive the sarif output
     And we should have errors in the sarif output
@@ -54,7 +54,7 @@ Feature: OSCAL CLI Wrapper
     Then I should receive the sarif output
 
   Scenario: Get sarif output for valid xml
-    Given I have an OSCAL document "bad-ssp.xml"
+    Given I have an OSCAL document "invalid-ssp.xml"
     Given I have an Metaschema extensions document "fedramp-external-constraints.xml"
     When I validate with metaschema extensions and sarif output on the document
     Then I should receive the sarif output

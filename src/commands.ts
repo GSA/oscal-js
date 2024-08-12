@@ -12,6 +12,7 @@ import { v4 } from 'uuid';
 import xml2js from 'xml2js';
 import { scaffold } from './scaffold.js';
 import { platform } from 'os';
+import AdmZip from 'adm-zip'
 import { parseSarifToErrorStrings } from './validate.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -105,6 +106,12 @@ export const isOscalCliInstalled = async (): Promise<boolean> => {
   const oscalCliInstallPath = path.join('.', 'oscal-cli');
   return fs.existsSync(oscalCliInstallPath);
 };
+const versions = {
+  "oscal-cli-enhanced-2.0.0-oscal-cli":
+  `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/2.0.0/oscal-cli-enhanced-2.0.0-oscal-cli.zip`,
+  "oscal-cli":
+  `https://utfs.io/f/0992ac73-6387-4666-8e0e-d1daeec87614-5nwzst.zip`    
+}
 
 export const isJavaInstalled = async (): Promise<boolean> => {
   const command = process.platform === 'win32'
@@ -112,18 +119,22 @@ export const isJavaInstalled = async (): Promise<boolean> => {
     : 'which java';
   
   return checkCommand(command);
-};export const installOscalCli = async (version= "oscal-cli-enhanced-2.0.0"): Promise<void> => {
-  const versions = {
-    "oscal-cli-enhanced-2.0.0":
-    `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/2.0.0/oscal-cli-enhanced-2.0.0-oscal-cli.zip`
+};export const installOscalCli = async (version= "latest"): Promise<void> => {
+  if (version==="latest"){
+    version = "oscal-cli-enhanced-2.0.0-oscal-cli"
+  }
+  
+  if(!Object.keys(versions).includes(version)){
+    console.error("unknown oscal version :"+version)
+    console.error(chalk.blue(Object.keys(versions)))
+    return;
   }
   const oscalCliInstallUrl = versions[version];
   const url = new URL(oscalCliInstallUrl);
   const host = url.hostname;
-  console.log("Installing version:", version, "from", host);
+  console.log("Installing version:",chalk.blue(version), "from", host);
   const isWindows = process.platform === 'win32';
-  const zipfilename = oscalCliInstallUrl.split("/").pop(); // Fixed filename
-
+  let zipfilename = oscalCliInstallUrl.split("/").pop(); // Fixed filename
   // Use AppData for Windows, or .local for other systems
   const homeDir = isWindows ? process.env.APPDATA : (process.env.HOME || process.env.USERPROFILE);
   const localPath = isWindows ? path.join(homeDir as string, 'OSCAL-CLI') : path.join(homeDir as string, '.local');
@@ -159,19 +170,24 @@ export const isJavaInstalled = async (): Promise<boolean> => {
         });
       });
     } else {
-      await new Promise((resolve, reject) => {
-        exec(`unzip -o "${zipFilePath}" -d "${oscalCliPath}"`, (error, stdout, stderr) => {
-          if (error) reject(error);
-          else resolve(stdout);
-        });
-      });
+      console.log(`Extracting OSCAL CLI to ${oscalCliPath}`);
+        console.log('Attempting to use Node.js to extract the zip file...');
+    
+        // Fallback to using a Node.js library for zip extraction
+        const zip = new AdmZip(zipFilePath);
+        
+        zip.extractAllTo(localPath, true);
+    
+      console.log('Extraction completed successfully');
     }
     // Make the CLI executable (for non-Windows systems)
     if (!isWindows) {
+      console.log("Looking for cli executable at"+oscalCliExecutablePath)
       await fs.promises.chmod(oscalCliExecutablePath, '755');
     }
 
     // Create a shortcut (Windows) or symbolic link (other systems)
+    console.log(`Creating OSCAL CLI... symlink oscal-cli=> ${oscalCliExecutablePath}` );
     const sourceFile = isWindows ? `${oscalCliExecutablePath}.bat` : oscalCliExecutablePath;
     const aliasPath = path.join(localBinPath, 'oscal-cli' + (isWindows ? '.bat' : ''));
 
@@ -182,9 +198,19 @@ export const isJavaInstalled = async (): Promise<boolean> => {
     if (isWindows) {
       // For Windows, create a .bat file in WindowsApps directory
       const batchContent = `@echo off\n"${sourceFile}" %*`;
-      await fs.promises.writeFile(aliasPath, batchContent);
+      await fs.promises.writeFile(aliasPath, batchContent,{flag:"w"});
     } else {
-      await fs.promises.symlink(sourceFile, aliasPath);
+      try {
+        await fs.promises.symlink(sourceFile, aliasPath, 'file');
+    } catch (symlinkError:any) {
+        if (symlinkError.code === 'EEXIST') {
+            // If symlink already exists, force creation by unlinking and trying again
+            await fs.promises.unlink(aliasPath);
+            await fs.promises.symlink(sourceFile, aliasPath, 'file');
+        } else {
+            throw symlinkError;
+        }
+    }
     }
 
     // Delete the zip file
@@ -310,15 +336,15 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 
 program
-  .version("1.3.7")
-  .command('validate')
+  .version("1.3.8")
+  .command('validate [file]')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')
   .option('-r, --recursive', 'Recursively validate files in directories')
   .description('Validate the OSCAL document(s)')
-  .action(async (options: { file?: string, extensions?: string, recursive?: boolean }) => {
+  .action(async (fileArg,options: { file?: string, extensions?: string, recursive?: boolean }) => {
     let { file, extensions, recursive } = options;
-
+    file = fileArg || file;
     if (typeof file === 'undefined') {
       const answer = await inquirer.prompt<{ file: string }>([{
         type: 'input',
@@ -446,13 +472,14 @@ function findFedrampExtensionsFile() {
   return null;
 }
 
-program.command('convert')
+program.command('convert [file]')
   .description('Convert an OSCAL document (XML, JSON, YAML)')
   .option('-f, --file <path>', 'Path to the OSCAL document or folder')
   .option('-o, --output <path>', 'Path to the output file or folder')
   .option('-t, --type <type>', 'JSON, YAML, or XML type setting when converting a directory')
-  .action(async (options: { file?: string; output?: string; type?: string }) => {
+  .action(async (fileArg,options: { file?: string; output?: string; type?: string }) => {
     let { file, output, type } = options;
+    file = fileArg || file;
 
     if (!file) {
       const answer = await inquirer.prompt<{ file: string }>([{
@@ -544,13 +571,13 @@ async function convertFile(inputFile: string, outputFile: string, outputFormat: 
 
 
 
-program.command('resolve')
+program.command('resolve [file]')
   .description('Resolve an OSCAL profile (XML, JSON, YAML)')
   .option('-f, --file <path>', 'Path to the OSCAL profile document')
   .option('-o, --output <path>', 'Path to the output file')
-  .action(async (options: { file?: string; output?: string }) => {
+  .action(async (fileArg,options: { file?: string; output?: string }) => {
     let { file, output } = options;
-
+    file = fileArg ||file
     if (!file) {
       const answer = await inquirer.prompt<{ file: string }>([{
         type: 'input',
@@ -596,24 +623,65 @@ program.command('resolve')
     }
   });
 
+  program
+  .command('use [version]')
+  .description('Install or switch to a specific OSCAL CLI version')
+  .action(async (version) => {
+    if (!version) {
+      const choices = Object.keys(versions).map(v => ({
+        name: v,
+        value: v
+      }));
+      
+      const answer = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'selectedVersion',
+          message: 'Select the OSCAL CLI version to install:',
+          choices: [...choices, { name: 'latest', value: 'latest' }]
+        }
+      ]);
+      
+      version = answer.selectedVersion;
+    }
+    
+    if (!versions[version] && version !== 'latest') {
+      console.error(chalk.red(`Unknown version: ${version}`));
+      console.log(chalk.yellow('Available versions:'));
+      Object.keys(versions).forEach(v => console.log(chalk.blue(`- ${v}`)));
+      console.log(chalk.blue(`- latest`));
+      return;
+    }
+    
+    await installOscalCli(version);
+  });
 
 program.command('scaffold')
   .option('-o, --output <path>', 'Path to the output')
   .description('Scaffold an OSCAL package')
   .action(scaffold);
 
-export const run = () => {
-  isOscalCliInstalled()
-    .then((installed) => {
-      if (!installed) {
-        return installOscalCli();
-      }
-    })
-    .then(() => {
+  export const run = () => {
+    const args = process.argv.slice(2);
+    const command = args[0];
+  
+    if (command === 'use') {
+      // If the command is 'use', directly parse the arguments without checking for OSCAL CLI installation
       program.parse(process.argv);
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-      process.exit(1);
-    });
-}
+    } else {
+      // For all other commands, check for OSCAL CLI installation first
+      isOscalCliInstalled()
+        .then((installed) => {
+          if (!installed) {
+            return installOscalCli();
+          }
+        })
+        .then(() => {
+          program.parse(process.argv);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+          process.exit(1);
+        });
+    }
+  };

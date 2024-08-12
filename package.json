@@ -1,6 +1,6 @@
 {
   "name": "oscal",
-  "version": "1.3.7",
+  "version": "1.3.8",
   "description": "oscal",
   "main": "./dist/index.js",
   "bin": "./dist/cli.js",
@@ -21,7 +21,9 @@
   "license": "MIT",
   "dependencies": {
     "@terascope/fetch-github-release": "^0.8.10",
+    "@types/adm-zip": "^0.5.5",
     "@types/sarif": "^2.1.7",
+    "adm-zip": "^0.5.15",
     "ajv": "^8.16.0",
     "ajv-formats": "^3.0.1",
     "chai": "^5.1.1",

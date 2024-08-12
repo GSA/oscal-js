@@ -36,10 +36,10 @@ jobs:
       run: node ./dist/cli.js resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml
 
     - name: Convert Profiles to JSON
-      run: node ./dist/cli.js convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/json/ -t JSON
+      run: node ./dist/cli.js convert ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/json/ -t JSON
 
     - name: Convert Profiles to YAML
-      run: node ./dist/cli.js convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML
+      run: node ./dist/cli.js convert ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML
 
     - name: Validate all output recursively
       run: node ./dist/cli.js validate -f ./artifacts/ -e fedramp -r

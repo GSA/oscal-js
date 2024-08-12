@@ -109,8 +109,8 @@ export const isOscalCliInstalled = async (): Promise<boolean> => {
 const versions = {
   "oscal-cli-enhanced-2.0.0-oscal-cli":
   `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/2.0.0/oscal-cli-enhanced-2.0.0-oscal-cli.zip`,
-  "oscal-cli":
-  `https://utfs.io/f/0992ac73-6387-4666-8e0e-d1daeec87614-5nwzst.zip`    
+  "oscal-cli-1.1.0":
+  `https://media.githubusercontent.com/media/security-automations/oscal-cli-versions/main/oscal-cli-1.1.0.zip`    
 }
 
 export const isJavaInstalled = async (): Promise<boolean> => {
@@ -176,7 +176,7 @@ export const isJavaInstalled = async (): Promise<boolean> => {
         // Fallback to using a Node.js library for zip extraction
         const zip = new AdmZip(zipFilePath);
         
-        zip.extractAllTo(localPath, true);
+        zip.extractAllTo(oscalCliPath, true);
     
       console.log('Extraction completed successfully');
     }

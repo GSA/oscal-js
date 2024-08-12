@@ -54,6 +54,9 @@ jobs:
     - name: Validate all output recursively
       run: oscal validate -f ./artifacts/ -e fedramp -r
 
+    - name: Install old oscal version
+      run: oscal use oscal-cli-1.1.0
+
     - name: Deploy to GitHub Pages (forks only)
       uses: peaceiris/actions-gh-pages@v3
       if: github.repository != env.HOME_REPO && github.ref == 'refs/heads/main'

@@ -107,6 +107,8 @@ export const isOscalCliInstalled = async (): Promise<boolean> => {
   return fs.existsSync(oscalCliInstallPath);
 };
 const versions = {
+  "oscal-cli-enhanced-2.0.1-oscal-cli":
+  `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/2.0.1/oscal-cli-enhanced-2.0.1-oscal-cli.zip`,
   "oscal-cli-enhanced-2.0.0-oscal-cli":
   `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/2.0.0/oscal-cli-enhanced-2.0.0-oscal-cli.zip`,
   "oscal-cli-1.1.0":
@@ -121,7 +123,7 @@ export const isJavaInstalled = async (): Promise<boolean> => {
   return checkCommand(command);
 };export const installOscalCli = async (version= "latest"): Promise<void> => {
   if (version==="latest"){
-    version = "oscal-cli-enhanced-2.0.0-oscal-cli"
+    version = "oscal-cli-enhanced-2.0.1-oscal-cli"
   }
   
   if(!Object.keys(versions).includes(version)){
@@ -336,7 +338,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 
 program
-  .version("1.3.8")
+  .version("1.3.9")
   .command('validate [file]')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')

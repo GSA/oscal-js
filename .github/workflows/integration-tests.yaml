@@ -22,9 +22,8 @@ jobs:
     - name: Install cli
       run: npm install oscal -g
 
-    - name: Use Stable oscal version
-      run: oscal use oscal-cli-1.1.0
-
+    - name: Use latest oscal version
+      run: oscal use latest
     - name: Produce artifacts baselines in all formats
       run: oscal convert -f ./content/rev5/baselines/xml -o artifacts/content/rev5/baselines/
     - name: Produce artifacts for ssp

@@ -112,7 +112,9 @@ const versions = {
   "oscal-cli-enhanced-2.0.0-oscal-cli":
   `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/2.0.0/oscal-cli-enhanced-2.0.0-oscal-cli.zip`,
   "oscal-cli-1.1.0":
-  `https://media.githubusercontent.com/media/security-automations/oscal-cli-versions/main/oscal-cli-1.1.0.zip`    
+  `https://media.githubusercontent.com/media/security-automations/oscal-cli-versions/main/oscal-cli-1.1.0.zip`,
+  "oscal-cli-2.0.2.rc1":
+  `https://media.githubusercontent.com/media/security-automations/oscal-cli-versions/main/oscal-cli-2.0.2.rc1.zip`    
 }
 
 export const isJavaInstalled = async (): Promise<boolean> => {

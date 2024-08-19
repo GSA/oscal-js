@@ -123,102 +123,77 @@ export const isJavaInstalled = async (): Promise<boolean> => {
     : 'which java';
   
   return checkCommand(command);
-};export const installOscalCli = async (version= "latest"): Promise<void> => {
-  if (version==="latest"){
-    version = "oscal-cli-enhanced-2.0.1-oscal-cli"
+};
+
+export const installOscalCli = (version = "latest"): void => {
+  if (version === "latest") {
+    version = "oscal-cli-enhanced-2.0.1-oscal-cli";
   }
   
-  if(!Object.keys(versions).includes(version)){
-    console.error("unknown oscal version :"+version)
-    console.error(chalk.blue(Object.keys(versions)))
+  if (!Object.keys(versions).includes(version)) {
+    console.error("Unknown OSCAL version: " + version);
+    console.error(chalk.blue(Object.keys(versions)));
     return;
   }
+
   const oscalCliInstallUrl = versions[version];
   const url = new URL(oscalCliInstallUrl);
   const host = url.hostname;
-  console.log("Installing version:",chalk.blue(version), "from", host);
-  const isWindows = process.platform === 'win32';
-  let zipfilename = oscalCliInstallUrl.split("/").pop(); // Fixed filename
-  // Use AppData for Windows, or .local for other systems
-  const homeDir = isWindows ? process.env.APPDATA : (process.env.HOME || process.env.USERPROFILE);
-  const localPath = isWindows ? path.join(homeDir as string, 'OSCAL-CLI') : path.join(homeDir as string, '.local');
+  console.log("Installing version:", chalk.blue(version), "from", host);
 
-  const localBinPath = isWindows ? path.join(process.env.USERPROFILE as string, 'AppData', 'Local', 'Microsoft', 'WindowsApps') : path.join(localPath, 'bin');
-  const oscalCliPath = path.join(localPath, version);
+  const isWindows = process.platform === 'win32';
+  const zipfilename = oscalCliInstallUrl.split("/").pop();
+
+  // Use npm's global prefix to determine the installation directory
+  const npmPrefix = execSync('npm config get prefix').toString().trim();
+
+  const binPath = isWindows ? npmPrefix : path.join(npmPrefix, 'bin');
+  const oscalCliPath = path.join(npmPrefix, 'lib', 'node_modules', 'oscal-cli');
   const oscalCliExecutablePath = path.join(oscalCliPath, 'bin', 'oscal-cli');
-  const zipFilePath = path.join(localPath, zipfilename);
+  const zipFilePath = path.join(oscalCliPath, zipfilename);
 
   try {
     // Create necessary directories
-    await fs.promises.mkdir(oscalCliPath, { recursive: true });
-    if (!isWindows) {
-      await fs.promises.mkdir(localBinPath, { recursive: true });
-    }
+    fs.mkdirSync(oscalCliPath, { recursive: true });
 
     // Download the zip file
     console.log(`Downloading OSCAL CLI...`);
-    await new Promise((resolve, reject) => {
-      exec(`curl -o "${zipFilePath}" "${oscalCliInstallUrl}"`, (error, stdout, stderr) => {
-        if (error) reject(error);
-        else resolve(stdout);
-      });
-    });
+    execSync(`curl -o "${zipFilePath}" "${oscalCliInstallUrl}"`);
 
     // Unzip the file to oscal-cli directory
-    console.log(`Extracting OSCAL CLI... ${zipFilePath}` );
+    console.log(`Extracting OSCAL CLI... ${zipFilePath}`);
     if (isWindows) {
-      await new Promise((resolve, reject) => {
-        exec(`powershell -command "Expand-Archive -Path '${zipFilePath}' -DestinationPath '${oscalCliPath}' -Force"`, (error, stdout, stderr) => {
-          if (error) reject(error);
-          else resolve(stdout);
-        });
-      });
+      execSync(`powershell -command "Expand-Archive -Path '${zipFilePath}' -DestinationPath '${oscalCliPath}' -Force"`);
     } else {
       console.log(`Extracting OSCAL CLI to ${oscalCliPath}`);
-        console.log('Attempting to use Node.js to extract the zip file...');
-    
-        // Fallback to using a Node.js library for zip extraction
-        const zip = new AdmZip(zipFilePath);
-        
-        zip.extractAllTo(oscalCliPath, true);
-    
-      console.log('Extraction completed successfully');
+      const zip = new AdmZip(zipFilePath);
+      zip.extractAllTo(oscalCliPath, true);
     }
+
     // Make the CLI executable (for non-Windows systems)
     if (!isWindows) {
-      console.log("Looking for cli executable at"+oscalCliExecutablePath)
-      await fs.promises.chmod(oscalCliExecutablePath, '755');
+      console.log("Setting executable permissions for CLI at " + oscalCliExecutablePath);
+      fs.chmodSync(oscalCliExecutablePath, '755');
     }
 
     // Create a shortcut (Windows) or symbolic link (other systems)
-    console.log(`Creating OSCAL CLI... symlink oscal-cli=> ${oscalCliExecutablePath}` );
+    console.log(`Creating OSCAL CLI symlink: oscal-cli => ${oscalCliExecutablePath}`);
     const sourceFile = isWindows ? `${oscalCliExecutablePath}.bat` : oscalCliExecutablePath;
-    const aliasPath = path.join(localBinPath, 'oscal-cli' + (isWindows ? '.bat' : ''));
+    const aliasPath = path.join(binPath, 'oscal-cli' + (isWindows ? '.bat' : ''));
 
-    if (await fs.promises.access(aliasPath).then(() => true).catch(() => false)) {
-      await fs.promises.unlink(aliasPath); // Remove existing alias if it exists
+    if (fs.existsSync(aliasPath)) {
+      fs.unlinkSync(aliasPath); // Remove existing alias if it exists
     }
 
     if (isWindows) {
-      // For Windows, create a .bat file in WindowsApps directory
       const batchContent = `@echo off\n"${sourceFile}" %*`;
-      await fs.promises.writeFile(aliasPath, batchContent,{flag:"w"});
+      fs.writeFileSync(aliasPath, batchContent, { flag: "w" });
     } else {
-      try {
-        await fs.promises.symlink(sourceFile, aliasPath, 'file');
-    } catch (symlinkError:any) {
-        if (symlinkError.code === 'EEXIST') {
-            // If symlink already exists, force creation by unlinking and trying again
-            await fs.promises.unlink(aliasPath);
-            await fs.promises.symlink(sourceFile, aliasPath, 'file');
-        } else {
-            throw symlinkError;
-        }
-    }
+      fs.symlinkSync(sourceFile, aliasPath, 'file');
     }
 
     // Delete the zip file
-    await fs.promises.unlink(zipFilePath);
+    fs.unlinkSync(zipFilePath);
 
     console.log(`OSCAL CLI installed to ${oscalCliPath}`);
     console.log(`Alias created at ${aliasPath}`);
@@ -340,7 +315,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 
 program
-  .version("1.4.0")
+  .version("1.4.1")
   .command('validate [file]')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')

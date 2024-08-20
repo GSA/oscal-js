@@ -39,8 +39,7 @@ async function getVersionsFromMaven() {
 }
 
 async function downloadFromMaven(version) {
-  const downloadUrl = `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/${version}/oscal-cli-enhanced-${version}.jar`;
-  
+  const downloadUrl = `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/${version}/oscal-cli-enhanced-${version}-oscal-cli.zip`;
   try {
     console.log(`Downloading version ${version} from ${downloadUrl}`);
     const response = await fetch(downloadUrl);

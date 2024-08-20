@@ -14,6 +14,46 @@ import { scaffold } from './scaffold.js';
 import { platform } from 'os';
 import AdmZip from 'adm-zip'
 import { parseSarifToErrorStrings } from './validate.js';
+const MAVEN_METADATA_URL = 'https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/maven-metadata.xml';
+
+
+
+async function getVersionsFromMaven() {
+  try {
+    const response = await fetch(MAVEN_METADATA_URL);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const xmlData = await response.text();
+    const parser = new xml2js.Parser();
+    const result = await parser.parseStringPromise(xmlData);
+
+    const versions = result.metadata.versioning[0].versions[0].version.sort();
+    const latestVersion = result.metadata.versioning[0].release[0];
+
+    return { versions, latestVersion };
+  } catch (error) {
+    console.error('Error fetching versions from Maven:', error);
+    throw error;
+  }
+}
+
+async function downloadFromMaven(version) {
+  const downloadUrl = `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/${version}/oscal-cli-enhanced-${version}.jar`;
+  
+  try {
+    console.log(`Downloading version ${version} from ${downloadUrl}`);
+    const response = await fetch(downloadUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return  await response.arrayBuffer();
+    console.log(`Successfully downloaded version ${version}`);
+  } catch (error) {
+    console.error(`Error downloading version ${version}:`, error);
+    throw error;
+  }
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -106,16 +146,6 @@ export const isOscalCliInstalled = async (): Promise<boolean> => {
   const oscalCliInstallPath = path.join('.', 'oscal-cli');
   return fs.existsSync(oscalCliInstallPath);
 };
-const versions = {
-  "oscal-cli-enhanced-2.0.1-oscal-cli":
-  `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/2.0.1/oscal-cli-enhanced-2.0.1-oscal-cli.zip`,
-  "oscal-cli-enhanced-2.0.0-oscal-cli":
-  `https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/2.0.0/oscal-cli-enhanced-2.0.0-oscal-cli.zip`,
-  "oscal-cli-1.1.0":
-  `https://media.githubusercontent.com/media/security-automations/oscal-cli-versions/main/oscal-cli-1.1.0.zip`,
-  "oscal-cli-2.0.2.rc1":
-  `https://media.githubusercontent.com/media/security-automations/oscal-cli-versions/main/oscal-cli-2.0.2.rc1.zip`    
-}
 
 export const isJavaInstalled = async (): Promise<boolean> => {
   const command = process.platform === 'win32'
@@ -125,50 +155,39 @@ export const isJavaInstalled = async (): Promise<boolean> => {
   return checkCommand(command);
 };
 
-export const installOscalCli = (version = "latest"): void => {
-  if (version === "latest") {
-    version = "oscal-cli-enhanced-2.0.1-oscal-cli";
-  }
-  
-  if (!Object.keys(versions).includes(version)) {
-    console.error("Unknown OSCAL version: " + version);
-    console.error(chalk.blue(Object.keys(versions)));
-    return;
-  }
 
-  const oscalCliInstallUrl = versions[version];
-  const url = new URL(oscalCliInstallUrl);
-  const host = url.hostname;
-  console.log("Installing version:", chalk.blue(version), "from", host);
-
-  const isWindows = process.platform === 'win32';
-  const zipfilename = oscalCliInstallUrl.split("/").pop();
-
-  // Use npm's global prefix to determine the installation directory
-  const npmPrefix = execSync('npm config get prefix').toString().trim();
-
-  const binPath = isWindows ? npmPrefix : path.join(npmPrefix, 'bin');
-  const oscalCliPath = path.join(npmPrefix, 'lib', 'node_modules', 'oscal-cli');
-  const oscalCliExecutablePath = path.join(oscalCliPath, 'bin', 'oscal-cli');
-  const zipFilePath = path.join(oscalCliPath, zipfilename);
-
+export const installOscalCli = async (version = "latest"): Promise<void> => {
   try {
+    const { versions, latestVersion } = await getVersionsFromMaven();
+    
+    if (version === "latest") {
+      version = latestVersion;
+    } else if (!versions.includes(version)) {
+      console.error("Unknown OSCAL version: " + version);
+      console.error(chalk.blue(versions.join(', ')));
+      return;
+    }
+
+    console.log("Installing version:", chalk.blue(version));
+
+    const isWindows = process.platform === 'win32';
+    const npmPrefix = execSync('npm config get prefix').toString().trim();
+
+    const binPath = isWindows ? npmPrefix : path.join(npmPrefix, 'bin');
+    const oscalCliPath = path.join(npmPrefix, 'lib', 'node_modules', 'oscal-cli');
+    const oscalCliExecutablePath = path.join(oscalCliPath, 'bin', 'oscal-cli');
+
     // Create necessary directories
     fs.mkdirSync(oscalCliPath, { recursive: true });
 
     // Download the zip file
     console.log(`Downloading OSCAL CLI...`);
-    execSync(`curl -o "${zipFilePath}" "${oscalCliInstallUrl}"`);
+    const zipBuffer = await downloadFromMaven(version);
 
     // Unzip the file to oscal-cli directory
-    console.log(`Extracting OSCAL CLI... ${zipFilePath}`);
-    if (isWindows) {
-      execSync(`powershell -command "Expand-Archive -Path '${zipFilePath}' -DestinationPath '${oscalCliPath}' -Force"`);
-    } else {
-      console.log(`Extracting OSCAL CLI to ${oscalCliPath}`);
-      const zip = new AdmZip(zipFilePath);
-      zip.extractAllTo(oscalCliPath, true);
-    }
+    console.log(`Extracting OSCAL CLI...`);
+    const zip = new AdmZip(Buffer.from(zipBuffer));
+    zip.extractAllTo(oscalCliPath, true);
 
     // Make the CLI executable (for non-Windows systems)
     if (!isWindows) {
@@ -191,9 +210,6 @@ export const installOscalCli = (version = "latest"): void => {
     } else {
       fs.symlinkSync(sourceFile, aliasPath, 'file');
     }
-
-    // Delete the zip file
-    fs.unlinkSync(zipFilePath);
 
     console.log(`OSCAL CLI installed to ${oscalCliPath}`);
     console.log(`Alias created at ${aliasPath}`);
@@ -315,7 +331,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 
 program
-  .version("1.4.1")
+  .version("1.4.3")
   .command('validate [file]')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')
@@ -606,25 +622,26 @@ program.command('resolve [file]')
   .command('use [version]')
   .description('Install or switch to a specific OSCAL CLI version')
   .action(async (version) => {
+    const {versions}= await getVersionsFromMaven();
     if (!version) {
-      const choices = Object.keys(versions).map(v => ({
+      const choices = (versions.reverse()).map(v => ({
         name: v,
         value: v
-      }));
+      }))
       
       const answer = await inquirer.prompt([
         {
           type: 'list',
           name: 'selectedVersion',
           message: 'Select the OSCAL CLI version to install:',
-          choices: [...choices, { name: 'latest', value: 'latest' }]
+          choices: [{ name: 'latest', value: 'latest' },...choices, ]
         }
       ]);
       
       version = answer.selectedVersion;
     }
     
-    if (!versions[version] && version !== 'latest') {
+    if (!versions.includes(version) && version !== 'latest') {
       console.error(chalk.red(`Unknown version: ${version}`));
       console.log(chalk.yellow('Available versions:'));
       Object.keys(versions).forEach(v => console.log(chalk.blue(`- ${v}`)));

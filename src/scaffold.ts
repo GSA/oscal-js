@@ -20,7 +20,9 @@ export const scaffold = async (options: ScaffoldOptions) => {
       choices: ['fedramp-ssp', 'fedramp-poam'],
     },
   ]);
-
+  const document = template.replaceAll("fedramp-","").replaceAll("nist-","")
+  const document_map:Record<string,string> ={"ssp":"system-security-plan","poam":"plan-of-action-and-milestones"} 
+  var document_path = document_map[document];
   const { baseline } = await inquirer.prompt([
     {
       type: 'list',
@@ -38,15 +40,14 @@ export const scaffold = async (options: ScaffoldOptions) => {
     },
   ]);
 
-  const { sspName } = await inquirer.prompt([
+  const {title}= await inquirer.prompt([
     {
       type: 'input',
-      name: 'sspName',
-      message: 'Enter the SSP name:',
-      default: 'My SSP',
+      name: 'title',
+      message: 'Enter the '+document+' name:',
+      default: 'My '+document,
     },
   ]);
-
   let outputPath = options.output as string;
   if (!outputPath) {
     const { output } = await inquirer.prompt([
@@ -79,7 +80,7 @@ export const scaffold = async (options: ScaffoldOptions) => {
   const templateUrl = templateUrls[template];
   const baselineUrl = baselineUrls[baseline];
 
-  const templateFileName = `${sspName.replace(/\s+/g, '-')}-${path.basename(templateUrl)}`;
+  const templateFileName = `${title.replace(/\s+/g, '-')}-${path.basename(templateUrl)}`;
   const templateFilePath = path.join(outputPath, templateFileName);
 
   console.log(`Downloading template from "${templateUrl}"`);
@@ -94,13 +95,18 @@ export const scaffold = async (options: ScaffoldOptions) => {
 
   // Update the SSP
   console.log(templateContent)
-  templateJson['system-security-plan'].uuid = uuidv4();
-  templateJson['system-security-plan'].metadata.title = sspName;
-  templateJson['system-security-plan'].metadata["last-modified"] = new Date().toISOString();
-  templateJson['system-security-plan'].metadata.version = "1.0";
-  templateJson['system-security-plan']["import-profile"] = {
+  
+
+  templateJson[document_path].uuid = uuidv4();
+  templateJson[document_path].metadata.title = title;
+  templateJson[document_path].metadata["last-modified"] = new Date().toISOString();
+  templateJson[document_path].metadata.version = "1.0";
+if(document==="ssp"){
+  templateJson[document_path]["import-profile"] = {
     href: baselineUrl
   };
+
+}
 
   // Write the updated SSP to file
   fs.writeFileSync(templateFilePath, JSON.stringify(templateJson, null, 2));

@@ -2,12 +2,13 @@ import { Given, Then, When } from '@cucumber/cucumber';
 import yaml from 'js-yaml'; // Make sure to import js-yaml
 import Ajv from 'ajv';
 import addFormats from "ajv-formats";
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import { existsSync, readFile, readFileSync } from 'fs';
 import path, { dirname } from 'path';
 import { Log } from 'sarif';
 import { profile} from '../../examples/profile.js'
 import {resolveProfile, resolveProfileFromFile} from '../../src/resolve.js'
+import {evaluateMetapath} from '../../src/evaluate.js'
 import { fileURLToPath } from 'url';
 import { convert } from '../../src/convert.js';
 import {
@@ -48,6 +49,8 @@ let sarifResult: Log;
 let validateResult: { isValid: boolean; errors?: string[] | undefined; };
 let conversionResult: string;
 let resolutionResult: Catalog|undefined;
+let evalResult: string|undefined;
+let evalQuery: string|undefined;
 
 const ajv = new Ajv()
 addFormats(ajv);
@@ -280,4 +283,23 @@ When('I resolve it with imported resolve function', async () => {
   resolutionResult =await resolveProfileFromFile(documentPath);
   console.error(resolutionResult);
 
+})
+
+
+When('I query with the eval function', async () => {
+  assert.isString(evalQuery);
+  assert.isString(documentPath);
+  evalResult=await evaluateMetapath({document:documentPath,expression:evalQuery!})
+  console.error(evalResult);
+  // Write code here that turns the phrase above into concrete actions
+})
+
+Given('I want query with metapath {string}', (s: string) => {
+  evalQuery = s ;
+  // Write code here that turns the phrase above into concrete actions
+})
+
+Then('the metapath evaluation should include {string}', (s: string) => {
+  assert.include(evalResult,s);
+  // Write code here that turns the phrase above into concrete actions
 })

@@ -14,6 +14,7 @@ import { scaffold } from './scaffold.js';
 import { platform } from 'os';
 import AdmZip from 'adm-zip'
 import { parseSarifToErrorStrings } from './validate.js';
+import { evaluateMetapath, evaluateMetapathCommand } from './evaluate.js';
 const MAVEN_METADATA_URL = 'https://repo1.maven.org/maven2/dev/metaschema/oscal/oscal-cli-enhanced/maven-metadata.xml';
 
 
@@ -221,11 +222,11 @@ const execPromise = promisify(exec);
 export type stdIn = string;
 export type stdErr = string;
 
-export const executeOscalCliCommand = async (command: string, args: string[], showLoader: boolean = false): Promise<[stdIn, stdErr]> => {
+export const executeOscalCliCommand = async (command: string, args: string[], showLoader: boolean = false,quiet:boolean=false): Promise<[stdIn, stdErr]> => {
   return new Promise((resolve, reject) => {
     findOscalCliPath().then(oscalCliPath => {
       const isWindows = process.platform === 'win32';
-      const fullArgs = [command, ...args];
+      const fullArgs = [...command.split(" "), ...args];
 
       console.log(chalk.green("oscal-cli ") + chalk.blue(command)+' '+(args.join(" ")));
 
@@ -238,9 +239,8 @@ export const executeOscalCliCommand = async (command: string, args: string[], sh
           { windowsVerbatimArguments: true }
         ];
       } else {
-        spawnArgs = [oscalCliPath, fullArgs, {}];
+        spawnArgs = [oscalCliPath, fullArgs,{shell:true}];
       }
-
       const oscalCliProcess = spawn(...spawnArgs);
 
       let stdout = '';
@@ -286,17 +286,17 @@ export const executeOscalCliCommand = async (command: string, args: string[], sh
     }).catch(error => reject(error));
   });
 };
-export const validateWithSarif = async (args: string[]): Promise<Log> => {
+export const validateWithSarif = async (args: string[],quiet:boolean=false): Promise<Log> => {
   const tempFile = path.join(`oscal-cli-sarif-log-${v4()}.json`);
   const sarifArgs = [...args, '-o', tempFile, "--sarif-include-pass", '--show-stack-trace'];
   var consoleErr = ""
   try {
-    const [out, err] = await executeOscalCliCommand('validate', sarifArgs, false);
+    const [out, err] = await executeOscalCliCommand('validate', sarifArgs, false,quiet);
     consoleErr = err;
-    console.log(out);
-    console.error(chalk.red(err));
+    !quiet&&console.log(out);
+    !quiet&&console.error(chalk.red(err));
   } catch (error) {
-    console.error(chalk.red(error));
+    !quiet&&console.error(chalk.red(error));
     if (!existsSync(tempFile)) {
       throw (consoleErr)
     }
@@ -655,6 +655,13 @@ program.command('scaffold')
   .option('-o, --output <path>', 'Path to the output')
   .description('Scaffold an OSCAL package')
   .action(scaffold);
+
+  program.command('metaquery')
+  .option('-e, --expression <path>', 'Path to the output')
+  .option('-i, --document <path>', 'Path to the document')
+  .option('-m, --metaschema <path>', 'Path to the metaschema-module')
+  .description('Evaluate metapath query against an oscal document')
+  .action(evaluateMetapathCommand);
 
   export const run = () => {
     const args = process.argv.slice(2);

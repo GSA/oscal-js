@@ -75,3 +75,9 @@ Feature: OSCAL CLI Wrapper
     Given I want to resolve the profile
     When I resolve it with imported resolve function
     Then the resolved profile should be valid
+
+  Scenario: evaluate a metapath
+    Given I have an OSCAL document "ssp.xml"
+    Given I want query with metapath "//user"
+    When I query with the eval function
+    Then the metapath evaluation should include "/system-implementation"

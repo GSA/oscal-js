@@ -1,21 +1,22 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
+    "target": "ES2020",
+    "module": "ES2020",
+    "lib": ["ES2020", "DOM"],
     "moduleResolution": "node",
-    "esModuleInterop": true,
+    "outDir": "./dist/esm",
+    "rootDir": "./src",
     "strict": true,
-    "target": "ES2015",
-    "outDir": "./dist",
+    "esModuleInterop": true,
     "resolveJsonModule": true,
-    "rootDir": "./src/",
     "allowJs": true,
     "noImplicitAny": false,
     "declaration": true,
-    "declarationDir": "./dist"
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true
   },
-  "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
-  },
-  "exclude": ["node_modules", "features/", "examples", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }

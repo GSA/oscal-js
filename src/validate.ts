@@ -1,5 +1,5 @@
 import { Ajv } from 'ajv';
-import addFormats from "ajv-formats";
+import addFormats from 'ajv-formats';
 import { readFileSync, rmSync, writeFileSync } from 'fs';
 import path from 'path';
 import { v4 } from 'uuid';
@@ -26,7 +26,7 @@ function getAjv(): Ajv {
       verbose: true,
       schemas:[oscalSchema]
     });
-    addFormats(ajv);
+    (addFormats as any)(ajv);
   }
   return ajv;
 }

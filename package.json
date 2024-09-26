@@ -1,12 +1,18 @@
 {
   "name": "oscal",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "description": "oscal",
   "main": "./dist/index.js",
   "bin": "./dist/cli.js",
+"exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "npx tsc",
+    "build": "tsc -b tsconfig.json tsconfig.cjs.json",
     "types": "node ./dist/scripts/generateTypes.js",
     "test": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js",
     "test:lib": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @lib",

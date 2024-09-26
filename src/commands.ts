@@ -330,7 +330,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 
 program
-  .version("1.4.8")
+  .version("1.4.7")
   .command('validate [file]')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')

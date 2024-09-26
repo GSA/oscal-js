@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import inquirer from 'inquirer';
 import { v4 as uuidv4 } from 'uuid';
-import { SystemSecurityPlanSSP } from './types.js';
+import { SystemSecurityPlanSSP } from './types';
 
 interface ScaffoldOptions {
   output?: string;

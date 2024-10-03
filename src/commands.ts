@@ -314,12 +314,15 @@ export const validateWithSarif = async (args: string[],quiet:boolean=false): Pro
 };
 
 const findOscalCliPath = async (): Promise<string> => {
-  const command = process.platform === 'win32' ? 'where oscal-cli' : 'which oscal-cli';
+  const command = process.platform === 'win32' ? 'where oscal-cli' : 'which -a oscal-cli';
 
   try {
     const { stdout } = await execPromise(command);
     const paths = stdout.trim().split('\n');
     if (paths.length > 0) {
+      if(paths.length > 1) {
+        console.warn(chalk.yellow(`Detected multiple installs of oscal-cli in PATH, defaulting to ${paths[0]} for now`));
+      }
       return paths[0]; // Return the first found path
     }
   } catch (error) {

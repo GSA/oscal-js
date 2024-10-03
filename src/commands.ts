@@ -318,14 +318,25 @@ const findOscalCliPath = async (): Promise<string> => {
 
   try {
     const { stdout } = await execPromise(command);
-    const paths = stdout.trim().split('\n');
+    const paths = [...new Set(stdout.trim().split('\n'))]
     if (paths.length > 0) {
-      if(paths.length > 1) {
-        console.warn(chalk.yellow(`Detected multiple installs of oscal-cli in PATH, defaulting to ${paths[0]} for now`));
+      // Filter paths that include 'node'
+      const nodePaths = paths.filter(path => path.toLowerCase().includes('node'));
+      
+      if (nodePaths.length > 0) {
+        // If node paths are found, use the first one
+        if (nodePaths.length > 1) {
+          console.warn(chalk.yellow(`Detected ${nodePaths.length} node-based installs of oscal-cli in PATH, using ${nodePaths[0]}`));
+        }
+        return nodePaths[0];
+      } else {
+        // If no node paths are found, fall back to the original behavior
+        if (paths.length > 1) {
+          console.warn(chalk.yellow(`Detected ${paths.length} installs of oscal-cli in PATH, defaulting to ${paths[0]} (no node-based install found)`));
+        }
+        return paths[0];
       }
-      return paths[0]; // Return the first found path
-    }
-  } catch (error) {
+    }  } catch (error) {
     // Command failed or oscal-cli not found
   }
 
@@ -333,7 +344,7 @@ const findOscalCliPath = async (): Promise<string> => {
 };
 
 program
-  .version("1.4.7")
+  .version("1.4.8")
   .command('validate [file]')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')

@@ -1,21 +1,32 @@
-import { Ajv } from 'ajv';
+import { Ajv, ErrorObject } from 'ajv';
 import addFormats from "ajv-formats";
-import { readFileSync, rmSync, writeFileSync } from 'fs';
+import chalk from 'chalk';
+import fs, { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import inquirer from 'inquirer';
 import path from 'path';
+import { Exception, Location, Log, ReportingDescriptor, Result, Run } from 'sarif';
 import { v4 } from 'uuid';
-import { installOscalCli, isJavaInstalled, isOscalCliInstalled, validateWithSarif } from './commands.js';
+import { executeOscalCliCommand, installOscalCli, installOscalServer, isJavaInstalled, isOscalExecutorInstalled } from './env.js';
 import { oscalSchema } from './schema/oscal.complete.js';
-import { AssessmentPart, ImportAssessmentPlan, LocalDefinitions, OscalJsonPackage, POAMItem, PlanOfActionAndMilestonesPOAM, ResourceHypertextReference } from './types.js';
+import { OscalJsonPackage, ResourceHypertextReference } from './types.js';
+import { detectOscalDocumentType, findFedrampExtensionsFile, OscalExecutorOptions } from './utils.js';
+import { randomUUID } from 'crypto';
+import { getServerClient } from './server.js';
+import { createFinalURL, defaultPathSerializer } from 'openapi-fetch';
+
 
 export type OscalValidationOptions = {
     extensions: ResourceHypertextReference[],
-    useAjv: boolean  
+} 
+
+
+export type OscalServerValidationOptions = OscalValidationOptions&{
+  inline: boolean
 } 
 
 export const fedrampValidationOptions: OscalValidationOptions = {
-    extensions: ["./examples/fedramp-external-constraints.xml", "./oscal-external-constraints.xml"],
-    useAjv: false
-};
+    extensions: ["./examples/fedramp-external-constraints.xml", "./oscal-external-constraints.xml"]
+  };
 
 let ajv: Ajv | null = null;
 
@@ -30,12 +41,16 @@ function getAjv(): Ajv {
   }
   return ajv;
 }
+
+
+
 export async function validate(
   document: OscalJsonPackage,
-  options: OscalValidationOptions = {extensions: [], useAjv: false}
-): Promise<{ isValid: boolean; errors?: string[] }> {
-  if (options.useAjv) {
-    return validateWithJsonSchema(document);
+  options: OscalValidationOptions = {extensions: []},
+  executor:OscalExecutorOptions='oscal-server'
+): Promise<{isValid:boolean,log:Log}> {
+  if (executor==='oscal-server') {
+    return executeSarifValidationViaServer(JSON.stringify(document),{...options,inline:true});
   }
 
   const javaInstalled = await isJavaInstalled();
@@ -44,7 +59,7 @@ export async function validate(
     return validateWithJsonSchema(document);
   }
 
-  let oscalCliInstalled = await isOscalCliInstalled();
+  let oscalCliInstalled = await isOscalExecutorInstalled('oscal-cli');
   if (!oscalCliInstalled) {
     try {
       installOscalCli();
@@ -57,61 +72,34 @@ export async function validate(
 
   const tempFile = path.join(`./oscal-cli-tmp-input-${v4()}.json`);
   writeFileSync(tempFile, JSON.stringify(document));
-  const result = await validateSarif(tempFile, options);
+  const result = await validateDocument(tempFile, options);
   rmSync(tempFile);
   return result;
 }
 
-export async function validateFile(
+export async function validateDocument(
   documentPath: string,
-  options: OscalValidationOptions = {extensions: [], useAjv: false}
-): Promise<{ isValid: boolean; errors?: string[] }> {
-  if (options.useAjv) {
-    throw new Error("Cannot use AJV with file validation");
+  options: OscalValidationOptions = {extensions: []},
+  executor:OscalExecutorOptions='oscal-server'
+): Promise<{ isValid: boolean; log: Log }> {      
+    return executeSarifValidation(documentPath, options,executor);  
   }
 
-  let oscalCliInstalled = await isOscalCliInstalled();
-  if (!oscalCliInstalled) {
-    installOscalCli();
-    oscalCliInstalled = true;
-  }
+ 
 
-  if (!oscalCliInstalled) {
-    return { isValid: false, errors: ["OSCAL CLI not installed"] };
-  }
-
-  return validateSarif(documentPath, options);
-}
-
-export async function validateSarif(
+export async function executeSarifValidation(
   filePath: string,
-  options: OscalValidationOptions
-): Promise<{ isValid: boolean; errors?: string[] }> {
+  options: OscalValidationOptions = {extensions:[]},
+  executor:OscalExecutorOptions
+): Promise<{ isValid: boolean; log: Log }> {
   const additionalArgs = options.extensions.flatMap(x => ["-c", x]);
-  const sarifResult = await validateWithSarif([filePath, ...additionalArgs]);
-  return parseSarifToErrorStrings(sarifResult);
-}
-
-export async function validateFileSarif(
-  documentPath: string,
-  options: OscalValidationOptions = {extensions: [], useAjv: false}
-): Promise<any> {
-  if (options.useAjv) {
-    throw new Error("Cannot use AJV with file validation");
+  if(executor==='oscal-cli'){
+    return await executeSarifValidationViaCLI([filePath, ...additionalArgs]);
+  }else if(executor==='oscal-server'){
+    return  await executeSarifValidationViaServer(filePath,{...options,inline:false}); 
+  }else {
+    return {isValid:false,log:buildSarifFromMessage("")}
   }
-
-  let oscalCliInstalled = await isOscalCliInstalled();
-  if (!oscalCliInstalled) {
-    installOscalCli();
-    oscalCliInstalled = true;
-  }
-
-  if (!oscalCliInstalled) {
-    throw new Error("OSCAL CLI not installed");
-  }
-
-  const additionalArgs = options.extensions.flatMap(x => ["-c", x]);
-  return validateWithSarif([documentPath, ...additionalArgs]);
 }
 
 export function parseSarifToErrorStrings(sarifResult: any): { isValid: boolean; errors: string[] } {
@@ -142,21 +130,56 @@ export function parseSarifToErrorStrings(sarifResult: any): { isValid: boolean; 
   
   return { isValid: errors.length === 0, errors };
 }
+
+function convertAjvErrorsToSarif(errors: ErrorObject[]): Log {
+  const results: Result[] = errors.map((error) => {
+    const location: Location = {
+      physicalLocation: {
+        artifactLocation: {
+          uri: error.instancePath || '/',
+        },
+        region: {
+          startLine: error.instancePath ? parseInt(error.instancePath.split('/')[1]) : 1,
+          startColumn: 1,
+        },
+      },
+    };
+
+    return {
+      level: 'error',
+      message: {
+        text: error.message || 'Unknown error',
+      },
+      locations: [location],
+    };
+  });
+
+  const sarif: Log = {
+    $schema: 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
+    version: '2.1.0',
+    runs: [
+      {
+        tool: {
+          driver: {
+            name: 'AJV Validator',
+            informationUri: 'https://ajv.js.org/',
+            rules: [],
+          },
+        },
+        results: results,
+      },
+    ],
+  };
+
+  return sarif;
+}
 function validateWithJsonSchema(
   document: OscalJsonPackage,
-): { isValid: boolean; errors?: string[] } {
+): {isValid:boolean,log:Log} {
   const ajv = getAjv();
   const validate = ajv.compile(oscalSchema);
-  const isJsonSchemaValid = validate({...document, $schema: "http://csrc.nist.gov/ns/oscal/1.0"});
-  if (!isJsonSchemaValid) {
-    console.error(validate.errors);
-    return {
-      isValid: false,
-      errors: validate.errors?.map((error: any) => `JSON Schema: ${error.message} at ${error.instancePath}`)
-    };
-  }
-
-  return { isValid: true };
+  const isValid=validate({...document, $schema: "http://csrc.nist.gov/ns/oscal/1.0"});
+  return {isValid,log:convertAjvErrorsToSarif(validate.errors||[])}
 }
 export const OscalDefinitions=[ "catalog", "group", "control", "part", 
   "parameter", "parameter-constraint", "parameter-guideline",
@@ -226,3 +249,221 @@ export function validateDefinition(
   return { isValid: true };
 }
 
+
+
+export async function validateDirectory(dirPath: string, options: OscalValidationOptions = { extensions: [] },executor: OscalExecutorOptions): Promise<{isValid:boolean,log:Log}> {
+  const files = fs.readdirSync(dirPath);
+  
+  const validationPromises = files.map(async (file) => {
+    const filePath = path.join(dirPath, file);
+    const stats = fs.statSync(filePath);
+    
+    if (!stats.isDirectory() && isValidFileType(filePath)) {
+      try {
+        return await validateDocument(filePath, options,executor);
+      } catch (error) {
+        console.error(`Error validating ${filePath}:`, error);
+        return {log:buildSarifFromMessage(("!" +error).toString()),isValid:false};
+      }
+    }
+    return {isValid:true,log:{runs:[],version:'2.1.0',$schema:""} as Log}; // Consider directories or invalid file types as "valid"
+  });
+
+  const results = await Promise.all(validationPromises);
+  
+  // Check if all validations passed
+  const isValid = results.every(result => result.isValid === true);
+  const runs = results.map(result => (result.log?.runs||[])).reduce((a,b)=>[...a,...b]);
+  let log=buildSarif(runs);
+  return {isValid,log};
+}
+
+export const validateCommand =async function(fileArg,commandOptions: { file?: string, extensions?: string[], recursive?: boolean,server?:boolean }) {
+  let { file, extensions, recursive,server } = commandOptions;
+  const options:OscalValidationOptions = {extensions:extensions||[]}
+  file = fileArg || file;
+  if (typeof file === 'undefined') {
+    const answer = await inquirer.prompt<{ file: string }>([{
+      type: 'input',
+      name: 'file',
+      message: 'Enter the path to the OSCAL document or directory:',
+      validate: (input: string) => input.trim() !== '' ? true : 'This field is required'
+    }]);
+    file = answer.file;
+  }
+
+  console.log('Beginning OSCAL document validation for', file);
+  const executor = server?"oscal-server":'oscal-cli';
+  try {
+    const stats = fs.statSync(file);
+    if (stats.isDirectory()) {
+      if (recursive) {
+        await validateDirectoryRecursively(file,options,buildSarifFromMessage("initial sarif"),executor);
+      } else {
+        await validateDirectory(file,options,executor);
+      }
+    } else {
+      if (recursive) {
+        console.warn('The --recursive option is ignored for single files.');
+      }
+      await validateDocument(file, options,executor);
+    }
+  } catch (error) {
+    console.error('Error during validation:', error);
+    process.exit(1);
+  }
+}
+
+async function validateDirectoryRecursively(dirPath: string, options:OscalValidationOptions,log:Log=buildSarif([]),executor:OscalExecutorOptions='oscal-server'): Promise<{isValid:boolean,log:Log}> {
+  const files = fs.readdirSync(dirPath);
+  let runs:Run[] = [];
+  let isValid = true;
+  for (const file of files) {
+    const filePath = path.join(dirPath, file);
+    const stats = fs.statSync(filePath);
+    if (stats.isDirectory()) {
+      const subdirResult = await validateDirectoryRecursively(filePath, options,log,executor);
+      subdirResult.log.runs&&runs.concat(subdirResult.log.runs);
+      if(!subdirResult.isValid){
+        isValid = false;
+      }
+      if (!subdirResult) return {isValid:false,log:buildSarifFromMessage("Failed to validate")}; // Stop if validation failed in subdirectory
+    } else if (isValidFileType(filePath)) {
+      const fileResult = await validateDocument(filePath,options);
+      fileResult.log&&fileResult.log.runs&&runs.concat(fileResult.log.runs);
+      if (!fileResult) return {isValid:false,log:buildSarifFromMessage("Failed to validate")}; // Stop if validation failed for this file
+    }
+  }
+  return {isValid,log:buildSarif(runs)}; // All validations passed
+}
+
+function isValidFileType(filePath: string): boolean {
+const validExtensions = ['.xml', '.json', '.yaml', '.yml'];
+return validExtensions.includes(path.extname(filePath).toLowerCase());
+}
+
+const executeSarifValidationViaCLI = async (args: string[],quiet:boolean=false): Promise<{isValid:boolean,log:Log}> => {
+  const tempFile = path.join(`oscal-cli-sarif-log-${v4()}.json`);
+  const sarifArgs = [...args, '-o', tempFile, "--sarif-include-pass", '--show-stack-trace'];
+  var consoleErr = ""
+  try {
+    const [out, err] = await executeOscalCliCommand('validate', sarifArgs, false);
+    consoleErr = err;
+    !quiet&&console.log(out);
+    !quiet&&console.error(chalk.red(err));
+  } catch (error) {
+    !quiet&&console.error(chalk.red(error));
+    if (!existsSync(tempFile)) {
+      throw (consoleErr)
+    }
+    const sarifOutput = readFileSync(tempFile, 'utf8');
+    rmSync(tempFile);
+    return {isValid:false,log:JSON.parse(sarifOutput) as Log};
+  }
+  try {
+    const sarifOutput = readFileSync(tempFile, 'utf8');
+    rmSync(tempFile);
+    return {isValid:true,log:JSON.parse(sarifOutput) as Log}
+  } catch (error) {
+    throw new Error(`Failed to read or parse SARIF output: ${error}`);
+  }
+};
+
+async function executeSarifValidationViaServer(document:string,options:OscalServerValidationOptions): Promise<{isValid:boolean,log:Log}> {
+  try {
+    if(!options.inline){
+      const args = (document+" "+options.extensions.join("-c "));
+      const params = {query:{content:args}}
+      console.log(document,"DOCUMENT");
+      const {response,error} =await getServerClient().GET('/validate',{params})
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const log = await response.json();
+      const responseCode = response.headers.get("Exit-Code")
+      let isValid = false;
+      if(responseCode=="0"){
+        isValid = true;
+      }
+    return {isValid,log};
+  }else{
+    const args = (" "+options.extensions.join("-c "));
+    const request = getServerClient().GET('/validate',{params:{query:{content:args}}})
+    const {response,error,data:log} =await request
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    if(!log){
+      throw new Error(`No Sarif response`);
+    }
+    error&&console.error(error);
+    const responseCode = response.headers.get("Exit-Code")
+    let isValid = false;
+    if(responseCode=="0"){
+      isValid = true;
+    }
+    return {isValid,log:log as any};
+  }
+} catch (error) {
+    console.error('Error during validation:', error);
+    throw error;
+  }
+}
+
+
+function buildSarifFromMessage(message: string): Log {
+  const ruleId = randomUUID();
+  
+  const rule: ReportingDescriptor = {
+    id: ruleId,
+    name: 'Runtime Error',
+    shortDescription: {
+      text: 'An error occured during runtime'
+    }
+  };
+
+  const result: Result = {
+    ruleId: ruleId,
+    level: 'warning',
+    message: {
+      text: message
+    },
+    locations: [
+      {
+        physicalLocation: {
+          artifactLocation: {
+            uri: 'unknown'
+          },
+          region: {
+            startLine: 1,
+            startColumn: 1
+          }
+        }
+      }
+    ]
+  };
+
+  const run: Run = {
+    tool: {
+      driver: {
+        name: 'oscal-js',
+        rules: [rule]
+      }
+    },
+    results: [result]
+  };
+
+  return buildSarif([run]);
+}
+function buildSarif(runs: Run[]): Log {  
+
+  const log: Log = {
+    version: '2.1.0',
+    $schema: 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
+    runs
+  };
+
+  return log;
+}

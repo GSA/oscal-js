@@ -1,6 +1,6 @@
 {
   "name": "oscal",
-  "version": "1.4.8",
+  "version": "2.0.0",
   "description": "oscal",
   "main": "./dist/index.js",
   "bin": "./dist/cli.js",
@@ -12,7 +12,8 @@
     "test:lib": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @lib",
     "test:constraints": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @lib",
     "test:ssp": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @ssp",
-    "report": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --format html:cucumber-report.html --publish-quiet || (exit 0)"
+    "report": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --format html:cucumber-report.html --publish-quiet || (exit 0)",
+    "generate:server-types": "npx openapi-typescript https://raw.githubusercontent.com/metaschema-framework/oscal-server/refs/heads/main/src/main/resources/webroot/openapi.yaml -o ./src/open-api/oscal-server.d.ts"
   },
   "keywords": [
     "oscal"
@@ -21,8 +22,6 @@
   "license": "MIT",
   "dependencies": {
     "@terascope/fetch-github-release": "^0.8.10",
-    "@types/adm-zip": "^0.5.5",
-    "@types/sarif": "^2.1.7",
     "adm-zip": "^0.5.15",
     "ajv": "^8.16.0",
     "ajv-formats": "^3.0.1",
@@ -33,6 +32,8 @@
     "inquirer": "^9.2.23",
     "js-yaml": "^4.1.0",
     "openai": "^4.51.0",
+    "openapi-fetch": "^0.12.2",
+    "ps-list": "^8.1.1",
     "uuid": "^10.0.0",
     "xml2js": "^0.6.2",
     "yaml": "^2.4.3"
@@ -40,10 +41,11 @@
   "type": "module",
   "devDependencies": {
     "@cucumber/cucumber": "^10.8.0",
+    "@types/adm-zip": "^0.5.5",
     "@types/chai": "^4.3.16",
     "@types/inquirer": "^9.0.7",
-    "@types/node": "^20.14.9",
-    "@types/xml2js": "^0.4.14",
+    "@types/node": "18.17.0",
+    "@types/sarif": "^2.1.7",
     "cross-env": "^7.0.3",
     "json-schema-to-typescript": "^14.1.0",
     "ts-node": "^10.9.2",

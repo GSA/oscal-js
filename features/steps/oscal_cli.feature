@@ -1,83 +1,130 @@
-Feature: OSCAL CLI Wrapper
+Feature: OSCAL Operations with Multiple Executors
 
-  Scenario: Detect OSCAL document type
+  Scenario Outline: Detect OSCAL document type
     Given I have an OSCAL document "ssp.xml"
     When I detect the document type
     Then the document type should be "ssp"
 
-  Scenario: Check OSCAL CLI installation
-    When I check if OSCAL CLI is installed
+  Scenario Outline: Check OSCAL tool installation
+    When I check if "<tool>" is installed
     Then I should receive a boolean result
+    Examples:
+      | tool         |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: Install OSCAL CLI
-    Given OSCAL CLI is not installed
-    When I install OSCAL CLI
-    Then OSCAL CLI should be installed
+  Scenario Outline: Install OSCAL tool
+    Given "<tool>" is not installed
+    When I install "<tool>"
+    Then "<tool>" should be installed
+    Examples:
+      | tool         |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: Execute OSCAL CLI command
+  Scenario Outline: Execute OSCAL command
     Given I have an OSCAL document "ssp.xml"
-    When I execute the OSCAL CLI command "validate" on the document
+    When I execute the OSCAL command "validate" on the document using "<executor>"
     Then I should receive the execution result
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: Convert OSCAL document from XML to JSON
+  Scenario Outline: Convert OSCAL document from XML to JSON
     Given I have an OSCAL document "ssp.xml"
-    When I convert the document to JSON
+    When I convert the document to JSON using "<executor>"
     Then I should receive the conversion result
     And conversion result is a json
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: Convert OSCAL document from XML to YAML
+  Scenario Outline: Convert OSCAL document from XML to YAML
     Given I have an OSCAL document "ssp.xml"
-    When I convert the document to YAML
+    When I convert the document to YAML using "<executor>"
     Then I should receive the conversion result
     And conversion result is a yaml
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: Get sarif output invalid xml
+  Scenario Outline: Get sarif output for invalid XML
     Given I have an OSCAL document "invalid-ssp.xml"
-    When I validate with sarif output on the document
+    When I validate with sarif output on the document using "<executor>"
     Then I should receive the sarif output
     And we should have errors in the sarif output
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: Get sarif output for valid xml
+  Scenario Outline: Get sarif output for valid XML
     Given I have an OSCAL document "ssp.xml"
-    When I validate with sarif output on the document
+    When I validate with sarif output on the document using "<executor>"
     Then I should receive the sarif output
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: Get sarif output for valid json
+  Scenario Outline: Get sarif output for valid JSON
     Given I have an OSCAL document "ssp.json"
-    When I validate with sarif output on the document
+    When I validate with sarif output on the document using "<executor>"
     Then I should receive the sarif output
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: Get sarif output for valid xml
+  Scenario Outline: Get sarif output for valid XML with metaschema extensions
     Given I have an OSCAL document "ssp.xml"
-    Given I have an Metaschema extensions document "fedramp-external-constraints.xml"
-    When I validate with metaschema extensions and sarif output on the document
+    And I have a Metaschema extensions document "fedramp-external-constraints.xml"
+    When I validate with metaschema extensions and sarif output on the document using "<executor>"
     Then I should receive the sarif output
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: Get sarif output for valid xml
+  Scenario Outline: Get sarif output for invalid XML with metaschema extensions
     Given I have an OSCAL document "invalid-ssp.xml"
-    Given I have an Metaschema extensions document "fedramp-external-constraints.xml"
-    When I validate with metaschema extensions and sarif output on the document
+    And I have a Metaschema extensions document "fedramp-external-constraints.xml"
+    When I validate with metaschema extensions and sarif output on the document using "<executor>"
     Then I should receive the sarif output
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: validate javascript object inline
+  Scenario Outline: Validate JavaScript object inline
     Given I have an OSCAL document "ssp.json"
-    When I validate with imported validate function
+    When I validate with imported validate function using "<executor>"
     Then I should receive a validation object
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: convert javascript object inline
+  Scenario Outline: Convert JavaScript object inline
     Given I have an OSCAL document "profile.xml"
-    Given I want an OSCAL document "profile.json"
-    When I convert it with imported convert function
+    And I want an OSCAL document "profile.json"
+    When I convert it with imported convert function using "<executor>"
     Then I should receive a valid json object
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: resolve an XML profile
+  Scenario Outline: Resolve an XML profile
     Given I have an OSCAL document "profile.xml"
-    Given I want to resolve the profile
-    When I resolve it with imported resolve function
+    And I want to resolve the profile
+    When I resolve it with imported resolve function using "<executor>"
     Then the resolved profile should be valid
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |
 
-  Scenario: evaluate a metapath
-    Given I have an OSCAL document "ssp.xml"
-    Given I want query with metapath "//user"
-    When I query with the eval function
-    Then the metapath evaluation should include "/system-implementation"

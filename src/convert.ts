@@ -1,23 +1,178 @@
-import { executeOscalCliCommand, installOscalCli, isOscalCliInstalled } from './commands.js';
+import fs, { readFileSync, unlinkSync, writeFileSync } from 'fs';
+import path from 'path';
+import { executeOscalCliCommand, installOscalCli, isOscalExecutorInstalled } from './env.js';
+import inquirer from 'inquirer';
+import { detectOscalDocumentType, OscalExecutorOptions } from './utils.js';
+import { OscalJsonPackage } from './types.js';
+import { randomUUID } from 'crypto';
+import { getServerClient } from './server.js';
+
+export type OscalConvertOptions = {
+  outputFormat: 'json'|'yaml'|'xml'|'yml',
+} 
+
 
 export async function convert(
-    document: string,
-    output: string,
-): Promise<void> {
-    let oscalCliInstalled = await isOscalCliInstalled();
+  document: OscalJsonPackage,
+  options: OscalConvertOptions,
+  executor: OscalExecutorOptions = 'oscal-server'
+): Promise<object> {
+  const tempInputFile = path.join(process.cwd(), `oscal-cli-tmp-input-${randomUUID()}.json`);
+  const tempOutputFile = path.join(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
 
-    if (!oscalCliInstalled) {
-        // If OSCAL CLI is not installed, attempt to install it
-        try {
-            await installOscalCli();
-            oscalCliInstalled = true;
-        } catch (error) {
-            console.error("Error installing CLI:", error);
-            throw new Error("Failed to install OSCAL CLI");
-        }
+  try {
+    writeFileSync(tempInputFile, JSON.stringify(document));
+    await convertDocument(tempInputFile, tempOutputFile, options, executor);
+    const convertedContent = readFileSync(tempOutputFile, 'utf8');
+
+    let result;
+    if (options.outputFormat === 'json') {
+      result = JSON.parse(convertedContent);
+    } else if (['yaml', 'yml'].includes(options.outputFormat)) {
+      result = convertedContent; // Return as string if YAML parser is not available
+    } else {
+      result = convertedContent;
     }
 
-    // Whether OSCAL CLI was already installed or just installed, proceed with conversion
-    const args = ["--to=JSON", document, output,"--overwrite"];
-    await executeOscalCliCommand("convert", args);
+    return result;
+  } finally {
+    await Promise.all([
+      unlinkSync(tempInputFile),
+      unlinkSync(tempOutputFile)
+    ]);
+  }
 }
+
+export async function convertDocument(
+  documentPath: string,
+  outputPath: string,
+  options: OscalConvertOptions = { outputFormat: 'xml' },
+  executor: OscalExecutorOptions = 'oscal-cli'
+): Promise<void> {
+  if (executor === 'oscal-cli') {
+    await convertFileWithCli(documentPath, outputPath, options);
+  } else if (executor === 'oscal-server') {
+    await convertFileWithServer(documentPath, outputPath, options);
+  } else {
+    throw new Error(`Unsupported executor: ${executor}`);
+  }
+}
+
+async function handleFolderConversion(
+  inputFolder: string,
+  outputFolder: string,
+  options: OscalConvertOptions
+): Promise<void> {
+  const { outputFormat } = options;
+  const validTypes = ['json', 'yaml', 'xml'];
+  const outputFormats = outputFormat && validTypes.includes(outputFormat.toLowerCase())
+    ? [outputFormat.toLowerCase()]
+    : validTypes;
+
+  for (const format of outputFormats) {
+    const formatOutputFolder = outputFormat
+      ? outputFolder
+      : path.join(outputFolder, format);
+    fs.mkdirSync(formatOutputFolder, { recursive: true });
+
+    const files = fs.readdirSync(inputFolder);
+    for (const inputFile of files) {
+      const inputPath = path.join(inputFolder, inputFile);
+      const outputPath = path.join(formatOutputFolder, `${path.parse(inputFile).name}.${format}`);
+      const inputFileExtension = path.extname(inputPath).toLowerCase().slice(1);
+      if (validTypes.includes(inputFileExtension)) {
+        await convertDocument(inputPath, outputPath, { ...options, outputFormat: format as any });
+      }
+    }
+  }
+}
+
+export async function handleSingleFileConversion(
+  inputFile: string,
+  output: string,
+  options: OscalConvertOptions,
+  executor: OscalExecutorOptions = 'oscal-cli'
+): Promise<void> {
+  const outputExt = path.extname(output).toLowerCase();
+  if (['.json', '.yaml', '.xml'].includes(outputExt)) {
+    const outputFormat = outputExt.slice(1) as 'json' | 'yaml' | 'xml';
+    await convertDocument(inputFile, output, { ...options, outputFormat }, executor);
+  } else {
+    const outputFormats = ['json', 'yaml', 'xml'];
+    for (const format of outputFormats) {
+      const outputFolder = path.join(output, format);
+      fs.mkdirSync(outputFolder, { recursive: true });
+      const outputFile = path.join(outputFolder, `${path.parse(inputFile).name}.${format}`);
+      await convertDocument(inputFile, outputFile, { ...options, outputFormat: format as 'json' | 'yaml' | 'xml' }, executor);
+    }
+  }
+}
+
+async function convertFileWithCli(
+  inputFile: string,
+  outputFile: string,
+  options: OscalConvertOptions
+): Promise<void> {
+  const args = [`--to=${options.outputFormat}`, inputFile, outputFile, "--overwrite"];
+  const [result, errors] = await executeOscalCliCommand("convert", args);
+  if (errors) console.error(errors);
+}
+
+async function convertFileWithServer(
+  inputFile: string,
+  outputFile: string,
+  options: OscalConvertOptions
+): Promise<void> {
+    try {
+        const encodedArgs = encodeURIComponent(inputFile+' '+outputFile);
+        console.log(decodeURIComponent(encodedArgs))
+        const {response,error} =await getServerClient().GET('/convert',{params:{query:{content:inputFile}}})
+        if (!response.ok) {
+          console.error(error?.error)
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }        
+        const result = await response.text();
+        fs.writeFileSync(outputFile,result);
+      return;
+  } catch (error) {
+      console.error('Error during validation:', error);
+      throw error;
+    }
+  
+}
+
+export const convertCommand = async (
+  fileArg: string | undefined,
+  commandOptions: { file?: string; output?: string; type?: string; server: boolean }
+) => {
+  let { file, output, type, server } = commandOptions;
+  const options: OscalConvertOptions = { outputFormat: type as 'json' | 'yaml' | 'xml' | 'yml' };
+  const executor = server ? "oscal-server" : 'oscal-cli';
+  file = fileArg || file;
+
+  if (!file) {
+    const answer = await inquirer.prompt<{ file: string }>([{
+      type: 'input',
+      name: 'file',
+      message: 'Enter the path to the OSCAL document or folder:',
+      validate: (input: string) => input.trim() !== '' ? true : 'This field is required'
+    }]);
+    file = answer.file;
+  }
+
+  if (!output) {
+    const answer = await inquirer.prompt<{ output: string }>([{
+      type: 'input',
+      name: 'output',
+      message: 'Enter the path for the output file or folder:',
+      validate: (input: string) => input.trim() !== '' ? true : 'This field is required'
+    }]);
+    output = answer.output;
+  }
+
+  if (fs.lstatSync(file).isDirectory()) {
+    await handleFolderConversion(file, output, options);
+  } else {
+    await handleSingleFileConversion(file, output, options, executor);
+  }
+};

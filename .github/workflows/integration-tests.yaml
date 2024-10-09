@@ -20,7 +20,7 @@ jobs:
         node-version: '20'
 
     - name: Install cli
-      run: npm install oscal -g
+      run: npm install oscal@next -g
 
     - name: Use latest oscal version
       run: oscal use latest

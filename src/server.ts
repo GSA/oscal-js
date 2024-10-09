@@ -1,13 +1,14 @@
 import chalk from "chalk";
-import { ChildProcess, exec, spawn } from "child_process";
-import { existsSync, mkdirSync, readFileSync } from 'fs';
+import { ChildProcess, spawn } from "child_process";
+import { existsSync, mkdirSync } from 'fs';
 import fetch from 'node-fetch';
 import createClient, { Client, Middleware } from "openapi-fetch";
 import os from 'os';
-import { join } from 'path';
+import path, { join } from 'path';
 import psList from 'ps-list';
-import { findOscalServerPath, installOscalExecutor, installOscalExecutorIfNeeded } from "./env.js";
+import { findOscalServerPath, installOscalExecutor } from "./env.js";
 import { paths } from "./open-api/oscal-server.js";
+import { URL } from "url";
 
 export async function stopServer() {
   try {
@@ -39,10 +40,16 @@ export async function stopServer() {
 
 const loggingMiddleware: Middleware = {
   onRequest: async ({request}) => {
-    console.log(chalk.blue('oscal-server')+' http request:', request.url);
     return request;
-  },onResponse:async ({response})=>{
-    console.log(chalk.blue('oscal-server')+' http response:', response.status);
+  },onResponse: async ({ response, request }) => {
+    const url = new URL(request.url);
+    const documentParam = url.searchParams.get('document') || 'No document specified';
+    const filename = path.basename(documentParam);
+    let exitStatus=(response.headers.get("Exit-Status")||"NA").toString()
+    const statusColor= exitStatus==="OK"?chalk.green:chalk.red
+    console.log(
+      chalk.blue('oscal-server') + ' ' + filename  +' '+ statusColor(exitStatus)
+    );
   }
 };
 
@@ -150,6 +157,7 @@ export async function checkServerStatus(): Promise<boolean> {
     return response.ok;
   } catch (error) {
     console.error('Error checking server status:', error);
+    console.info('Start the oscal server with oscal-server', error);
     return false;
   }
 }

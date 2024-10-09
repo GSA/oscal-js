@@ -17,8 +17,8 @@ export async function convert(
   options: OscalConvertOptions,
   executor: OscalExecutorOptions = 'oscal-server'
 ): Promise<string|OscalJsonPackage> {
-  const tempInputFile = path.join(process.cwd(), `oscal-cli-tmp-input-${randomUUID()}.json`);
-  const tempOutputFile = path.join(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
+  const tempInputFile = path.resolve(process.cwd(), `oscal-cli-tmp-input-${randomUUID()}.json`);
+  const tempOutputFile = path.resolve(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
 
   try {
     writeFileSync(tempInputFile, JSON.stringify(document));
@@ -61,7 +61,8 @@ export async function convertDocument(
 async function handleFolderConversion(
   inputFolder: string,
   outputFolder: string,
-  options: OscalConvertOptions
+  options: OscalConvertOptions,
+  executor:OscalExecutorOptions
 ): Promise<void> {
   const { outputFormat } = options;
   const validTypes = ['json', 'yaml', 'xml'];
@@ -77,11 +78,11 @@ async function handleFolderConversion(
 
     const files = fs.readdirSync(inputFolder);
     for (const inputFile of files) {
-      const inputPath = path.join(inputFolder, inputFile);
-      const outputPath = path.join(formatOutputFolder, `${path.parse(inputFile).name}.${format}`);
+      const inputPath = path.resolve(inputFolder, inputFile);
+      const outputPath = path.resolve(formatOutputFolder, `${path.parse(inputFile).name}.${format}`);
       const inputFileExtension = path.extname(inputPath).toLowerCase().slice(1);
       if (validTypes.includes(inputFileExtension)) {
-        await convertDocument(inputPath, outputPath, { ...options, outputFormat: format as any });
+        await convertDocument(inputPath, outputPath, { ...options, outputFormat: format as any },executor);
       }
     }
   }
@@ -100,9 +101,9 @@ export async function handleSingleFileConversion(
   } else {
     const outputFormats = ['json', 'yaml', 'xml'];
     for (const format of outputFormats) {
-      const outputFolder = path.join(output, format);
+      const outputFolder = path.resolve(output, format);
       fs.mkdirSync(outputFolder, { recursive: true });
-      const outputFile = path.join(outputFolder, `${path.parse(inputFile).name}.${format}`);
+      const outputFile = path.resolve(outputFolder, `${path.parse(inputFile).name}.${format}`);
       await convertDocument(inputFile, outputFile, { ...options, outputFormat: format as 'json' | 'yaml' | 'xml' }, executor);
     }
   }
@@ -198,7 +199,7 @@ export const convertCommand = async (
   }
 
   if (fs.lstatSync(file).isDirectory()) {
-    await handleFolderConversion(file, output, options);
+    await handleFolderConversion(file, output, options,executor);
   } else {
     await handleSingleFileConversion(file, output, options, executor);
   }

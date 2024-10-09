@@ -78,9 +78,9 @@ export const installOscalCli = async (version = "latest"): Promise<void> => {
       const isWindows = process.platform === 'win32';
       const npmPrefix = execSync('npm config get prefix').toString().trim();
   
-      const binPath = isWindows ? npmPrefix : path.join(npmPrefix, 'bin');
-      const oscalCliPath = path.join(npmPrefix, 'lib', 'node_modules', 'oscal-cli');
-      const oscalCliExecutablePath = path.join(oscalCliPath, 'bin', 'oscal-cli');
+      const binPath = isWindows ? npmPrefix : path.resolve(npmPrefix, 'bin');
+      const oscalCliPath = path.resolve(npmPrefix, 'lib', 'node_modules', 'oscal-cli');
+      const oscalCliExecutablePath = path.resolve(oscalCliPath, 'bin', 'oscal-cli');
   
       // Create necessary directories
       fs.mkdirSync(oscalCliPath, { recursive: true });
@@ -103,7 +103,7 @@ export const installOscalCli = async (version = "latest"): Promise<void> => {
       // Create a shortcut (Windows) or symbolic link (other systems)
       console.log(`Creating OSCAL CLI symlink: oscal-cli => ${oscalCliExecutablePath}`);
       const sourceFile = isWindows ? `${oscalCliExecutablePath}.bat` : oscalCliExecutablePath;
-      const aliasPath = path.join(binPath, 'oscal-cli' + (isWindows ? '.bat' : ''));
+      const aliasPath = path.resolve(binPath, 'oscal-cli' + (isWindows ? '.bat' : ''));
   
       if (fs.existsSync(aliasPath)) {
         fs.unlinkSync(aliasPath); // Remove existing alias if it exists
@@ -188,8 +188,8 @@ export async function installOscalServer(tag:string='latest') {
     console.log(`Extracting OSCAL SERVER...`);
 
     const homeDir = homedir();
-    const oscalDir = path.join(homeDir, '.oscal');
-    const installDir = path.join(oscalDir, latestVersion);
+    const oscalDir = path.resolve(homeDir, '.oscal');
+    const installDir = path.resolve(oscalDir, latestVersion);
     
     // Create .oscal directory if it doesn't exist
     if (!fs.existsSync(oscalDir)) {
@@ -212,12 +212,12 @@ export async function installOscalServer(tag:string='latest') {
     execSync(`chmod +x "${executablePath}"`);
     
     // Create alias in user's local bin
-    const userLocalBin = path.join(homeDir, '.local', 'bin');
+    const userLocalBin = path.resolve(homeDir, '.local', 'bin');
     if (!fs.existsSync(userLocalBin)) {
       fs.mkdirSync(userLocalBin, { recursive: true });
     }
     
-    const aliasPath = path.join(userLocalBin, 'oscal-server');
+    const aliasPath = path.resolve(userLocalBin, 'oscal-server');
     try{
       fs.unlinkSync(aliasPath);
     }catch(e){
@@ -239,7 +239,7 @@ export async function installOscalServer(tag:string='latest') {
 async function findExecutable(dir: string, name: string): Promise<string | null> {
   const files = await fs.promises.readdir(dir);
   for (const file of files) {
-    const filePath = path.join(dir, file);
+    const filePath = path.resolve(dir, file);
     const stats = await fs.promises.stat(filePath);
     if (stats.isDirectory()) {
       const result = await findExecutable(filePath, name);

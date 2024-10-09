@@ -9,7 +9,7 @@ import { validateCommand } from './validate.js';
 import { useVersion } from './versions.js';
 
 program
-  .version("2.0.0-rc2")
+  .version("2.0.0-rc3")
   .command('validate [file]')
   .option('-s, --server', 'Use OSCAL server for operations')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
@@ -65,24 +65,21 @@ program.command('metaquery')
     if (command === 'use') {
       // If the command is 'use', directly parse the arguments without checking for OSCAL CLI installation
       program.parse(process.argv);
-    } else if (command==='server'||args.includes("-s")||args.includes("--server")){
+    } else if (args.includes("-s")||args.includes("--server")){
       isOscalExecutorInstalled('oscal-server')
-        .then((installed) => {
-          if (!installed) {
-            return installOscalExecutor('oscal-server');
-          }
-          const isRunning=checkServerStatus()
-          if(!isRunning){
-            startServer()
-          }
-        })
-        .then(() => {
-          program.parse(process.argv);
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-          process.exit(1);
-        });      
+      .then((installed) => {
+        if (!installed) {
+          return installOscalExecutor('oscal-server');
+        }
+      })
+      .then(() => {
+        program.parse(process.argv);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        process.exit(1);
+      });
+
     }else {
       // For all other commands, check for OSCAL CLI installation first
       isOscalExecutorInstalled('oscal-cli')

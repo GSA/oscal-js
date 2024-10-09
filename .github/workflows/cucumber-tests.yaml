@@ -31,7 +31,7 @@ jobs:
       run: node ./dist/cli.js server update
 
     - name: Start Server
-      run: node ./dist/cli.js server start 
+      run: node ./dist/cli.js server start --background
 
     - name: Run Cucumber tests
       run: npm run test

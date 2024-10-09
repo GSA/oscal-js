@@ -160,7 +160,7 @@
                 <party-uuid>ec485dcf-2519-43f5-8e7d-014cc315332d</party-uuid>
             </responsible-role>
         </component>
-        <component uuid="941e2a87-46f4-4b3e-9e87-bbd187091ca1" type="process">
+        <component uuid="941e2a87-46f4-4b3e-9e87-bbd187091ca1" type="service">
             <title>System Integration Process</title>
             <description>
                 <p>Ensures proper integration into the enterprise as new systems are brought into
@@ -177,7 +177,7 @@
                 <party-uuid>0f0c15ed-565e-4ce9-8670-b54853d0bf03</party-uuid>
             </responsible-role>
         </component>
-        <component uuid="fa39eb84-3014-46b4-b6bc-7da10527c262" type="process">
+        <component uuid="fa39eb84-3014-46b4-b6bc-7da10527c262" type="policy">
             <title>Inventory Management Process</title>
             <description>
                 <p>Describes how new components are introduced into the system - ensures monitoring
@@ -385,14 +385,4 @@
             </statement>
         </implemented-requirement>
     </control-implementation>
-    <back-matter>
-        <resource uuid="b78aa3ec-915d-475b-8097-46813fae1825">
-           <description>
-              <p>NIST Special Publication 800-53 Revision 4: Moderate Baseline Profile</p>
-           </description>
-           <rlink media-type="application/oscal.catalog+xml" href="../../../nist.gov/SP800-53/rev4/xml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.xml"/>
-           <rlink media-type="application/oscal.catalog+json" href="../../../nist.gov/SP800-53/rev4/json/NIST_SP-800-53_rev4_MODERATE-baseline_profile.json"/>
-           <rlink media-type="application/oscal.catalog+yaml" href="../../../nist.gov/SP800-53/rev4/yaml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.yaml"/>
-        </resource>
-     </back-matter>
 </system-security-plan>

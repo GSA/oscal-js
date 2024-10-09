@@ -13,6 +13,7 @@ import { oscalSchema } from './schema/oscal.complete.js';
 import { getServerClient } from './server.js';
 import { OscalJsonPackage, ResourceHypertextReference } from './types.js';
 import { OscalExecutorOptions } from './utils.js';
+import { Url } from 'url';
 
 
 export type OscalValidationOptions = {
@@ -51,10 +52,10 @@ export async function validate(
     console.log(document)
     let tempFilePath: string | null = null;
         // Create a temporary file
-        tempFilePath = path.join(tmpdir(), `temp-${Date.now()}.json`);
+        tempFilePath = path.resolve(tmpdir(), `temp-${Date.now()}.json`);
         fs.writeFileSync(tempFilePath, JSON.stringify(document));
 
-    return executeSarifValidationViaServer(tempFilePath,{...options,inline:true});
+    return executeSarifValidationViaServer((tempFilePath),{...options,inline:true});
   }
 
   const javaInstalled = await isJavaInstalled();
@@ -74,7 +75,7 @@ export async function validate(
     }
   }
 
-  const tempFile = path.join(`./oscal-cli-tmp-input-${v4()}.json`);
+  const tempFile = path.resolve(`./oscal-cli-tmp-input-${v4()}.json`);
   writeFileSync(tempFile, JSON.stringify(document));
   const result = await validateDocument(tempFile, options);
   rmSync(tempFile);
@@ -259,7 +260,7 @@ export async function validateDirectory(dirPath: string, options: OscalValidatio
   const files = fs.readdirSync(dirPath);
   
   const validationPromises = files.map(async (file) => {
-    const filePath = path.join(dirPath, file);
+    const filePath = path.resolve(dirPath, file);
     const stats = fs.statSync(filePath);
     
     if (!stats.isDirectory() && isValidFileType(filePath)) {
@@ -297,10 +298,10 @@ export const validateCommand =async function(fileArg,commandOptions: { file?: st
   }
 
   console.log('Beginning OSCAL document validation for', file);
-  
-  console.log('Beginning executing on', server);
-  
   const executor = server?"oscal-server":'oscal-cli';
+  
+  console.log('Beginning executing on', executor);
+  
   try {
     const stats = fs.statSync(file);
     if (stats.isDirectory()) {
@@ -326,7 +327,7 @@ async function validateDirectoryRecursively(dirPath: string, options:OscalValida
   let runs:Run[] = [];
   let isValid = true;
   for (const file of files) {
-    const filePath = path.join(dirPath, file);
+    const filePath = path.resolve(dirPath, file);
     const stats = fs.statSync(filePath);
     if (stats.isDirectory()) {
       const subdirResult = await validateDirectoryRecursively(filePath, options,log,executor);
@@ -336,9 +337,9 @@ async function validateDirectoryRecursively(dirPath: string, options:OscalValida
       }
       if (!subdirResult) return {isValid:false,log:buildSarifFromMessage("Failed to validate")}; // Stop if validation failed in subdirectory
     } else if (isValidFileType(filePath)) {
-      const fileResult = await validateDocument(filePath,options);
-      fileResult.log&&fileResult.log.runs&&runs.concat(fileResult.log.runs);
-      if (!fileResult) return {isValid:false,log:buildSarifFromMessage("Failed to validate")}; // Stop if validation failed for this file
+      const {isValid,log} = await validateDocument(filePath,options);
+      log&&log.runs&&runs.concat(log.runs);
+      if (!isValid) return {isValid:false,log:buildSarifFromMessage("Failed to validate")}; // Stop if validation failed for this file
     }
   }
   return {isValid,log:buildSarif(runs)}; // All validations passed
@@ -350,7 +351,7 @@ return validExtensions.includes(path.extname(filePath).toLowerCase());
 }
 
 const executeSarifValidationViaCLI = async (args: string[],quiet:boolean=false): Promise<{isValid:boolean,log:Log}> => {
-  const tempFile = path.join(`oscal-cli-sarif-log-${v4()}.json`);
+  const tempFile = path.resolve(`oscal-cli-sarif-log-${v4()}.json`);
   const sarifArgs = [...args, '-o', tempFile, "--sarif-include-pass", '--show-stack-trace'];
   var consoleErr = ""
   try {
@@ -376,23 +377,23 @@ const executeSarifValidationViaCLI = async (args: string[],quiet:boolean=false):
   }
 };
 
+const toUri =(document:string)=>{
+  return !document.startsWith("http")&&!document.startsWith("file")?"file://"+document:document
+}
+
 async function executeSarifValidationViaServer(document:string,options:OscalServerValidationOptions): Promise<{isValid:boolean,log:Log}> {
   try {
-      const args = ("file://"+document);
-        
-        const constraints=(options.extensions||[]).map(x=>{
-        if(!x.startsWith("http")&&!x.startsWith("file")){
-          return "file://"+x
-        }else{
-          return x
-        }
-      });
-      const params = {query:{document:args,constraints,flags:options.flags}}
+      let documentUri = toUri(document)
+      const constraint=(options.extensions||[]).map(toUri)
+      
+      const params = {query:{document:documentUri,constraint,flags:options.flags}}
       const client = await getServerClient()
       const {response,error,data} =await client.GET('/validate',{params,
         parseAs:'blob'
       })
-
+      if(error){
+        console.error(error.error)
+      }
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

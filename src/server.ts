@@ -6,7 +6,7 @@ import createClient, { Client, Middleware } from "openapi-fetch";
 import os from 'os';
 import { join } from 'path';
 import psList from 'ps-list';
-import { findOscalServerPath, installOscalExecutor } from "./env.js";
+import { findOscalServerPath, installOscalExecutor, installOscalExecutorIfNeeded } from "./env.js";
 import { paths } from "./open-api/oscal-server.js";
 
 export async function stopServer() {
@@ -46,13 +46,11 @@ const loggingMiddleware: Middleware = {
   }
 };
 
-export const getServerClient: (baseUrl?: string, port?: number) => Client<paths, `${string}/${string}`> = (
+export const getServerClient: (baseUrl?: string, port?: number) => Promise<Client<paths, `${string}/${string}`>> = async (
   baseUrl = "http://localhost",
   port: number = 8888
 ) => {
   const fullBaseUrl = `${baseUrl}:${port}/`;
-  console.log("Creating client with baseUrl:", fullBaseUrl);
-  
   const client= createClient<paths>({
     baseUrl: fullBaseUrl,
   });

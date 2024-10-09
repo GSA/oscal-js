@@ -11,7 +11,7 @@ import { useVersion } from './versions.js';
 program
   .version("2.0.0-rc1")
   .command('validate [file]')
-  .option('-s, --use-server', 'Use OSCAL server for operations')
+  .option('-s, --server', 'Use OSCAL server for operations')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions>', 'List of extension namespaces')
   .option('-r, --recursive', 'Recursively validate files in directories')
@@ -21,7 +21,7 @@ program
 
 program.command('convert [file]')
   .description('Convert an OSCAL document (XML, JSON, YAML)')
-  .option('-s, --use-server', 'Use OSCAL server for operations')
+  .option('-s, --server', 'Use OSCAL server for operations')
   .option('-f, --file <path>', 'Path to the OSCAL document or folder')
   .option('-o, --output <path>', 'Path to the output file or folder')
   .option('-t, --type <type>', 'JSON, YAML, or XML type setting when converting a directory')
@@ -29,7 +29,7 @@ program.command('convert [file]')
 
 program.command('resolve [file]')
   .description('Resolve an OSCAL profile (XML, JSON, YAML)')
-  .option('-s, --use-server', 'Use OSCAL server for operations')
+  .option('-s, --server', 'Use OSCAL server for operations')
   .option('-f, --file <path>', 'Path to the OSCAL profile document')
   .option('-o, --output <path>', 'Path to the output file')
   .action(resolveProfileCommand);
@@ -65,11 +65,15 @@ program.command('metaquery')
     if (command === 'use') {
       // If the command is 'use', directly parse the arguments without checking for OSCAL CLI installation
       program.parse(process.argv);
-    } else if (command==='server'||args.includes("-s")||args.includes("--use-server")){
+    } else if (command==='server'||args.includes("-s")||args.includes("--server")){
       isOscalExecutorInstalled('oscal-server')
         .then((installed) => {
           if (!installed) {
             return installOscalExecutor('oscal-server');
+          }
+          const isRunning=checkServerStatus()
+          if(!isRunning){
+            startServer()
           }
         })
         .then(() => {

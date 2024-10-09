@@ -51,6 +51,7 @@ let validateResult: { isValid: boolean; log: Log };
 let sarifResult: Log;
 let conversionResult: string;
 let resolutionResult: Catalog |string| undefined;
+let resolutionResultOutputPath: string;
 let evalResult: string | undefined;
 let evalQuery: string | undefined;
 let definitionToValidate: string;
@@ -211,7 +212,7 @@ Given('I want to resolve the profile', function () {
 });
 
 When('I resolve it with imported resolve function using {string}', async function (executor: OscalExecutorOptions) {
-  resolutionResult = await resolveProfileDocument(documentPath, {outputFormat:'json'}, executor);
+  resolutionResult = await resolveProfile(documentPath, {outputFormat:'json'}, executor);
 });
 
 Then('the resolved profile should be valid', async function () {
@@ -321,8 +322,10 @@ Given('I have a second Metaschema extensions document {string}', function (filen
 });
 
 When('I resolve it with imported resolve function using oscal-server', async function () {
-  resolutionResult = await resolveProfileDocument(documentPath,{outputFormat:"json"},'oscal-server')
+  await resolveProfileDocument((documentPath),resolutionResultOutputPath,{outputFormat:"json"},'oscal-server')
+  resolutionResult=JSON.parse(readFileSync(resolutionResultOutputPath).toString())
 });
 When('I resolve it with imported resolve function using oscal-cli', async function () {
-  resolutionResult = await resolveProfileDocument(documentPath,{outputFormat:"json"},'oscal-cli')
+  await resolveProfileDocument(documentPath,resolutionResultOutputPath,{outputFormat:"json"},'oscal-cli')
+  resolutionResult=JSON.parse(readFileSync(resolutionResultOutputPath).toString())
 });

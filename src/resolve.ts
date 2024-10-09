@@ -9,76 +9,80 @@ import { executeOscalCliCommand, installOscalCli, installOscalExecutor, isOscalE
 import { detectOscalDocumentType,  OscalExecutorOptions } from './utils.js';
 import { OscalConvertOptions } from './convert.js';
 import { getServerClient } from './server.js';
+import { ResolveOptions } from 'dns';
+import { randomUUID } from 'crypto';
 
 const execAsync = promisify(exec);
 export type OscalResolveOptions = {
   outputFormat: 'json'|'yaml'|'xml',
 } 
 
-export async function resolveProfile(
-  document: Profile,
-): Promise<Catalog|undefined> {  
 
-  const tempFile = path.join(process.cwd(), `oscal-cli-tmp-input-${v4()}.json`);
-  const tempOutput = path.join(process.cwd(), `oscal-cli-tmp-output-${v4()}.json`);
+export async function resolveProfileInline(
+  document: Profile,
+  options: OscalConvertOptions,
+  executor: OscalExecutorOptions = 'oscal-server'
+): Promise<string|Catalog> {
+  const tempInputFile = path.join(process.cwd(), `oscal-cli-tmp-input-${randomUUID()}.json`);
+  const tempOutputFile = path.join(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
 
   try {
-    writeFileSync(tempFile, JSON.stringify(document));
-    
-    const args = ["--to=JSON", tempFile, tempOutput, '--show-stack-trace'];
-    await executeOscalCliCommand("resolve-profile", args);
-    
-    const result = JSON.parse(readFileSync(tempOutput, 'utf-8'));
-    return result as Catalog;
-  } catch (error) {
-    console.error("Error resolving profile:", error);
-    return undefined;
-  } finally {
-    // Clean up temporary files
-    try {
-      if (tempFile) {
-        unlinkSync(tempFile);
-      }
-      if (tempOutput) {
-        unlinkSync(tempOutput);
-      }
-    } catch (cleanupError) {
-      console.error("Error cleaning up temporary files:", cleanupError);
+    writeFileSync(tempInputFile, JSON.stringify(document));
+    await resolveProfileDocument(tempInputFile, tempOutputFile, options, executor);
+    const resolvedDocument = readFileSync(tempOutputFile, 'utf8');
+
+    if (options.outputFormat === 'json') {
+      return JSON.parse(resolvedDocument);
+    }else{
+      return resolvedDocument;
     }
+  } finally {
+    await Promise.all([
+      unlinkSync(tempInputFile),
+      unlinkSync(tempOutputFile)
+    ]);
+  }
+}
+export async function resolveProfile(
+  documentPath: string,
+  options: OscalConvertOptions,
+  executor: OscalExecutorOptions = 'oscal-server'
+): Promise<string|Catalog> {
+  const tempOutputFile = path.join(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
+
+  try {
+    await resolveProfileDocument(documentPath, tempOutputFile, options, executor);
+    const resolvedDocument = readFileSync(tempOutputFile, 'utf8');
+
+    if (options.outputFormat === 'json') {
+      return JSON.parse(resolvedDocument);
+    }else{
+      return resolvedDocument;
+    }
+  } finally {
+    await Promise.all([
+      unlinkSync(tempOutputFile)
+    ]);
   }
 }
 
+
 export async function resolveProfileDocument(
-  filePath: string,options:OscalResolveOptions={outputFormat:'json'},executor:OscalExecutorOptions='oscal-server'): Promise<Catalog|string|undefined> {
-  const tempOutput = path.join(process.cwd(), `oscal-cli-tmp-output-${v4()}.json`);
+  filePath: string,
+  outputPath: string,
+  options:OscalResolveOptions={outputFormat:'json'},executor:OscalExecutorOptions='oscal-server'): Promise<void> {
 
   try {
     
     if(executor==='oscal-server'){
-      await resolveFileWithServer(filePath,tempOutput,options)
+      await resolveFileWithServer(filePath,outputPath,options)
     }else{
-      const args = ["--to=JSON", filePath, tempOutput, '--show-stack-trace'];
+      const args = ["--to=JSON", filePath, outputPath, '--show-stack-trace'];
       await executeOscalCliCommand("resolve-profile", args);     
     }
-    
-    const resolvedContent =(readFileSync(tempOutput, 'utf-8'));
-    if (options.outputFormat === 'json') {
-      return JSON.parse(resolvedContent) as Catalog;
-    } else {
-      return resolvedContent
-    }
-
   } catch (error) {
     console.error("Error resolving profile from file:", error);
     return undefined;
-  } finally {
-    try {
-      if (tempOutput) {
-        unlinkSync(tempOutput);
-      }
-    } catch (cleanupError) {
-      console.error("Error cleaning up temporary output file:", cleanupError);
-    }
   }
 }
 
@@ -109,8 +113,8 @@ async function resolveFileWithServer(
           console.warn(`Unsupported output format: ${options.outputFormat}. Defaulting to JSON.`);
       }
     }
-
-    const { response, error,data } = await getServerClient().GET('/resolve', {
+    const client =await getServerClient();
+    const { response, error,data } = await client.GET('/resolve', {
       params: { query: { document: encodedArgs,format:options.outputFormat } },
       parseAs: "blob" ,
       headers: { Accept: acceptHeader }

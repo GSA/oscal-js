@@ -1,23 +1,23 @@
 import { Ajv, ErrorObject } from 'ajv';
 import addFormats from "ajv-formats";
 import chalk from 'chalk';
+import { randomUUID } from 'crypto';
 import fs, { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import inquirer from 'inquirer';
-import path from 'path';
-import { Exception, Location, Log, ReportingDescriptor, Result, Run } from 'sarif';
-import { v4 } from 'uuid';
-import { executeOscalCliCommand, installOscalCli, installOscalServer, isJavaInstalled, isOscalExecutorInstalled } from './env.js';
-import { oscalSchema } from './schema/oscal.complete.js';
-import { OscalJsonPackage, ResourceHypertextReference } from './types.js';
-import { detectOscalDocumentType, findFedrampExtensionsFile, OscalExecutorOptions } from './utils.js';
-import { randomUUID } from 'crypto';
-import { getServerClient } from './server.js';
-import { createFinalURL, defaultPathSerializer } from 'openapi-fetch';
 import { tmpdir } from 'os';
+import path from 'path';
+import { Location, Log, ReportingDescriptor, Result, Run } from 'sarif';
+import { v4 } from 'uuid';
+import { executeOscalCliCommand, installOscalCli, installOscalExecutorIfNeeded, isJavaInstalled, isOscalExecutorInstalled } from './env.js';
+import { oscalSchema } from './schema/oscal.complete.js';
+import { getServerClient } from './server.js';
+import { OscalJsonPackage, ResourceHypertextReference } from './types.js';
+import { OscalExecutorOptions } from './utils.js';
 
 
 export type OscalValidationOptions = {
-    extensions: ResourceHypertextReference[],
+    extensions?: ResourceHypertextReference[],
+    flags?:("disable-schema" | "disable-constraint")[] 
 } 
 
 
@@ -93,10 +93,10 @@ export async function validateDocument(
 
 export async function executeSarifValidation(
   filePath: string,
-  options: OscalValidationOptions = {extensions:[]},
+  options: OscalValidationOptions = {},
   executor:OscalExecutorOptions
 ): Promise<{ isValid: boolean; log: Log }> {
-  const additionalArgs = options.extensions.flatMap(x => ["-c", x]);
+  const additionalArgs = (options.extensions||[]).flatMap(x => ["-c", x]);
   if(executor==='oscal-cli'){
     return await executeSarifValidationViaCLI([filePath, ...additionalArgs]);
   }else if(executor==='oscal-server'){
@@ -297,6 +297,9 @@ export const validateCommand =async function(fileArg,commandOptions: { file?: st
   }
 
   console.log('Beginning OSCAL document validation for', file);
+  
+  console.log('Beginning executing on', server);
+  
   const executor = server?"oscal-server":'oscal-cli';
   try {
     const stats = fs.statSync(file);
@@ -377,15 +380,16 @@ async function executeSarifValidationViaServer(document:string,options:OscalServ
   try {
       const args = ("file://"+document);
         
-        const constraints=options.extensions.map(x=>{
-        if(!x.startsWith("http")){
+        const constraints=(options.extensions||[]).map(x=>{
+        if(!x.startsWith("http")&&!x.startsWith("file")){
           return "file://"+x
         }else{
           return x
         }
       });
-      const params = {query:{document:args,constraints}}
-      const {response,error,data} =await getServerClient().GET('/validate',{params,
+      const params = {query:{document:args,constraints,flags:options.flags}}
+      const client = await getServerClient()
+      const {response,error,data} =await client.GET('/validate',{params,
         parseAs:'blob'
       })
 

@@ -178,6 +178,11 @@ export interface operations {
                  *     ]
                  */
                 constraint?: string[];
+                /**
+                 * @description URIs of metaschema extension modules to load
+                 * @example disable-schema
+                 */
+                flags?: ("disable-schema" | "disable-constraint")[];
             };
             header?: never;
             path?: never;

@@ -16,7 +16,7 @@ export async function convert(
   document: OscalJsonPackage,
   options: OscalConvertOptions,
   executor: OscalExecutorOptions = 'oscal-server'
-): Promise<object> {
+): Promise<string|OscalJsonPackage> {
   const tempInputFile = path.join(process.cwd(), `oscal-cli-tmp-input-${randomUUID()}.json`);
   const tempOutputFile = path.join(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
 
@@ -146,7 +146,8 @@ async function convertFileWithServer(
       }
     }
 
-    const { response, error,data } = await getServerClient().GET('/convert', {
+    const client = await getServerClient();
+    const { response, error,data } = await client.GET('/convert', {
       params: { query: { document: encodedArgs,format:options.outputFormat } },
       parseAs:"blob",
       headers: { Accept: acceptHeader }

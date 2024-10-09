@@ -185,7 +185,7 @@ export async function installOscalServer(tag:string='latest') {
     
     const zipBuffer = await downloadFromGithub(releaseData);
     console.log(`Downloaded ${zipBuffer.byteLength} bytes`);
-    console.log(`Extracting OSCAL CLI...`);
+    console.log(`Extracting OSCAL SERVER...`);
 
     const homeDir = homedir();
     const oscalDir = path.join(homeDir, '.oscal');

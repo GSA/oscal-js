@@ -13,6 +13,7 @@ import { detectOscalDocumentType, findFedrampExtensionsFile, OscalExecutorOption
 import { randomUUID } from 'crypto';
 import { getServerClient } from './server.js';
 import { createFinalURL, defaultPathSerializer } from 'openapi-fetch';
+import { tmpdir } from 'os';
 
 
 export type OscalValidationOptions = {
@@ -24,9 +25,6 @@ export type OscalServerValidationOptions = OscalValidationOptions&{
   inline: boolean
 } 
 
-export const fedrampValidationOptions: OscalValidationOptions = {
-    extensions: ["./examples/fedramp-external-constraints.xml", "./oscal-external-constraints.xml"]
-  };
 
 let ajv: Ajv | null = null;
 
@@ -50,7 +48,13 @@ export async function validate(
   executor:OscalExecutorOptions='oscal-server'
 ): Promise<{isValid:boolean,log:Log}> {
   if (executor==='oscal-server') {
-    return executeSarifValidationViaServer(JSON.stringify(document),{...options,inline:true});
+    console.log(document)
+    let tempFilePath: string | null = null;
+        // Create a temporary file
+        tempFilePath = path.join(tmpdir(), `temp-${Date.now()}.json`);
+        fs.writeFileSync(tempFilePath, JSON.stringify(document));
+
+    return executeSarifValidationViaServer(tempFilePath,{...options,inline:true});
   }
 
   const javaInstalled = await isJavaInstalled();
@@ -371,41 +375,34 @@ const executeSarifValidationViaCLI = async (args: string[],quiet:boolean=false):
 
 async function executeSarifValidationViaServer(document:string,options:OscalServerValidationOptions): Promise<{isValid:boolean,log:Log}> {
   try {
-    if(!options.inline){
-      const args = (document+" "+options.extensions.join("-c "));
-      const params = {query:{content:args}}
-      console.log(document,"DOCUMENT");
-      const {response,error} =await getServerClient().GET('/validate',{params})
+      const args = ("file://"+document);
+        
+        const constraints=options.extensions.map(x=>{
+        if(!x.startsWith("http")){
+          return "file://"+x
+        }else{
+          return x
+        }
+      });
+      const params = {query:{document:args,constraints}}
+      const {response,error,data} =await getServerClient().GET('/validate',{params,
+        parseAs:'blob'
+      })
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+      if (!data) {
+        throw new Error(`HTTP error! missing data`);
+      }
       
-      const log = await response.json();
-      const responseCode = response.headers.get("Exit-Code")
+      const responseCode = response.headers.get("exit-status")
       let isValid = false;
-      if(responseCode=="0"){
+      if(responseCode=="OK"){
         isValid = true;
       }
-    return {isValid,log};
-  }else{
-    const args = (" "+options.extensions.join("-c "));
-    const request = getServerClient().GET('/validate',{params:{query:{content:args}}})
-    const {response,error,data:log} =await request
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    if(!log){
-      throw new Error(`No Sarif response`);
-    }
-    error&&console.error(error);
-    const responseCode = response.headers.get("Exit-Code")
-    let isValid = false;
-    if(responseCode=="0"){
-      isValid = true;
-    }
-    return {isValid,log:log as any};
-  }
+      const log = JSON.parse(await data?.text())
+    return {isValid,log};  
 } catch (error) {
     console.error('Error during validation:', error);
     throw error;

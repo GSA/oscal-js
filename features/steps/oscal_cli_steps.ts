@@ -9,9 +9,9 @@ import { Log } from 'sarif';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { parseString } from 'xml2js';
-import { setDefaultTimeout } from '@cucumber/cucumber';
+import { setDefaultTimeout,BeforeAll,AfterAll } from '@cucumber/cucumber';
 import { Catalog } from '../../src/types.js';
-import { startServer } from '../../src/server.js';
+import { startServer, stopServer } from '../../src/server.js';
 import {
   installOscalCli,
   executeOscalCliCommand,
@@ -29,6 +29,7 @@ import { resolveProfile, resolveProfileDocument } from '../../src/resolve.js';
 import { evaluateMetapath } from '../../src/evaluate.js';
 import { sarifSchema } from '../../src/schema/sarif.js';
 
+startServer()
 const DEFAULT_TIMEOUT = 17000;
 setDefaultTimeout(DEFAULT_TIMEOUT);
 
@@ -49,7 +50,7 @@ let executionErrors: string;
 let validateResult: { isValid: boolean; log: Log };
 let sarifResult: Log;
 let conversionResult: string;
-let resolutionResult: Catalog | undefined;
+let resolutionResult: Catalog |string| undefined;
 let evalResult: string | undefined;
 let evalQuery: string | undefined;
 let definitionToValidate: string;
@@ -57,10 +58,7 @@ let exampleObject: any;
 let constraintId: string;
 let constraintExists: boolean;
 
-Given('the list of executors includes:', function (dataTable) {
-  // This step is just for documentation in the feature file
-  // No implementation needed
-});
+
 
 Given('I have an OSCAL document {string}', function (filename: string) {
   documentPath = path.join(__dirname, '..', '..', 'examples', filename);
@@ -87,11 +85,6 @@ Then('I should receive a boolean result', function () {
   expect(executorInstalled).to.be.a('boolean');
 });
 
-Given('{string} is not installed', async function (tool: OscalExecutorOptions) {
-  executorInstalled = await isOscalExecutorInstalled(tool);
-  expect(executorInstalled).to.be.false;
-});
-
 When('I install {string}', async function (tool: string) {
   if (tool === 'oscal-cli') {
     await installOscalCli();
@@ -102,18 +95,16 @@ When('I install {string}', async function (tool: string) {
 
 Then('{string} should be installed', async function (tool: OscalExecutorOptions) {
   executorInstalled = await isOscalExecutorInstalled(tool);
+  if(tool=='oscal-server'){
+    startServer(true);
+  }
   expect(executorInstalled).to.be.true;
 });
 
-When('I execute the OSCAL command {string} on the document using {string}', async function (command: string, executor: string) {
-  if (executor === 'oscal-cli') {
+When('I execute the OSCAL CLI command {string} on the document', async function (command: string) {
     const [cmd, ...args] = command.split(' ');
     args.push(documentPath);
     [executionResult, executionErrors] = await executeOscalCliCommand(cmd, args);
-  } else if (executor === 'oscal-server') {
-    // Implement server-specific execution logic here
-    // This might involve making an API call to the OSCAL server
-  }
 });
 
 When('I validate with metaschema extensions and sarif output on the document using {string}', async function (executor: OscalExecutorOptions) {
@@ -123,7 +114,7 @@ When('I validate with metaschema extensions and sarif output on the document usi
 
 
 When('I convert the document to JSON using {string}', async function (executor: string) {
-  outputPath = path.join(__dirname, '..', '..', 'examples', 'output.json');
+  outputPath = path.join(__dirname, '..', '..', 'examples', 'ssp.json');
   if (executor === 'oscal-cli') {
     [conversionResult, executionErrors] = await executeOscalCliCommand('convert', [documentPath, '--to=json', outputPath, '--overwrite']);
   } else if (executor === 'oscal-server') {
@@ -132,7 +123,7 @@ When('I convert the document to JSON using {string}', async function (executor: 
 });
 
 When('I convert the document to YAML using {string}', async function (executor: string) {
-  outputPath = path.join(__dirname, '..', '..', 'examples', 'output.yaml');
+  outputPath = path.join(__dirname, '..', '..', 'examples', 'ssp.yaml');
   if (executor === 'oscal-cli') {
     [conversionResult, executionErrors] = await executeOscalCliCommand('convert', [documentPath, '--to=yaml', outputPath, '--overwrite']);
   } else if (executor === 'oscal-server') {
@@ -145,10 +136,6 @@ When('I validate with sarif output on the document using {string}', async functi
   sarifResult = validateResult.log;
 });
 
-When('I validate with metaschema extensions and sarif output on the document using {string}', async function (executor: OscalExecutorOptions) {
-  validateResult = await validateDocument(documentPath, { extensions: metaschemaDocuments }, executor);
-  sarifResult = validateResult.log;
-});
 
 Then('I should receive the execution result', function () {
   expect(executionResult).to.exist;
@@ -191,7 +178,7 @@ Then('conversion result is a yaml', async function () {
 });
 
 When('I validate with imported validate function using {string}', async function (executor: OscalExecutorOptions) {
-  validateResult = await validateDocument(documentPath, {extensions:[]}, executor);
+  validateResult = await validateDocument(documentPath, {extensions:metaschemaDocuments}, executor);
 });
 
 Then('I should receive a validation object', function () {
@@ -224,7 +211,7 @@ Given('I want to resolve the profile', function () {
 });
 
 When('I resolve it with imported resolve function using {string}', async function (executor: OscalExecutorOptions) {
-  resolutionResult = await resolveProfileDocument(documentPath, {outputFormat:'xml'}, executor);
+  resolutionResult = await resolveProfileDocument(documentPath, {outputFormat:'json'}, executor);
 });
 
 Then('the resolved profile should be valid', async function () {
@@ -309,7 +296,7 @@ When('I start the oscal server the OSCAL SERVER command {string} on the document
 });
 
 When('I execute validate endpoint on the document with oscal-server', async function () {
-  validateResult = await validateDocument(documentPath, {extensions:[]}, 'oscal-server');
+  validateResult = await validateDocument(documentPath, {extensions:metaschemaDocuments}, 'oscal-server');
 });
 
 Then('the validation result should be valid', () => {
@@ -317,7 +304,10 @@ Then('the validation result should be valid', () => {
 })
 When('I validate with imported validate function', async function () {
   const oscalObject = readFileSync(documentPath).toJSON()
-  validateResult = await validate(oscalObject as any);
+  validateResult = await validate(oscalObject as any,{extensions:metaschemaDocuments});
+});
+When('I validate with imported validateDocument function', async function () {
+  validateResult = await validateDocument(documentPath,{extensions:metaschemaDocuments});
 });
 
 Given('I have an Metaschema extensions document {string}', function (filename: string) {
@@ -328,11 +318,6 @@ Given('I have an Metaschema extensions document {string}', function (filename: s
 Given('I have a second Metaschema extensions document {string}', function (filename: string) {
   const secondMetaschemaDocumentPath = path.join(__dirname, '..', '..', 'extensions', filename);
   metaschemaDocuments.push(secondMetaschemaDocumentPath);
-});
-
-When('I validate with metaschema extensions and sarif output on the document using {string}', async function (executor: any) {
-  validateResult = await validateDocument(documentPath, { extensions: metaschemaDocuments }, executor);
-  sarifResult = validateResult.log;
 });
 
 When('I resolve it with imported resolve function using oscal-server', async function () {

@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
 import { getServerClient } from './server.js';
 
 export type OscalConvertOptions = {
-  outputFormat: 'json'|'yaml'|'xml'|'yml',
+  outputFormat: 'json'|'yaml'|'xml',
 } 
 
 
@@ -28,7 +28,7 @@ export async function convert(
     let result;
     if (options.outputFormat === 'json') {
       result = JSON.parse(convertedContent);
-    } else if (['yaml', 'yml'].includes(options.outputFormat)) {
+    } else if (['yaml'].includes(options.outputFormat)) {
       result = convertedContent; // Return as string if YAML parser is not available
     } else {
       result = convertedContent;
@@ -118,27 +118,53 @@ async function convertFileWithCli(
   if (errors) console.error(errors);
 }
 
+
 async function convertFileWithServer(
   inputFile: string,
   outputFile: string,
   options: OscalConvertOptions
 ): Promise<void> {
-    try {
-        const encodedArgs = encodeURIComponent(inputFile+' '+outputFile);
-        console.log(decodeURIComponent(encodedArgs))
-        const {response,error} =await getServerClient().GET('/convert',{params:{query:{content:inputFile}}})
-        if (!response.ok) {
-          console.error(error?.error)
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }        
-        const result = await response.text();
-        fs.writeFileSync(outputFile,result);
-      return;
-  } catch (error) {
-      console.error('Error during validation:', error);
-      throw error;
+  try {
+    const encodedArgs = `file://${inputFile.trim()}`;
+    
+    // Determine the Accept header based on options.outputFormat
+    let acceptHeader = 'application/json'; // Default to JSON
+    if (options.outputFormat) {
+      switch (options.outputFormat.toLowerCase()) {
+        case 'json':
+          acceptHeader = 'application/json';
+          break;
+        case 'xml':
+          acceptHeader = 'text/xml';
+          break;
+        case 'yaml':
+        case 'yml':
+          acceptHeader = 'text/yaml';
+          break;
+        default:
+          console.warn(`Unsupported output format: ${options.outputFormat}. Defaulting to JSON.`);
+      }
     }
-  
+
+    const { response, error,data } = await getServerClient().GET('/convert', {
+      params: { query: { document: encodedArgs,format:options.outputFormat } },
+      parseAs:"blob",
+      headers: { Accept: acceptHeader }
+    });
+    if (!response.ok) {
+      console.error(error?.error);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    if (!data) {
+      console.error("Data not found");
+      throw new Error(`HTTP error! missing data!`);
+    }
+    const fileOutput = await data.text()
+    fs.writeFileSync(outputFile,fileOutput);
+  } catch (error) {
+    console.error('Error during conversion:', error);
+    throw error;
+  }
 }
 
 export const convertCommand = async (
@@ -146,7 +172,7 @@ export const convertCommand = async (
   commandOptions: { file?: string; output?: string; type?: string; server: boolean }
 ) => {
   let { file, output, type, server } = commandOptions;
-  const options: OscalConvertOptions = { outputFormat: type as 'json' | 'yaml' | 'xml' | 'yml' };
+  const options: OscalConvertOptions = { outputFormat: type as 'json' | 'yaml' | 'xml'  };
   const executor = server ? "oscal-server" : 'oscal-cli';
   file = fileArg || file;
 

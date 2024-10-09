@@ -1,14 +1,13 @@
 import chalk from "chalk";
-import { spawn, ChildProcess, exec } from "child_process";
-import { findOscalServerPath, installOscalExecutor, stdErr, stdIn } from "./env.js";
-import { writeFileSync, readFileSync, existsSync, unlinkSync, mkdirSync } from 'fs';
-import { join } from 'path';
-import os from 'os';
+import { ChildProcess, exec, spawn } from "child_process";
+import { existsSync, mkdirSync, readFileSync } from 'fs';
 import fetch from 'node-fetch';
-import { exit } from "process";
-import  createClient,{ Client,ClientOptions, Middleware } from "openapi-fetch";
-import { paths } from "./open-api/oscal-server.js";
+import createClient, { Client, Middleware } from "openapi-fetch";
+import os from 'os';
+import { join } from 'path';
 import psList from 'ps-list';
+import { findOscalServerPath, installOscalExecutor } from "./env.js";
+import { paths } from "./open-api/oscal-server.js";
 
 export async function stopServer() {
   try {
@@ -64,7 +63,6 @@ export const getServerClient: (baseUrl?: string, port?: number) => Client<paths,
 
 let serverProcess: ChildProcess | null = null;
 const OSCAL_DIR = join(os.homedir(), '.oscal');
-const PID_FILE = join(OSCAL_DIR, 'PID');
 
 // Ensure .oscal directory exists
 if (!existsSync(OSCAL_DIR)) {
@@ -72,22 +70,6 @@ if (!existsSync(OSCAL_DIR)) {
 }
 
 
-
-const isProcessRunning = (pid: number): Promise<boolean> => {
-  return new Promise((resolve) => {
-    if (process.platform === 'win32') {
-      // Windows
-      exec(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`, (error, stdout) => {
-        resolve(stdout.toLowerCase().includes(pid.toString()));
-      });
-    } else {
-      // Unix-like systems (Linux, macOS)
-      exec(`ps -p ${pid} -o pid=`, (error, stdout) => {
-        resolve(!!stdout.trim());
-      });
-    }
-  });
-};
 
 export const executeOscalServerCommand = async (
   command: string,
@@ -99,9 +81,8 @@ export const executeOscalServerCommand = async (
       const isWindows = process.platform === 'win32';
       const fullArgs = [...command.split(" "), ...args];
       // Check if a server process is already running
-      if (existsSync(PID_FILE)) {
-        const pid = parseInt(readFileSync(PID_FILE, 'utf-8'), 10);
-        if (await isProcessRunning(pid)) {
+        if (await isServerRunning()) {
+          const pid =await getServerPid();
           if (command === 'start') {
             reject(new Error('OSCAL SERVER is already running. Use the stop command to stop it or the restart command to restart it.'));
             return;
@@ -113,7 +94,6 @@ export const executeOscalServerCommand = async (
             }
           }
         }
-      }
 
       let spawnArgs: [string, string[], object];
       if (isWindows) {
@@ -123,7 +103,7 @@ export const executeOscalServerCommand = async (
           { windowsVerbatimArguments: true, detached: !foreground }
         ];
       } else {
-        spawnArgs = [oscalServerPath, fullArgs, { shell: true, detached: !foreground }];
+        spawnArgs = [oscalServerPath, fullArgs, { shell: foreground, detached: !foreground }];
       }
 
       const oscalServerProcess = spawn(...spawnArgs);
@@ -132,8 +112,6 @@ export const executeOscalServerCommand = async (
       if (!foreground) {
         console.log("running in background")
         oscalServerProcess.unref();
-        writeFileSync(PID_FILE, oscalServerProcess.pid!.toString());
-        exit();
       } else {
 
         oscalServerProcess.stdout?.on('data', (data) => {
@@ -156,14 +134,21 @@ export const executeOscalServerCommand = async (
     }).catch(error => reject(error));
   });
 };
-export function startServer(foreground: boolean = false) {
-  return executeOscalServerCommand("start", [], foreground);
+export async function startServer(foreground: boolean = false) {
+  const status =  await checkServerStatus()
+  status&&console.log("Server is already healthy")
+  !status&& executeOscalServerCommand("start", [], foreground);
 }
 
 
 export async function checkServerStatus(): Promise<boolean> {
   try {
     const response = await fetch('http://localhost:8888/health');
+    if(response.ok)
+      {
+        const data = await response.json()
+        console.log(data);
+      }
     return response.ok;
   } catch (error) {
     console.error('Error checking server status:', error);
@@ -187,3 +172,21 @@ export const serverCommand= async (cmd,options: { background?: string; stop?: st
     console.log('Please specify an action: start, stop,restart or status');
   }
 }
+
+async function isServerRunning() {
+  const processes = await psList();
+  const oscalProcesses = processes.filter(process => 
+    process.name.toLowerCase().includes('oscal-server') || 
+    (process.cmd && process.cmd.toLowerCase().includes('oscal-server'))
+  );
+  return oscalProcesses.length>0
+}
+async function getServerPid() {
+  const processes = await psList();
+  const oscalProcesses = processes.filter(process => 
+    process.name.toLowerCase().includes('oscal-server') || 
+    (process.cmd && process.cmd.toLowerCase().includes('oscal-server'))
+  );
+  return oscalProcesses[0].pid
+}
+

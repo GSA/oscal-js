@@ -7,10 +7,12 @@ import { Catalog, Profile } from './types.js';
 import inquirer from 'inquirer';
 import { executeOscalCliCommand, installOscalCli, installOscalExecutor, isOscalExecutorInstalled } from './env.js';
 import { detectOscalDocumentType,  OscalExecutorOptions } from './utils.js';
+import { OscalConvertOptions } from './convert.js';
+import { getServerClient } from './server.js';
 
 const execAsync = promisify(exec);
 export type OscalResolveOptions = {
-  outputFormat: 'json'|'yaml'|'xml'|'yml',
+  outputFormat: 'json'|'yaml'|'xml',
 } 
 
 export async function resolveProfile(
@@ -47,14 +49,25 @@ export async function resolveProfile(
 }
 
 export async function resolveProfileDocument(
-  filePath: string,options:OscalResolveOptions={outputFormat:'xml'},executor:OscalExecutorOptions='oscal-server'): Promise<Catalog|undefined> {
+  filePath: string,options:OscalResolveOptions={outputFormat:'json'},executor:OscalExecutorOptions='oscal-server'): Promise<Catalog|string|undefined> {
   const tempOutput = path.join(process.cwd(), `oscal-cli-tmp-output-${v4()}.json`);
+
   try {
-    const args = ["--to=JSON", filePath, tempOutput, '--show-stack-trace'];
-    await executeOscalCliCommand("resolve-profile", args);
     
-    const result = JSON.parse(readFileSync(tempOutput, 'utf-8'));
-    return result as Catalog;
+    if(executor==='oscal-server'){
+      await resolveFileWithServer(filePath,tempOutput,options)
+    }else{
+      const args = ["--to=JSON", filePath, tempOutput, '--show-stack-trace'];
+      await executeOscalCliCommand("resolve-profile", args);     
+    }
+    
+    const resolvedContent =(readFileSync(tempOutput, 'utf-8'));
+    if (options.outputFormat === 'json') {
+      return JSON.parse(resolvedContent) as Catalog;
+    } else {
+      return resolvedContent
+    }
+
   } catch (error) {
     console.error("Error resolving profile from file:", error);
     return undefined;
@@ -69,43 +82,59 @@ export async function resolveProfileDocument(
   }
 }
 
-export async function resolveProfileServerFromFile(
-  filePath: string,executor:OscalExecutorOptions='oscal-cli'
 
-): Promise<Catalog|undefined> {
-  let oscalExecutorInstalled = await isOscalExecutorInstalled(executor);
-
-  if (!oscalExecutorInstalled) {
-    try {
-      await installOscalExecutor(executor);
-      oscalExecutorInstalled = true;
-    } catch (error) {
-      console.error("Error installing CLI:", error);
-      return undefined;
-    }
-  }
-
-  const tempOutput = path.join(process.cwd(), `oscal-cli-tmp-output-${v4()}.json`);
-
+async function resolveFileWithServer(
+  inputFile: string,
+  outputFile: string,
+  options: OscalConvertOptions
+): Promise<void> {
   try {
-    const args = ["--to=JSON", filePath, tempOutput, '--show-stack-trace'];
-    await executeOscalCliCommand("resolve-profile", args);
+    const encodedArgs = `file://${inputFile.trim()}`;
     
-    const result = JSON.parse(readFileSync(tempOutput, 'utf-8'));
-    return result as Catalog;
-  } catch (error) {
-    console.error("Error resolving profile from file:", error);
-    return undefined;
-  } finally {
-    try {
-      if (tempOutput) {
-        unlinkSync(tempOutput);
+    // Determine the Accept header based on options.outputFormat
+    let acceptHeader = 'application/json'; // Default to JSON
+    if (options.outputFormat) {
+      switch (options.outputFormat.toLowerCase()) {
+        case 'json':
+          acceptHeader = 'application/json';
+          break;
+        case 'xml':
+          acceptHeader = 'application/xml';
+          break;
+        case 'yaml':
+          acceptHeader = 'application/yaml';
+          break;
+        // Add more cases as needed
+        default:
+          console.warn(`Unsupported output format: ${options.outputFormat}. Defaulting to JSON.`);
       }
-    } catch (cleanupError) {
-      console.error("Error cleaning up temporary output file:", cleanupError);
     }
+
+    const { response, error,data } = await getServerClient().GET('/resolve', {
+      params: { query: { document: encodedArgs,format:options.outputFormat } },
+      parseAs: "blob" ,
+      headers: { Accept: acceptHeader }
+    });
+
+    if (!response.ok) {
+      console.error(error?.error);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    if (!data) {
+      throw new Error('No data received from the server');
+    }
+
+    // Convert blob to text
+    const fileOutput = await data.text();
+
+    writeFileSync(outputFile, fileOutput);
+  } catch (error) {
+    console.error('Error during validation:', error);
+    throw error;
   }
 }
+
 
 export const resolveProfileCommand=async (fileArg,options: { file?: string; output?: string }) => {
   let { file, output } = options;

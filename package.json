@@ -13,7 +13,8 @@
     "test:constraints": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @lib",
     "test:ssp": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --tags @ssp",
     "report": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js --format html:cucumber-report.html --publish-quiet || (exit 0)",
-    "generate:server-types": "npx openapi-typescript https://raw.githubusercontent.com/metaschema-framework/oscal-server/refs/heads/main/src/main/resources/webroot/openapi.yaml -o ./src/open-api/oscal-server.d.ts"
+    "generate:server-types": "npx openapi-typescript https://raw.githubusercontent.com/metaschema-framework/oscal-server/refs/heads/main/src/main/resources/webroot/openapi.yaml -o ./src/open-api/oscal-server.d.ts",
+    "test:failed": "cross-env NODE_OPTIONS=\"--loader ts-node/esm --no-warnings --experimental-specifier-resolution=node\" cucumber-js -p rerun"
   },
   "keywords": [
     "oscal"

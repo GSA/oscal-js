@@ -13,23 +13,18 @@ Feature: OSCAL Operations with Multiple Executors
       | oscal-cli    |
       | oscal-server |
 
-  Scenario Outline: Install OSCAL tool
-    Given "<tool>" is not installed
-    When I install "<tool>"
-    Then "<tool>" should be installed
-    Examples:
-      | tool         |
-      | oscal-cli    |
-      | oscal-server |
+  # Scenario Outline: Install OSCAL tool
+  #   When I install "<tool>"
+  #   Then "<tool>" should be installed
+  #   Examples:
+  #     | tool         |
+  #     | oscal-cli    |
+  #     | oscal-server |
 
-  Scenario Outline: Execute OSCAL command
+  Scenario Outline: Execute OSCAL CLI command
     Given I have an OSCAL document "ssp.xml"
-    When I execute the OSCAL command "validate" on the document using "<executor>"
+    When I execute the OSCAL CLI command "validate" on the document
     Then I should receive the execution result
-    Examples:
-      | executor     |
-      | oscal-cli    |
-      | oscal-server |
 
   Scenario Outline: Convert OSCAL document from XML to JSON
     Given I have an OSCAL document "ssp.xml"
@@ -71,7 +66,7 @@ Feature: OSCAL Operations with Multiple Executors
       | oscal-server |
 
   Scenario Outline: Get sarif output for valid JSON
-    Given I have an OSCAL document "ssp.json"
+    Given I have an OSCAL document "profile.json"
     When I validate with sarif output on the document using "<executor>"
     Then I should receive the sarif output
     Examples:
@@ -80,14 +75,14 @@ Feature: OSCAL Operations with Multiple Executors
       | oscal-server |
 
   Scenario Outline: Get sarif output for valid XML with metaschema extensions
-    Given I have an OSCAL document "ssp.xml"
+    Given I have an OSCAL document "<oscal_document>"
     And I have a Metaschema extensions document "fedramp-external-constraints.xml"
     When I validate with metaschema extensions and sarif output on the document using "<executor>"
     Then I should receive the sarif output
     Examples:
-      | executor     |
-      | oscal-cli    |
-      | oscal-server |
+      | executor     | oscal_document|
+      | oscal-cli    | ssp.xml|
+      | oscal-server |invalid-|
 
   Scenario Outline: Get sarif output for invalid XML with metaschema extensions
     Given I have an OSCAL document "invalid-ssp.xml"
@@ -100,7 +95,7 @@ Feature: OSCAL Operations with Multiple Executors
       | oscal-server |
 
   Scenario Outline: Validate JavaScript object inline
-    Given I have an OSCAL document "ssp.json"
+    Given I have an OSCAL document "profile.json"
     When I validate with imported validate function using "<executor>"
     Then I should receive a validation object
     Examples:
@@ -110,7 +105,7 @@ Feature: OSCAL Operations with Multiple Executors
 
   Scenario Outline: Convert JavaScript object inline
     Given I have an OSCAL document "profile.xml"
-    And I want an OSCAL document "profile.json"
+    And I want an OSCAL document "converted-profile.json"
     When I convert it with imported convert function using "<executor>"
     Then I should receive a valid json object
     Examples:

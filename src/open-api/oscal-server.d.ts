@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check the health of the server
+         * @description Returns the health status of the server and the number of active workers
+         */
+        get: operations["healthCheck"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/validate": {
         parameters: {
             query?: never;
@@ -60,12 +80,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        HealthResponse: {
+            /** @enum {string} */
+            status?: "healthy" | "unhealthy";
+            /** @description The number of currently active workers */
+            activeWorkers?: number;
+        };
         SarifResponse: {
             version?: string;
             runs?: Record<string, never>[];
         };
-        /** @description OSCAL content (structure depends on the specific OSCAL format) */
-        OscalContent: Record<string, never>;
         Error: {
             error?: string;
         };
@@ -86,9 +110,9 @@ export interface components {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": components["schemas"]["OscalContent"];
-                "application/xml": components["schemas"]["OscalContent"];
-                "application/x-yaml": components["schemas"]["OscalContent"];
+                "application/json": string;
+                "text/xml": string;
+                "text/yaml": string;
             };
         };
         /** @description Bad request */
@@ -117,14 +141,43 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    healthCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful health check response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     validate: {
         parameters: {
             query: {
                 /**
-                 * @description URI of the remote OSCAL document to validate
+                 * @description URI of an OSCAL document to validate
                  * @example https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/content/ssp-all-VALID.xml
                  */
-                content: string;
+                document: string;
+                /**
+                 * @description URIs of metaschema extension modules to load
+                 * @example [
+                 *       "https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-constraints.xml",
+                 *       "https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-constraints.xml"
+                 *     ]
+                 */
+                constraint?: string[];
             };
             header?: never;
             path?: never;
@@ -139,7 +192,16 @@ export interface operations {
     };
     validateUpload: {
         parameters: {
-            query?: never;
+            query?: {
+                /**
+                 * @description URIs of metaschema extension modules to load
+                 * @example [
+                 *       "https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-constraints.xml",
+                 *       "https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-constraints.xml"
+                 *     ]
+                 */
+                constraint?: string[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -158,8 +220,18 @@ export interface operations {
     resolve: {
         parameters: {
             query: {
-                /** @description Absolute Path of the local OSCAL document to resolve */
-                content: string;
+                /**
+                 * @description Absolute Path of the local OSCAL document to resolve
+                 * @example [
+                 *       "/Users/esper/fedramp-automation/dist/content/rev5/baselines/json/FedRAMP_rev5_HIGH-baseline_profile.json"
+                 *     ]
+                 */
+                document: string;
+                /**
+                 * @description Specify the format of the response
+                 * @example json
+                 */
+                format?: "json" | "yaml" | "xml";
             };
             header?: never;
             path?: never;
@@ -176,7 +248,12 @@ export interface operations {
         parameters: {
             query: {
                 /** @description URI of the remote OSCAL document to convert */
-                content: string;
+                document: string;
+                /**
+                 * @description Specify the format of the response
+                 * @example json
+                 */
+                format?: "json" | "yaml" | "xml";
             };
             header?: never;
             path?: never;

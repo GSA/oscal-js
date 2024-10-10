@@ -287,11 +287,12 @@ export const validateCommand =async function(fileArg,commandOptions: { file?: st
   let { file, extensions, recursive,server } = commandOptions;
 
   let options:OscalValidationOptions = {extensions}
-  if(options.extensions&&options.extensions.includes("fedramp")){
-    options.extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-constraints.xml")
-    options.extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/oscal-external-constraints.xml")
-    options.extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-allowed-values.xml")
-    options.extensions=options.extensions.filter(x=>x!=='fedramp')
+  if(Array.isArray(options.extensions)&&options.extensions.includes("fedramp")){
+    let fedramp_extensions:string[] = []
+    fedramp_extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-constraints.xml")
+    fedramp_extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/oscal-external-constraints.xml")
+    fedramp_extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-allowed-values.xml")
+    options.extensions=[...fedramp_extensions,...options.extensions.filter(x=>x!=='fedramp')];
   }
   file = fileArg || file;
   if (typeof file === 'undefined') {

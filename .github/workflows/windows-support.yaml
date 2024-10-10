@@ -37,7 +37,7 @@ jobs:
       run: node ./dist/cli.js server update
 
     - name: Start Server
-      run: node ./dist/cli.js server start& 
+      run: Start-Process -FilePath "oscal-server"
 
     - name: Resolve FedRAMP HIGH baseline profile
       run: node ./dist/cli.js resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml -s

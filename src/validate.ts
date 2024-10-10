@@ -285,7 +285,14 @@ export async function validateDirectory(dirPath: string, options: OscalValidatio
 
 export const validateCommand =async function(fileArg,commandOptions: { file?: string, extensions?: string[], recursive?: boolean,server?:boolean }) {
   let { file, extensions, recursive,server } = commandOptions;
-  const options:OscalValidationOptions = {extensions:extensions||[]}
+
+  let options:OscalValidationOptions = {extensions}
+  if(options.extensions&&options.extensions.includes("fedramp")){
+    options.extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-constraints.xml")
+    options.extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/oscal-external-constraints.xml")
+    options.extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-allowed-values.xml")
+    options.extensions=options.extensions.filter(x=>x!=='fedramp')
+  }
   file = fileArg || file;
   if (typeof file === 'undefined') {
     const answer = await inquirer.prompt<{ file: string }>([{

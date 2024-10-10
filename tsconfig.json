@@ -9,6 +9,7 @@
     "resolveJsonModule": true,
     "rootDir": "./src/",
     "allowJs": true,
+    "skipLibCheck":true,
     "noImplicitAny": false,
     "declaration": true,
     "declarationDir": "./dist"

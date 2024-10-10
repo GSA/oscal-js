@@ -23,11 +23,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-
-    - name: Install dependencies
-      run: npm i 
-    - name: Install tsc
-      run: npm install --save-dev typescript
     
     - name: Build javacsript distribution
       run: npm run build

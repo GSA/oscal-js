@@ -9,7 +9,7 @@ import { validateCommand } from './validate.js';
 import { useVersion } from './versions.js';
 
 program
-  .version("2.0.0-rc6")
+  .version("2.0.0-rc7")
   .command('validate [file]')
   .option('-s, --server', 'Use OSCAL server for operations')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')

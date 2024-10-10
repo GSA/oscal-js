@@ -45,7 +45,6 @@
     "@types/adm-zip": "^0.5.5",
     "@types/chai": "^4.3.16",
     "@types/inquirer": "^9.0.7",
-    "@types/node": "18.17.0",
     "@types/sarif": "^2.1.7",
     "cross-env": "^7.0.3",
     "json-schema-to-typescript": "^14.1.0",

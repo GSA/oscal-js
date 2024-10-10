@@ -58,7 +58,7 @@ jobs:
       run: oscal convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML -s
 
     - name: Validate all output recursively
-      run: oscal validate -f ./artifacts/ -e fedramp -r -s
+      run: oscal validate -f ./artifacts/ -r -s
 
 
     - name: Deploy to GitHub Pages (forks only)

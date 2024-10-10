@@ -85,7 +85,6 @@ if (!existsSync(OSCAL_DIR)) {
 export const executeOscalServerCommand = async (
   command: string,
   args: string[] = [],
-  foreground: boolean = false
 ): Promise<[string, string]> => {
   return new Promise((resolve, reject) => {
     findOscalServerPath().then(async oscalServerPath => {
@@ -109,21 +108,18 @@ export const executeOscalServerCommand = async (
       let spawnArgs: [string, string[], object];
       if (isWindows) {
         spawnArgs = [
-          'cmd.exe',
-          ['/c', oscalServerPath, ...fullArgs],
-          { windowsVerbatimArguments: true, detached: !foreground }
+          'powershell.exe',
+          ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', 
+           `& {&'${oscalServerPath}' ${fullArgs.map(arg => `'${arg}'`).join(' ')}}`],
+          { windowsVerbatimArguments: true, detached: false }
         ];
       } else {
-        spawnArgs = [oscalServerPath, fullArgs, { shell: foreground, detached: !foreground }];
+        spawnArgs = [oscalServerPath, fullArgs, { shell: true, detached: false }];
       }
 
       const oscalServerProcess = spawn(...spawnArgs);
 
 
-      if (!foreground) {
-        console.log("running in background")
-        oscalServerProcess.unref();
-      } else {
 
         oscalServerProcess.stdout?.on('data', (data) => {
           console.info(data.toString());
@@ -141,14 +137,14 @@ export const executeOscalServerCommand = async (
         oscalServerProcess.on('error',console.error)
         oscalServerProcess.on('exit',(exit)=>console.log("Service process Exited ("+exit+")"))
         serverProcess = oscalServerProcess;
-      }
+      
     }).catch(error => reject(error));
   });
 };
 export async function startServer(foreground: boolean = false) {
   const status =  await checkServerStatus()
   status&&console.log("Server is already healthy")
-  !status&& executeOscalServerCommand("start", [], foreground);
+  !status&& executeOscalServerCommand("start", []);
 }
 
 
@@ -162,27 +158,23 @@ export async function checkServerStatus(): Promise<boolean> {
       }
     return response.ok;
   } catch (error) {
-    console.error('Error checking server status:', error);
-    console.info('Start the oscal server with oscal-server', error);
     return false;
   }
 }
-export const serverCommand= async (cmd,options: { background?: string; stop?: string; port?: boolean }) => {
-
+export const serverCommand= async (command:string) => {
+  let cmd = command.trim()
   if (cmd=='start') {
-    await startServer(!options.background);
+    await startServer();
   }if (cmd=='restart') {
     await stopServer();
-    await startServer(!options.background);
+    await startServer();
   } else if (cmd=='stop') {
     await stopServer();
   } else if (cmd=='update') {
     await installOscalExecutor('oscal-server');
   } else if (cmd=='status') {
     await checkServerStatus();
-  } else {
-    console.log('Please specify an action: start, stop,restart or status');
-  }
+  } 
 }
 
 async function isServerRunning() {

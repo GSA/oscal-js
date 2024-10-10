@@ -1,4 +1,4 @@
-import { program } from 'commander';
+import { Argument, program } from 'commander';
 import { convertCommand } from './convert.js';
 import { installOscalExecutor, isOscalExecutorInstalled} from './env.js';
 import { evaluateMetapathCommand } from './evaluate.js';
@@ -9,7 +9,7 @@ import { validateCommand } from './validate.js';
 import { useVersion } from './versions.js';
 
 program
-  .version("2.0.0-rc4")
+  .version("2.0.0-rc6")
   .command('validate [file]')
   .option('-s, --server', 'Use OSCAL server for operations')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
@@ -45,8 +45,7 @@ program.command('scaffold')
   .action(scaffold);
 
 program.command('server [command]')
-.option('-b,--background', 'Start the OSCAL server')
-.addHelpText('afterAll', 'commands: [start,stop,status,health,restart]')
+.option('-c, --command <cmd>', 'server command')
 .description('Start OSCAL Server')
 .action(serverCommand);
 
@@ -65,21 +64,6 @@ program.command('metaquery')
     if (command === 'use') {
       // If the command is 'use', directly parse the arguments without checking for OSCAL CLI installation
       program.parse(process.argv);
-    } else if (args.includes("-s")||args.includes("--server")){
-      isOscalExecutorInstalled('oscal-server')
-      .then((installed) => {
-        if (!installed) {
-          return installOscalExecutor('oscal-server');
-        }
-      })
-      .then(() => {
-        program.parse(process.argv);
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-        process.exit(1);
-      });
-
     }else {
       // For all other commands, check for OSCAL CLI installation first
       isOscalExecutorInstalled('oscal-cli')

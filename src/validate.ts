@@ -397,7 +397,7 @@ async function executeSarifValidationViaServer(document:string,options:OscalServ
       const params = {query:{document:documentUri,constraint,flags:options.flags}}
       const client = await getServerClient()
       const {response,error,data} =await client.GET('/validate',{params,
-        parseAs:'blob'
+        parseAs:'json'
       })
       if(error){
         console.error(error.error)
@@ -414,7 +414,7 @@ async function executeSarifValidationViaServer(document:string,options:OscalServ
       if(responseCode=="OK"){
         isValid = true;
       }
-      const log = JSON.parse(await data?.text())
+      const log = data as any;
     return {isValid,log};  
 } catch (error) {
     console.error('Error during validation:', error);

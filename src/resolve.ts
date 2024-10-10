@@ -23,8 +23,8 @@ export async function resolveProfileInline(
   options: OscalConvertOptions,
   executor: OscalExecutorOptions = 'oscal-server'
 ): Promise<string|Catalog> {
-  const tempInputFile = path.join(process.cwd(), `oscal-cli-tmp-input-${randomUUID()}.json`);
-  const tempOutputFile = path.join(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
+  const tempInputFile = path.resolve(process.cwd(), `oscal-cli-tmp-input-${randomUUID()}.json`);
+  const tempOutputFile = path.resolve(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
 
   try {
     writeFileSync(tempInputFile, JSON.stringify(document));
@@ -48,7 +48,7 @@ export async function resolveProfile(
   options: OscalConvertOptions,
   executor: OscalExecutorOptions = 'oscal-server'
 ): Promise<string|Catalog> {
-  const tempOutputFile = path.join(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
+  const tempOutputFile = path.resolve(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
 
   try {
     await resolveProfileDocument(documentPath, tempOutputFile, options, executor);

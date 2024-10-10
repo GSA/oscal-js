@@ -62,11 +62,11 @@ let constraintExists: boolean;
 
 
 Given('I have an OSCAL document {string}', function (filename: string) {
-  documentPath = path.join(__dirname, '..', '..', 'examples', filename);
+  documentPath = path.resolve(__dirname, '..', '..', 'examples', filename);
 });
 
 Given('I have a Metaschema extensions document {string}', function (filename: string) {
-  metaschemaDocumentPath = path.join(__dirname, '..', '..', 'extensions', filename);
+  metaschemaDocumentPath = path.resolve(__dirname, '..', '..', 'extensions', filename);
   metaschemaDocuments = [metaschemaDocumentPath];
 });
 
@@ -115,7 +115,7 @@ When('I validate with metaschema extensions and sarif output on the document usi
 
 
 When('I convert the document to JSON using {string}', async function (executor: string) {
-  outputPath = path.join(__dirname, '..', '..', 'examples', 'ssp.json');
+  outputPath = path.resolve(__dirname, '..', '..', 'examples', 'ssp.json');
   if (executor === 'oscal-cli') {
     [conversionResult, executionErrors] = await executeOscalCliCommand('convert', [documentPath, '--to=json', outputPath, '--overwrite']);
   } else if (executor === 'oscal-server') {
@@ -124,7 +124,7 @@ When('I convert the document to JSON using {string}', async function (executor: 
 });
 
 When('I convert the document to YAML using {string}', async function (executor: string) {
-  outputPath = path.join(__dirname, '..', '..', 'examples', 'ssp.yaml');
+  outputPath = path.resolve(__dirname, '..', '..', 'examples', 'ssp.yaml');
   if (executor === 'oscal-cli') {
     [conversionResult, executionErrors] = await executeOscalCliCommand('convert', [documentPath, '--to=yaml', outputPath, '--overwrite']);
   } else if (executor === 'oscal-server') {
@@ -187,7 +187,7 @@ Then('I should receive a validation object', function () {
 });
 
 Given('I want an OSCAL document {string}', function (filename: string) {
-  outputPath = path.join(__dirname, '..', '..', 'examples', filename);
+  outputPath = path.resolve(__dirname, '..', '..', 'examples', filename);
 });
 
 When('I convert it with imported convert function using {string}', async function (executor:any) {
@@ -308,16 +308,16 @@ When('I validate with imported validate function', async function () {
   validateResult = await validate(oscalObject as any,{extensions:metaschemaDocuments});
 });
 When('I validate with imported validateDocument function', async function () {
-  validateResult = await validateDocument(documentPath,{extensions:metaschemaDocuments});
+  validateResult = await validateDocument(documentPath,{extensions:metaschemaDocuments},'oscal-server');
 });
 
 Given('I have an Metaschema extensions document {string}', function (filename: string) {
-  metaschemaDocumentPath = path.join(__dirname, '..', '..', 'extensions', filename);
+  metaschemaDocumentPath = path.resolve(__dirname, '..', '..', 'extensions', filename);
   metaschemaDocuments = [metaschemaDocumentPath];
 });
 
 Given('I have a second Metaschema extensions document {string}', function (filename: string) {
-  const secondMetaschemaDocumentPath = path.join(__dirname, '..', '..', 'extensions', filename);
+  const secondMetaschemaDocumentPath = path.resolve(__dirname, '..', '..', 'extensions', filename);
   metaschemaDocuments.push(secondMetaschemaDocumentPath);
 });
 

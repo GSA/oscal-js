@@ -73,7 +73,7 @@ async function handleFolderConversion(
   for (const format of outputFormats) {
     const formatOutputFolder = outputFormat
       ? outputFolder
-      : path.join(outputFolder, format);
+      : path.resolve(outputFolder, format);
     fs.mkdirSync(formatOutputFolder, { recursive: true });
 
     const files = fs.readdirSync(inputFolder);

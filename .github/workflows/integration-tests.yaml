@@ -17,13 +17,17 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '20'
+        node-version: '18'
 
     - name: Install cli
       run: npm install oscal@next -g
 
     - name: Use latest oscal version
       run: oscal use latest
+    - name: Use latest oscal server version
+      run: oscal server update
+    - name: start oscal server in the background
+      run: oscal server start&
     - name: Produce artifacts baselines in all formats
       run: oscal convert -f ./content/rev5/baselines/xml -o artifacts/content/rev5/baselines/
     - name: Produce artifacts for ssp

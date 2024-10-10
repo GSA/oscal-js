@@ -40,6 +40,12 @@ export async function stopServer() {
 
 const loggingMiddleware: Middleware = {
   onRequest: async ({request}) => {
+    const url = new URL(request.url);
+
+    console.log(
+      chalk.blue('oscal-server') + ' ' +decodeURIComponent(url.href)
+    );
+
     return request;
   },onResponse: async ({ response, request }) => {
     const url = new URL(request.url);

@@ -201,7 +201,7 @@ export async function installOscalServer(tag:string='latest') {
     zip.extractAllTo(installDir, true);
     
     // Find the executable in the extracted files
-    const executableName = 'oscal-server'; // Adjust this if the executable name is different
+    const executableName = process.platform === 'win32' ? 'oscal-server.exe' : 'oscal-server';
     const executablePath = await findExecutable(installDir, executableName);
     
     if (!executablePath) {
@@ -217,14 +217,33 @@ export async function installOscalServer(tag:string='latest') {
       fs.mkdirSync(userLocalBin, { recursive: true });
     }
     
-    const aliasPath = path.resolve(userLocalBin, 'oscal-server');
+    let aliasDir;
+    if (process.platform === 'win32') {
+      aliasDir = path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WindowsApps');
+    } else {
+      aliasDir = path.join(homeDir, '.local', 'bin');
+    }
+    if (!fs.existsSync(aliasDir)) {
+      fs.mkdirSync(aliasDir, { recursive: true });
+    }
+    const aliasPath = path.resolve(aliasDir, executableName);
+
     try{
       fs.unlinkSync(aliasPath);
     }catch(e){
       console.error(e)
     }
-    fs.symlinkSync(executablePath, aliasPath);
-    
+    if (process.platform === 'win32') {
+      fs.copyFileSync(executablePath, aliasPath);
+    } else {
+      try {
+        fs.unlinkSync(aliasPath);
+      } catch (e) {
+        // Ignore error if file doesn't exist
+      }
+      fs.symlinkSync(executablePath, aliasPath);
+      fs.chmodSync(aliasPath, '755'); // Make executable
+    }
     console.log(`OSCAL server ${latestVersion} installed successfully`);
     console.log(`Executable: ${executablePath}`);
     console.log(`Alias created: ${aliasPath}`);

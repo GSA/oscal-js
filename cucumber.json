@@ -1,16 +1,29 @@
 {
-    "default": {
-      "requireModule": ["ts-node/register"],
-      "import": ["features/**/*.ts"],
-      "format": [
-        "progress-bar",
-        ["rerun", "@rerun.txt"],
-        ["usage", "reports/usage.txt"],
-        ["message", "reports/messages.ndjson"],
-        ["junit", "reports/junit.xml"],
-        ["html", "reports/html-formatter.html"]
-      ],
-      "retry": 2,
-      "retryTagFilter": "@flaky"
-    }
+  "default": {
+    "import": [
+      "import { register } from 'ts-node'",
+      "register({ esm: true, experimentalSpecifierResolution: 'node' })",
+      "features/**/*.ts"
+    ],
+    "format": [
+      ["junit", "reports/junit-constraints.xml"],
+      ["html", "reports/constraints.html"],
+      ["rerun","@rerun.txt"]
+    ],
+    "retry": 2,
+    "retryTagFilter": "@flaky"
+  },
+  "rerun": {
+    "import": [
+      "import { register } from 'ts-node'",
+      "register({ esm: true, experimentalSpecifierResolution: 'node' })",
+      "features/**/*.ts"
+    ],
+    "format": [
+      ["junit", "reports/junit-constraints-rerun.xml"],
+      ["html", "reports/constraints-rerun.html"]
+    ],
+    "retry": 0,
+    "paths": ["@rerun.txt"]
   }
+}

@@ -11,38 +11,42 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Set up JDK 11
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v4
       with:
         java-version: '11'
         distribution: 'adopt'
 
     - name: Use Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4
       with:
-        node-version: '20'
-
-    - name: Install dependencies
-      run: npm i 
-    - name: Install tsc
-      run: npm install --save-dev typescript
+        node-version: '18.17.0'
     
+    - name: install deps
+      run: npm install
+      
     - name: Build javacsript distribution
       run: npm run build
 
-    - name: Use Stable oscal
-      run: node ./dist/cli.js use oscal-cli-1.1.0
+    - name: Use latest oscal
+      run: node ./dist/cli.js use latest
+
+    - name: Update Server
+      run: node ./dist/cli.js server update
+
+    - name: Start Server
+      run: node ./dist/cli.js server start
 
     - name: Resolve FedRAMP HIGH baseline profile
-      run: node ./dist/cli.js resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml
+      run: node ./dist/cli.js resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml -s
 
     - name: Convert Profiles to JSON
-      run: node ./dist/cli.js convert ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/json/ -t JSON
+      run: node ./dist/cli.js convert ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/json/ -t JSON -s
 
     - name: Convert Profiles to YAML
-      run: node ./dist/cli.js convert ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML
+      run: node ./dist/cli.js convert ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML -s
 
     - name: Validate all output recursively
-      run: node ./dist/cli.js validate -f ./artifacts/ -e fedramp -r
+      run: node ./dist/cli.js validate -f ./artifacts/ -r -s

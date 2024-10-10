@@ -49,4 +49,4 @@ jobs:
       run: node ./dist/cli.js convert ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML -s
 
     - name: Validate all output recursively
-      run: node ./dist/cli.js validate -f ./artifacts/ -e fedramp -r -s
+      run: node ./dist/cli.js validate -f ./artifacts/ -r -s

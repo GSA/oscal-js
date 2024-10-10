@@ -27,7 +27,7 @@ jobs:
     - name: Use latest oscal server version
       run: oscal server update
     - name: start oscal server in the background
-      run: oscal server start&
+      run: oscal-server&
     - name: Produce artifacts baselines in all formats
       run: oscal convert -f ./content/rev5/baselines/xml -o artifacts/content/rev5/baselines/ -s
     - name: Produce artifacts for ssp

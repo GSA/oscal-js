@@ -201,7 +201,7 @@ export async function installOscalServer(tag:string='latest') {
     zip.extractAllTo(installDir, true);
     
     // Find the executable in the extracted files
-    const executableName = process.platform === 'win32' ? 'oscal-server.exe' : 'oscal-server';
+    const executableName = process.platform === 'win32' ? 'oscal-server.bat' : 'oscal-server';
     const executablePath = await findExecutable(installDir, executableName);
     
     if (!executablePath) {

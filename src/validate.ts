@@ -92,20 +92,28 @@ export async function validateDocument(
 
  
 
-export async function executeSarifValidation(
-  filePath: string,
-  options: OscalValidationOptions = {},
-  executor:OscalExecutorOptions
-): Promise<{ isValid: boolean; log: Log }> {
-  const additionalArgs = (options.extensions||[]).flatMap(x => ["-c", x]);
-  if(executor==='oscal-cli'){
-    return await executeSarifValidationViaCLI([filePath, ...additionalArgs]);
-  }else if(executor==='oscal-server'){
-    return  await executeSarifValidationViaServer(filePath,{...options,inline:false}); 
-  }else {
-    return {isValid:false,log:buildSarifFromMessage("")}
+  export async function executeSarifValidation(
+    filePath: string,
+    options: OscalValidationOptions = {},
+    executor: OscalExecutorOptions
+  ): Promise<{ isValid: boolean; log: Log }> {
+    const additionalArgs = (options.extensions || []).flatMap(x => ["-c", x]);
+  
+    if (executor === 'oscal-server') {
+      try {
+        return await executeSarifValidationViaServer(filePath, { ...options, inline: false });
+      } catch (error) {
+        console.warn("Server validation failed. Falling back to CLI validation.");
+        executor = 'oscal-cli';
+      }
+    }
+  
+    if (executor === 'oscal-cli') {
+      return await executeSarifValidationViaCLI([filePath, ...additionalArgs]);
+    }
+  
+    return { isValid: false, log: buildSarifFromMessage("Invalid executor specified") };
   }
-}
 
 export function parseSarifToErrorStrings(sarifResult: any): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];

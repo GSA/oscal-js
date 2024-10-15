@@ -47,17 +47,30 @@ export async function convertDocument(
   documentPath: string,
   outputPath: string,
   options: OscalConvertOptions = { outputFormat: 'xml' },
-  executor: OscalExecutorOptions = 'oscal-cli'
+  executor: OscalExecutorOptions = 'oscal-server'
 ): Promise<void> {
-  if (executor === 'oscal-cli') {
-    await convertFileWithCli(documentPath, outputPath, options);
-  } else if (executor === 'oscal-server') {
-    await convertFileWithServer(documentPath, outputPath, options);
-  } else {
-    throw new Error(`Unsupported executor: ${executor}`);
+  if (executor === 'oscal-server') {
+    try {
+      await convertFileWithServer(documentPath, outputPath, options);
+      return;
+    } catch (error) {
+      console.warn("Server conversion failed. Falling back to CLI conversion.");
+      executor = 'oscal-cli';
+    }
   }
-}
 
+  if (executor === 'oscal-cli') {
+    try {
+      await convertFileWithCli(documentPath, outputPath, options);
+      return;
+    } catch (error) {
+      console.error("CLI conversion failed:", error);
+      throw error;
+    }
+  }
+
+  throw new Error(`Unsupported executor: ${executor}`);
+}
 async function handleFolderConversion(
   inputFolder: string,
   outputFolder: string,

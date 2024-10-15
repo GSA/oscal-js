@@ -82,28 +82,30 @@ if (!existsSync(OSCAL_DIR)) {
 
 
 
+
 export const executeOscalServerCommand = async (
   command: string,
   args: string[] = [],
-): Promise<[string, string]> => {
+  options: object = {}
+): Promise<ChildProcess> => {
   return new Promise((resolve, reject) => {
     findOscalServerPath().then(async oscalServerPath => {
       const isWindows = process.platform === 'win32';
       const fullArgs = [...command.split(" "), ...args];
-      // Check if a server process is already running
-        if (await isServerRunning()) {
-          const pid =await getServerPid();
-          if (command === 'start') {
-            reject(new Error('OSCAL SERVER is already running. Use the stop command to stop it or the restart command to restart it.'));
-            return;
-          } else if (command === 'restart') {
-            try {
-              process.kill(pid);
-            } catch (error) {
-              console.warn(`Failed to kill existing process (PID: ${pid}): ${error}`);
-            }
+
+      if (await isServerRunning()) {
+        const pid = await getServerPid();
+        if (command === 'start') {
+          reject(new Error('OSCAL SERVER is already running. Use the stop command to stop it or the restart command to restart it.'));
+          return;
+        } else if (command === 'restart') {
+          try {
+            process.kill(pid);
+          } catch (error) {
+            console.warn(`Failed to kill existing process (PID: ${pid}): ${error}`);
           }
         }
+      }
 
       let spawnArgs: [string, string[], object];
       if (isWindows) {
@@ -111,42 +113,70 @@ export const executeOscalServerCommand = async (
           'powershell.exe',
           ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', 
            `& {&'${oscalServerPath}' ${fullArgs.map(arg => `'${arg}'`).join(' ')}}`],
-          { windowsVerbatimArguments: true, detached: false }
+          { windowsVerbatimArguments: true, ...options }
         ];
       } else {
-        spawnArgs = [oscalServerPath, fullArgs, { shell: true, detached: false }];
+        spawnArgs = [oscalServerPath, fullArgs, { shell: true, ...options }];
       }
 
       const oscalServerProcess = spawn(...spawnArgs);
 
+      oscalServerProcess.stdout?.on('data', (data) => {
+        console.info(data.toString());
+      });
 
+      oscalServerProcess.stderr?.on('data', (data) => {
+        console.error(data.toString());
+      });
 
-        oscalServerProcess.stdout?.on('data', (data) => {
-          console.info(data.toString());
-        });
-  
-        oscalServerProcess.stderr?.on('data', (data) => {
-          console.error(data.toString());
-        });
-  
-        oscalServerProcess.on('error', (error) => {
-          console.error(error.message.toString())
-        });
-  
-        oscalServerProcess.on('message',console.log)
-        oscalServerProcess.on('error',console.error)
-        oscalServerProcess.on('exit',(exit)=>console.log("Service process Exited ("+exit+")"))
-        serverProcess = oscalServerProcess;
+      oscalServerProcess.on('error', (error) => {
+        console.error(error.message.toString());
+      });
+
+      oscalServerProcess.on('exit', (exit) => console.log("Service process Exited (" + exit + ")"));
       
+      serverProcess = oscalServerProcess;
+      resolve(oscalServerProcess);
     }).catch(error => reject(error));
   });
 };
-export async function startServer(foreground: boolean = false) {
-  const status =  await checkServerStatus()
-  status&&console.log("Server is already healthy")
-  !status&& executeOscalServerCommand("start", []);
-}
 
+export async function startServer(background: boolean = false) {
+  const status = await checkServerStatus();
+  if (status) {
+    console.log("Server is already healthy");
+    return;
+  }
+
+  console.log(`Starting server in ${background ? 'background' : 'foreground'} mode...`);
+  
+  const processOptions = background ? { detached: true, stdio: 'ignore' } : {};
+  const oscalServerProcess = await executeOscalServerCommand("start", [], processOptions);
+
+  console.log("Waiting for server to become healthy...");
+  const isHealthy = await waitForServerHealth();
+  
+  if (isHealthy) {
+    console.log("Server is now healthy and ready to use.");
+    if (background) {
+      console.log("Detaching server process to run in the background.");
+      oscalServerProcess.unref();
+    } else {
+      console.log("Server is running in the foreground. Press Ctrl+C to stop.");
+    }
+  } else {
+    console.error("Server failed to become healthy within the timeout period.");
+    // Optionally, you might want to kill the process here if it's not healthy
+    oscalServerProcess.kill();
+  }
+
+  // For foreground mode, we keep the process attached
+  if (!background) {
+    oscalServerProcess.on('exit', (code) => {
+      console.log(`Server process exited with code ${code}`);
+    });
+  }
+}
 
 export async function checkServerStatus(): Promise<boolean> {
   try {
@@ -161,20 +191,32 @@ export async function checkServerStatus(): Promise<boolean> {
     return false;
   }
 }
-export const serverCommand= async (command:string) => {
-  let cmd = command.trim()
-  if (cmd=='start') {
-    await startServer();
-  }if (cmd=='restart') {
+
+async function waitForServerHealth(timeout: number = 30000, interval: number = 1000): Promise<boolean> {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeout) {
+    if (await checkServerStatus()) {
+      return true;
+    }
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+  return false;
+}
+
+export const serverCommand = async (command: string, { background = false }: { background: boolean }) => {
+  let cmd = command.trim();
+  if (cmd == 'start') {
+    await startServer(background);
+  } else if (cmd == 'restart') {
     await stopServer();
-    await startServer();
-  } else if (cmd=='stop') {
+    await startServer(background);
+  } else if (cmd == 'stop') {
     await stopServer();
-  } else if (cmd=='update') {
+  } else if (cmd == 'update') {
     await installOscalExecutor('oscal-server');
-  } else if (cmd=='status') {
+  } else if (cmd == 'status') {
     await checkServerStatus();
-  } 
+  }
 }
 
 async function isServerRunning() {

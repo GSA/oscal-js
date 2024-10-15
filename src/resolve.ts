@@ -70,22 +70,42 @@ export async function resolveProfile(
 export async function resolveProfileDocument(
   filePath: string,
   outputPath: string,
-  options:OscalResolveOptions={outputFormat:'json'},executor:OscalExecutorOptions='oscal-server'): Promise<void> {
-
-  try {
-    
-    if(executor==='oscal-server'){
-      await resolveFileWithServer(filePath,outputPath,options)
-    }else{
-      const args = ["--to=JSON", filePath, outputPath, '--show-stack-trace'];
-      await executeOscalCliCommand("resolve-profile", args);     
+  options: OscalConvertOptions,
+  executor: OscalExecutorOptions
+): Promise<void> {
+  if (executor === 'oscal-server') {
+    try {
+      await resolveFileWithServer(filePath, outputPath, options);
+      return;
+    } catch (error) {
+      console.warn("Server resolution failed. Falling back to CLI resolve-profile.");
+      executor = 'oscal-cli';
     }
-  } catch (error) {
-    console.error("Error resolving profile from file:", error);
-    return undefined;
   }
-}
 
+  if (executor === 'oscal-cli') {
+    try {
+      const args = [
+        `--to=${options.outputFormat.toUpperCase()}`,
+        filePath,
+        outputPath,
+        '--overwrite',
+        '--show-stack-trace'
+      ];
+      const [result, errors] = await executeOscalCliCommand("resolve-profile", args);
+      if (errors) {
+        console.error('Errors during profile resolution:', errors);
+        throw new Error('CLI resolution failed');
+      }
+      return;
+    } catch (error) {
+      console.error("Error resolving profile with CLI:", error);
+      throw error;
+    }
+  }
+
+  throw new Error(`Unsupported executor: ${executor}`);
+}
 
 async function resolveFileWithServer(
   inputFile: string,
@@ -140,9 +160,10 @@ async function resolveFileWithServer(
 }
 
 
-export const resolveProfileCommand=async (fileArg,options: { file?: string; output?: string }) => {
-  let { file, output } = options;
-  file = fileArg ||file
+export const resolveProfileCommand = async (fileArg, options: { file?: string; output?: string; server: boolean }) => {
+  let { file, output, server } = options;
+  file = fileArg || file;
+  
   if (!file) {
     const answer = await inquirer.prompt<{ file: string }>([{
       type: 'input',
@@ -173,15 +194,12 @@ export const resolveProfileCommand=async (fileArg,options: { file?: string; outp
     const validOutputTypes = ['json', 'xml', 'yaml'];
     const outputType = validOutputTypes.includes(outputFileType) ? outputFileType : fileType;
 
-    const args = ["--to=" + outputType, file, output, "--overwrite","--show-stack-trace"];
-    const [result, errors] = await executeOscalCliCommand("resolve-profile", args);
+    const resolveOptions: OscalConvertOptions = { outputFormat: outputType as 'json' | 'yaml' | 'xml' };
+    const executor: OscalExecutorOptions = server ? 'oscal-server' : 'oscal-cli';
 
-    if (errors) {
-      console.error('Errors during profile resolution:', errors);
-    } else {
-      console.log('Profile successfully resolved. Output saved to:', output);
-      console.log(result);
-    }
+    await resolveProfileDocument(file, output, resolveOptions, executor);
+
+    console.log('Profile successfully resolved. Output saved to:', output);
   } catch (error) {
     console.error('Error resolving OSCAL profile:', error);
     process.exit(1);

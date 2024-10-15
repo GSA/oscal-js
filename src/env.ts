@@ -16,7 +16,6 @@ const execPromise = promisify(exec);
 // Cross-platform which promise function
 export const whichPromise = async (command: string): Promise<string | null> => {
   try {
-    console.log("platform:"+process.platform);
     if (process.platform === 'win32') {
       const { stdout } = await execPromise(`where ${command}`);
       return stdout.split('\r\n')[0].trim() || null;

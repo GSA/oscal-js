@@ -9,7 +9,7 @@ interface ScaffoldOptions {
   output?: string;
 }
 
-export const scaffold = async (options: ScaffoldOptions) => {
+export const scaffoldCommand = async (options: ScaffoldOptions) => {
   console.log('Scaffolding OSCAL document');
 
   const { template } = await inquirer.prompt([

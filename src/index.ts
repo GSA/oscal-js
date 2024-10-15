@@ -1,7 +1,6 @@
 export  type * from "./types.js";
-export * from "./validate.js";
-export * from "./convert.js";
-export {resolveProfile} from "./resolve.js";
-export * from "./generate.js";
-export * from "./evaluate.js";
-export {detectOscalDocumentType,executeOscalCliCommand,installOscalCli,isOscalCliInstalled,validateWithSarif} from './commands.js';
+export {validate,validateDocument} from "./validate.js";
+export {convertDocument,convert} from "./convert.js";
+export {resolveProfileDocument,resolveProfile} from "./resolve.js";
+export {evaluateMetapath} from "./evaluate.js";
+export {installOscalExecutor,isOscalExecutorInstalled,executeOscalCliCommand} from "./env.js"

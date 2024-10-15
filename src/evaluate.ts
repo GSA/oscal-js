@@ -1,4 +1,5 @@
-import { detectOscalDocumentType, executeOscalCliCommand, installOscalCli, isOscalCliInstalled } from './commands.js';
+import { executeOscalCliCommand, installOscalCli, isOscalExecutorInstalled } from './env.js';
+import { detectOscalDocumentType } from './utils.js';
 
 interface EvaulateOptions {
     document: string;
@@ -28,17 +29,6 @@ export async function evaluateMetapath(options:EvaulateOptions): Promise<string|
     const metaschemaFile = metaschemaMap[documentType] || 'oscal_complete_metaschema.xml'
      
     options.metaschema = `https://raw.githubusercontent.com/usnistgov/OSCAL/main/src/metaschema/${metaschemaFile}`
-  }
-    let oscalCliInstalled = await isOscalCliInstalled();
-  if (!oscalCliInstalled) {
-    // If OSCAL CLI is not installed, attempt to install it
-    try {
-      await installOscalCli();
-      oscalCliInstalled = true;
-    } catch (error) {
-      console.error("Error installing CLI:", error);
-      return undefined;
-    }
   }
   
   const args = ['-e "'+options.expression+'"',"-m "+options.metaschema,`-i ${options.document}`]

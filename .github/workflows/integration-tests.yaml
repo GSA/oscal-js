@@ -15,46 +15,50 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Use Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '18'
 
     - name: Install cli
-      run: npm install oscal -g
+      run: npm install oscal@next -g
 
     - name: Use latest oscal version
       run: oscal use latest
+    - name: Use latest oscal server version
+      run: oscal server update
+    - name: start oscal server in the background
+      run: oscal-server&
     - name: Produce artifacts baselines in all formats
-      run: oscal convert -f ./content/rev5/baselines/xml -o artifacts/content/rev5/baselines/
+      run: oscal convert -f ./content/rev5/baselines/xml -o artifacts/content/rev5/baselines/ -s
     - name: Produce artifacts for ssp
-      run: oscal convert -f ./content/rev5/templates/ssp/xml -o artifacts/content/rev5/templates/ssp
+      run: oscal convert -f ./content/rev5/templates/ssp/xml -o artifacts/content/rev5/templates/ssp -s
     - name: Produce artifacts for poam
-      run: oscal convert -f ./content/rev5/templates/poam/xml -o artifacts/content/rev5/templates/poam
+      run: oscal convert -f ./content/rev5/templates/poam/xml -o artifacts/content/rev5/templates/poam -s
     - name: Produce artifacts for sap
-      run: oscal convert -f ./content/rev5/templates/sap/xml -o artifacts/content/rev5/templates/sap
+      run: oscal convert -f ./content/rev5/templates/sap/xml -o artifacts/content/rev5/templates/sap -s
     - name: Produce artifacts for sar
-      run: oscal convert -f ./content/rev5/templates/sar/xml -o artifacts/content/rev5/templates/sar
+      run: oscal convert -f ./content/rev5/templates/sar/xml -o artifacts/content/rev5/templates/sar -s
 
     - name: Resolve FedRAMP HIGH baseline profile
-      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_HIGH-baseline-resolved-profile_catalog.xml -s
 
     - name: Resolve FedRAMP MODERATE baseline profile
-      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_MODERATE-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_MODERATE-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_MODERATE-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_MODERATE-baseline-resolved-profile_catalog.xml -s
 
     - name: Resolve FedRAMP LOW baseline profile
-      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_LOW-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_LOW-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_LOW-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_LOW-baseline-resolved-profile_catalog.xml -s
 
     - name: Resolve FedRAMP LI-SaaS baseline profile
-      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_LI-SaaS-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_LI-SaaS-baseline-resolved-profile_catalog.xml
+      run: oscal resolve -f ./content/rev5/baselines/xml/FedRAMP_rev5_LI-SaaS-baseline_profile.xml -o ./artifacts/content/rev5/baselines/xml/FedRAMP_rev5_LI-SaaS-baseline-resolved-profile_catalog.xml -s
 
     - name: Convert Profiles to JSON
-      run: oscal convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/json/ -t JSON
+      run: oscal convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/json/ -t JSON -s
 
     - name: Convert Profiles to YAML
-      run: oscal convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML
+      run: oscal convert -f ./artifacts/content/rev5/baselines/xml/ -o ./artifacts/content/rev5/baselines/yaml/ -t YAML -s
 
     - name: Validate all output recursively
-      run: oscal validate -f ./artifacts/ -e fedramp -r
+      run: oscal validate -f ./artifacts/ -r -s
 
 
     - name: Deploy to GitHub Pages (forks only)

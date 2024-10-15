@@ -154,8 +154,21 @@ export async function startServer(background: boolean = false) {
 
   console.log(`Starting server in ${background ? 'background' : 'foreground'} mode...`);
   
-  const processOptions = background ? { detached: true, stdio: 'ignore' } : {};
-  const oscalServerProcess = await executeOscalServerCommand("start", [], processOptions);
+  let oscalServerProcess;
+  
+  if (background) {
+    const oscalServerPath = await findOscalServerPath();
+    const command = `"${oscalServerPath}" start &`;
+    
+    oscalServerProcess = spawn(command, [], {
+      shell: true,
+      detached: true,
+      stdio: 'ignore'
+    });
+    oscalServerProcess.unref();
+  } else {
+    oscalServerProcess = await executeOscalServerCommand("start", []);
+  }
 
   console.log("Waiting for server to become healthy...");
   const isHealthy = await waitForServerHealth();
@@ -163,15 +176,15 @@ export async function startServer(background: boolean = false) {
   if (isHealthy) {
     console.log("Server is now healthy and ready to use.");
     if (background) {
-      console.log("Detaching server process to run in the background.");
-      oscalServerProcess.unref();
+      console.log("Server is running in the background.");
     } else {
       console.log("Server is running in the foreground. Press Ctrl+C to stop.");
     }
   } else {
     console.error("Server failed to become healthy within the timeout period.");
-    // Optionally, you might want to kill the process here if it's not healthy
-    oscalServerProcess.kill();
+    if (!background) {
+      oscalServerProcess.kill();
+    }
   }
 
   // For foreground mode, we keep the process attached

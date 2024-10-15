@@ -16,6 +16,7 @@ const execPromise = promisify(exec);
 // Cross-platform which promise function
 export const whichPromise = async (command: string): Promise<string | null> => {
   try {
+    console.log("platform:"+process.platform);
     if (process.platform === 'win32') {
       const { stdout } = await execPromise(`where ${command}`);
       return stdout.split('\r\n')[0].trim() || null;
@@ -178,7 +179,7 @@ export async function downloadFromGithub(releaseData) {
 
 // Function to install OSCAL server
 
-export async function installOscalServer(tag:string='latest') {
+export async function installOscalServer(tag: string = 'latest') {
   try {
     const { latestVersion, releaseData } = await getLatestVersionFromGithub();
     console.log(`Latest version: ${latestVersion}`);
@@ -200,25 +201,22 @@ export async function installOscalServer(tag:string='latest') {
     const zip = new AdmZip(Buffer.from(zipBuffer));
     zip.extractAllTo(installDir, true);
     
+    const isWindows = process.platform === 'win32';
     // Find the executable in the extracted files
-    const executableName = process.platform === 'win32' ? 'oscal-server.bat' : 'oscal-server';
+    const executableName = isWindows ? 'oscal-server.bat' : 'oscal-server';
     const executablePath = await findExecutable(installDir, executableName);
     
     if (!executablePath) {
       throw new Error('Could not find OSCAL server executable in the extracted files');
     }
     
-    // Make the executable file executable
-    execSync(`chmod +x "${executablePath}"`);
-    
-    // Create alias in user's local bin
-    const userLocalBin = path.resolve(homeDir, '.local', 'bin');
-    if (!fs.existsSync(userLocalBin)) {
-      fs.mkdirSync(userLocalBin, { recursive: true });
+    // Make the executable file executable (for non-Windows systems)
+    if (!isWindows) {
+      execSync(`chmod +x "${executablePath}"`);
     }
-    
+
     let aliasDir;
-    if (process.platform === 'win32') {
+    if (isWindows) {
       aliasDir = path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WindowsApps');
     } else {
       aliasDir = path.join(homeDir, '.local', 'bin');
@@ -228,22 +226,23 @@ export async function installOscalServer(tag:string='latest') {
     }
     const aliasPath = path.resolve(aliasDir, executableName);
 
-    try{
+    try {
       fs.unlinkSync(aliasPath);
-    }catch(e){
-      console.error(e)
+    } catch(e) {
+      // Ignore error if file doesn't exist
     }
-    if (process.platform === 'win32') {
-      fs.copyFileSync(executablePath, aliasPath);
+
+    if (isWindows) {
+      // Create a wrapper batch script that directly calls the original executable
+      const wrapperContent = `@echo off
+"${executablePath.replace(/\\/g, '\\\\')}" %*
+`;
+      fs.writeFileSync(aliasPath, wrapperContent);
     } else {
-      try {
-        fs.unlinkSync(aliasPath);
-      } catch (e) {
-        // Ignore error if file doesn't exist
-      }
       fs.symlinkSync(executablePath, aliasPath);
       fs.chmodSync(aliasPath, '755'); // Make executable
     }
+
     console.log(`OSCAL server ${latestVersion} installed successfully`);
     console.log(`Executable: ${executablePath}`);
     console.log(`Alias created: ${aliasPath}`);
@@ -254,7 +253,6 @@ export async function installOscalServer(tag:string='latest') {
     throw error;
   }
 }
-
 async function findExecutable(dir: string, name: string): Promise<string | null> {
   const files = await fs.promises.readdir(dir);
   for (const file of files) {

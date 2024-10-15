@@ -3,7 +3,7 @@ import { getVersionsFromMaven } from "./maven.js";
 import chalk from "chalk";
 import { installOscalCli } from "./env.js";
 
-export const useVersion = async (version) => {
+export const useCommand = async (version) => {
     const {versions}= await getVersionsFromMaven();
     if (!version) {
       const choices = (versions.reverse()).map(v => ({

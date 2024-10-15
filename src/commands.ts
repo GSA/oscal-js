@@ -1,15 +1,15 @@
-import { Argument, program } from 'commander';
+import { program } from 'commander';
 import { convertCommand } from './convert.js';
-import { installOscalExecutor, isOscalExecutorInstalled} from './env.js';
+import { installOscalExecutor, isOscalExecutorInstalled } from './env.js';
 import { evaluateMetapathCommand } from './evaluate.js';
 import { resolveProfileCommand } from './resolve.js';
-import { scaffold } from './scaffold.js';
-import { checkServerStatus, serverCommand, startServer, stopServer } from './server.js';
+import { scaffoldCommand } from './scaffold.js';
+import { serverCommand } from './server.js';
 import { validateCommand } from './validate.js';
-import { useVersion } from './versions.js';
+import { useCommand } from './versions.js';
 
 program
-  .version("2.0.0-rc8")
+  .version("2.0.0-rc9")
   .command('validate [file]')
   .option('-s, --server', 'Use OSCAL server for operations')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
@@ -37,12 +37,12 @@ program.command('resolve [file]')
   program
   .command('use [version]')
   .description('Install or switch to a specific OSCAL CLI version')
-  .action(useVersion);
+  .action(useCommand);
 
 program.command('scaffold')
   .option('-o, --output <path>', 'Path to the output')
   .description('Scaffold an OSCAL package')
-  .action(scaffold);
+  .action(scaffoldCommand);
 
 program.command('server [command]')
 .option('-c, --command <cmd>', 'server command')

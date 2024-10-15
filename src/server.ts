@@ -89,7 +89,11 @@ export const executeOscalServerCommand = async (
   options: object = {}
 ): Promise<ChildProcess> => {
   return new Promise((resolve, reject) => {
-    findOscalServerPath().then(async oscalServerPath => {
+    if(typeof command ==='undefined'){
+      console.log("commands: [start,restart,stop,update,status]")
+      return;
+    }
+      findOscalServerPath().then(async oscalServerPath => {
       const isWindows = process.platform === 'win32';
       const fullArgs = [...command.split(" "), ...args];
 
@@ -204,6 +208,10 @@ async function waitForServerHealth(timeout: number = 30000, interval: number = 1
 }
 
 export const serverCommand = async (command: string, { background = false }: { background: boolean }) => {
+  if(typeof command==='undefined'){
+    console.log("commands: start,stop,restart,update,status")
+    return 
+  }
   let cmd = command.trim();
   if (cmd == 'start') {
     await startServer(background);

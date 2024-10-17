@@ -8,13 +8,11 @@ import { tmpdir } from 'os';
 import path from 'path';
 import { Location, Log, ReportingDescriptor, Result, Run } from 'sarif';
 import { v4 } from 'uuid';
-import { executeOscalCliCommand, installOscalCli, installOscalExecutorIfNeeded, isJavaInstalled, isOscalExecutorInstalled } from './env.js';
+import { executeOscalCliCommand, installOscalCli, isJavaInstalled, isOscalExecutorInstalled } from './env.js';
 import { oscalSchema } from './schema/oscal.complete.js';
 import { getServerClient } from './server.js';
 import { OscalJsonPackage, ResourceHypertextReference } from './types.js';
 import { OscalExecutorOptions } from './utils.js';
-import { Url } from 'url';
-
 
 export type OscalValidationOptions = {
     extensions?: ResourceHypertextReference[],
@@ -485,3 +483,11 @@ function buildSarif(runs: Run[]): Log {
 
   return log;
 }
+export const validateWithSarif= async (args: string[], quiet?: boolean) => {
+  console.warn("This functions is deprecated, use validateDocument or validate instead.")
+  const outputfile = randomUUID()+'.sarif'
+  await executeOscalCliCommand('validate',[...args,'-o',outputfile],!quiet,quiet)
+  var response=fs.readFileSync(outputfile,{encoding:'utf8'})
+  fs.unlinkSync(outputfile);
+  return response
+};

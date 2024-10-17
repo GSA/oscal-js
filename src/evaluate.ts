@@ -1,50 +1,88 @@
-import { executeOscalCliCommand, installOscalCli, isOscalExecutorInstalled } from './env.js';
+import { executeOscalCliCommand } from './env.js';
 import { detectOscalDocumentType } from './utils.js';
+import { getServerClient } from './server.js';
 
-interface EvaulateOptions {
-    document: string;
-    expression: string;
-    metaschema?:string;
-  }
-  
-export async function evaluateMetapathCommand(options:EvaulateOptions): Promise<void> {
-   await evaluateMetapath(options);
+interface EvaluateOptions {
+  document: string;
+  expression: string;
+  metaschema?: string;
+  server?: boolean;
 }
 
+export async function evaluateMetapathCommand(fileArg,options: EvaluateOptions): Promise<void> {
+  options.document = fileArg;
+  const result = await evaluateMetapath(options);
+  console.log(result);
+}
 
-export async function evaluateMetapath(options:EvaulateOptions): Promise<string|undefined> {
+export async function evaluateMetapath(options: EvaluateOptions): Promise<string | undefined> {
+  options.metaschema = `https://raw.githubusercontent.com/usnistgov/OSCAL/main/src/metaschema/oscal_complete_metaschema.xml`;
+  const executor = options.server? 'oscal-server':'oscal-cli';
 
-    if(typeof options.metaschema==='undefined'||options.metaschema===""){
-      const [documentType,fileFormat]=await detectOscalDocumentType(options.document)
-      const metaschemaMap = {
-        'catalog': 'oscal_catalog_metaschema.xml',
-        'profile': 'oscal_profile_metaschema.xml',
-        'component': 'oscal_component_metaschema.xml',
-        'ssp': 'oscal_ssp_metaschema.xml',
-        'poam': 'oscal_poam_metaschema.xml',
-        'assessment-plan': 'oscal_assessment-plan_metaschema.xml',
-        'assessment-results': 'oscal_assessment-results_metaschema.xml'
+  if (executor === 'oscal-server') {
+    try {
+      return await evaluateMetapathWithServer(options);
+    } catch (error) {
+      console.warn("Server evaluation failed. Falling back to CLI evaluation.");
+      return await evaluateMetapathWithCli(options);
+    }
+  } else {
+    return await evaluateMetapathWithCli(options);
+  }
+}
+
+async function evaluateMetapathWithServer(options: EvaluateOptions): Promise<string | undefined> {
+  try {
+    const client = await getServerClient();
+    const { response, error ,data} = await client.GET('/query', {
+
+      params: { 
+        query: { 
+          document: `${options.document.trim()}`,
+          expression: options.expression
+        } 
+      },
+      parseAs:"blob",
+      headers: { Accept: 'text/xml' }
+    });
+
+    if (!response.ok) {
+      console.error(error?.error);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const metaschemaFile = metaschemaMap[documentType] || 'oscal_complete_metaschema.xml'
-     
-    options.metaschema = `https://raw.githubusercontent.com/usnistgov/OSCAL/main/src/metaschema/${metaschemaFile}`
+    if (!data) {
+      console.error("Data not found");
+      throw new Error(`HTTP error! missing data!`);
+    }
+
+    const result = await data.text();
+    return parseMetaPathFromOutput(result);
+  } catch (error) {
+    console.error('Error during server evaluation:', error);
+    throw error;
   }
-  
-  const args = ['-e "'+options.expression+'"',"-m "+options.metaschema,`-i ${options.document}`]
+}
+
+async function evaluateMetapathWithCli(options: EvaluateOptions): Promise<string | undefined> {
+  const args = [
+    `-e "${options.expression}"`,
+    `-m ${options.metaschema}`,
+    `-i ${options.document}`
+  ];
 
   try {
     const command = "metaschema metapath eval";
-
-    const [result,errors] =await executeOscalCliCommand(command, args);
+    const [result, errors] = await executeOscalCliCommand(command, args);
+    if (errors) console.error(errors);
     return parseMetaPathFromOutput(result);
-} catch (error) {
-    console.error("Error evaluating metapath", error);
-    return ;
+  } catch (error) {
+    console.error("Error evaluating metapath with CLI", error);
+    return undefined;
   }
 }
 
-function parseMetaPathFromOutput(output:string):string {
-    const lines = output.split('\n').filter(line => line.trim() !== '');
-    return lines.pop()||"";
+function parseMetaPathFromOutput(output: string): string {
+  const lines = output.split('\n').filter(line => line.trim() !== '');
+  return lines.pop() || "";
 }

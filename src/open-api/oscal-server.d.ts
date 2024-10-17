@@ -76,6 +76,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Query OSCAL document */
+        get: operations["query"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -190,7 +207,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["SarifResponse"];
+            200: components["responses"]["OscalResponse"];
             400: components["responses"]["BadRequest"];
             500: components["responses"]["InternalServerError"];
         };
@@ -259,6 +276,31 @@ export interface operations {
                  * @example json
                  */
                 format?: "json" | "yaml" | "xml";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["OscalResponse"];
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    query: {
+        parameters: {
+            query: {
+                /**
+                 * @description URI of the remote OSCAL document to convert
+                 * @example https://raw.githubusercontent.com/wandmagic/fedramp-automation/refs/heads/develop/src/validations/constraints/content/ssp-all-VALID.xml
+                 */
+                document: string;
+                /**
+                 * @description metapath expression to query oscal document
+                 * @example //user
+                 */
+                expression?: string;
             };
             header?: never;
             path?: never;

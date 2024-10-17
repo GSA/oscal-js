@@ -51,7 +51,8 @@ program.command('server [command]')
 .action(serverCommand);
 
 
-program.command('metaquery')
+program.command('metaquery [document]')
+  .option('-s, --server', 'Use OSCAL server for operations')
   .option('-e, --expression <path>', 'Path to the output')
   .option('-i, --document <path>', 'Path to the document')
   .option('-m, --metaschema <path>', 'Path to the metaschema-module')

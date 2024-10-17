@@ -54,7 +54,7 @@ const loggingMiddleware: Middleware = {
     let exitStatus=(response.headers.get("Exit-Status")||"NA").toString()
     const statusColor= exitStatus==="OK"?chalk.green:chalk.red
     console.log(
-      chalk.blue('oscal-server') + ' ' + filename  +' '+ statusColor(exitStatus)
+      chalk.blue('oscal-server') + ' ' + filename  +' '+chalk.blue(decodeURIComponent(url.pathname.replace("/","")))+' '+ statusColor(exitStatus)
     );
   }
 };

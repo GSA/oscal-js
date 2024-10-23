@@ -26,7 +26,7 @@ import {
 } from '../../src/validate.js';
 import { convert, convertDocument } from '../../src/convert.js';
 import { resolveProfile, resolveProfileDocument } from '../../src/resolve.js';
-import { evaluateMetapath } from '../../src/evaluate.js';
+import { evaluateMetapathDocument } from '../../src/evaluate.js';
 import { sarifSchema } from '../../src/schema/sarif.js';
 
 startServer()
@@ -287,7 +287,7 @@ Given('I want query with metapath {string}', function (s: string) {
 When('I query with the eval function', async function () {
   assert.isString(evalQuery);
   assert.isString(documentPath);
-  evalResult = await evaluateMetapath({ document: documentPath, expression: evalQuery! });
+  evalResult = await evaluateMetapathDocument({ document: documentPath, expression: evalQuery! });
 });
 
 // Server-specific steps

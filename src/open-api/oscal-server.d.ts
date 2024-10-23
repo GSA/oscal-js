@@ -52,7 +52,8 @@ export interface paths {
         /** Resolve OSCAL local document */
         get: operations["resolve"];
         put?: never;
-        post?: never;
+        /** Resolve uploaded OSCAL document */
+        post: operations["resolveUpload"];
         delete?: never;
         options?: never;
         head?: never;
@@ -69,7 +70,8 @@ export interface paths {
         /** Convert OSCAL document */
         get: operations["convert"];
         put?: never;
-        post?: never;
+        /** Convert uploaded OSCAL document */
+        post: operations["convertUpload"];
         delete?: never;
         options?: never;
         head?: never;
@@ -86,7 +88,8 @@ export interface paths {
         /** Query OSCAL document */
         get: operations["query"];
         put?: never;
-        post?: never;
+        /** Query uploaded OSCAL document */
+        post: operations["queryUpload"];
         delete?: never;
         options?: never;
         head?: never;
@@ -207,7 +210,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["OscalResponse"];
+            200: components["responses"]["SarifResponse"];
             400: components["responses"]["BadRequest"];
             500: components["responses"]["InternalServerError"];
         };
@@ -223,6 +226,11 @@ export interface operations {
                  *     ]
                  */
                 constraint?: string[];
+                /**
+                 * @description URIs of metaschema extension modules to load
+                 * @example disable-schema
+                 */
+                flags?: ("disable-schema" | "disable-constraint")[];
             };
             header?: never;
             path?: never;
@@ -266,6 +274,30 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    resolveUpload: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Specify the format of the response
+                 * @example json
+                 */
+                format?: "json" | "yaml" | "xml";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            200: components["responses"]["OscalResponse"];
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     convert: {
         parameters: {
             query: {
@@ -282,6 +314,30 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: components["responses"]["OscalResponse"];
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    convertUpload: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Specify the format of the response
+                 * @example json
+                 */
+                format?: "json" | "yaml" | "xml";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
         responses: {
             200: components["responses"]["OscalResponse"];
             400: components["responses"]["BadRequest"];
@@ -307,6 +363,30 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: components["responses"]["OscalResponse"];
+            400: components["responses"]["BadRequest"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    queryUpload: {
+        parameters: {
+            query: {
+                /**
+                 * @description metapath expression to query oscal document
+                 * @example //user
+                 */
+                expression: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
         responses: {
             200: components["responses"]["OscalResponse"];
             400: components["responses"]["BadRequest"];

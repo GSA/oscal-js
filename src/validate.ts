@@ -40,20 +40,51 @@ function getAjv(): Ajv {
 }
 
 
+async function executeSarifValidationWithFileUpload(document: OscalJsonPackage, options: OscalServerValidationOptions): Promise<{isValid: boolean, log: Log}> {
+  try {
+    const constraint = (options.extensions || []).map(toUri);
+    const client = await getServerClient();
+    
+    const { response, error, data } = await client.POST('/validate', {      
+      body: JSON.stringify(document),
+      params: {
+        query: {
+          constraint,
+          flags: options.flags
+        }
+      },
+      parseAs: 'json'
+    });
 
+    if (error) {
+      console.error(error.error);
+    }
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    if (!data) {
+      throw new Error(`HTTP error! missing data`);
+    }
+
+    const responseCode = response.headers.get("exit-status");
+    const isValid = responseCode === "OK";
+    const log = data as any;
+    
+    return { isValid, log };
+  } catch (error) {
+    console.error('Error during validation:', error);
+    throw error;
+  }
+}
 export async function validate(
   document: OscalJsonPackage,
   options: OscalValidationOptions = {extensions: []},
   executor:OscalExecutorOptions='oscal-server'
 ): Promise<{isValid:boolean,log:Log}> {
-  if (executor==='oscal-server') {
-    console.log(document)
-    let tempFilePath: string | null = null;
-        // Create a temporary file
-        tempFilePath = path.resolve(tmpdir(), `temp-${Date.now()}.json`);
-        fs.writeFileSync(tempFilePath, JSON.stringify(document));
-
-    return executeSarifValidationViaServer((tempFilePath),{...options,inline:true});
+  if (executor === 'oscal-server') {
+    return executeSarifValidationWithFileUpload(document, {...options, inline: true});
   }
 
   const javaInstalled = await isJavaInstalled();

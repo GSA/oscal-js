@@ -13,7 +13,7 @@ program
   .command('validate [file]')
   .option('-s, --server', 'Use OSCAL server for operations')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
-  .option('-e, --extensions <extensions>', 'List of extension namespaces')
+  .option('-e, --extensions <extensions...>', 'List of extension namespaces')
   .option('-r, --recursive', 'Recursively validate files in directories')
   .description('Validate the OSCAL document(s)')
   .action(validateCommand);

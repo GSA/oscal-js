@@ -37,7 +37,8 @@
     "ps-list": "^8.1.1",
     "uuid": "^10.0.0",
     "xml2js": "^0.6.2",
-    "yaml": "^2.4.3"
+    "yaml": "^2.4.3",
+    "@types/sarif": "^2.1.7"
   },
   "type": "module",
   "devDependencies": {
@@ -46,7 +47,6 @@
     "@types/chai": "^4.3.16",
     "@types/inquirer": "^9.0.7",
     "@types/node": "^18.19.55",
-    "@types/sarif": "^2.1.7",
     "cross-env": "^7.0.3",
     "json-schema-to-typescript": "^14.1.0",
     "ts-node": "^10.9.2",

@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import fs, { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import inquirer from 'inquirer';
 import { tmpdir } from 'os';
-import path, { resolve } from 'path';
+import path from 'path';
 import { Location, Log, ReportingDescriptor, Result, Run } from 'sarif';
 import { v4 } from 'uuid';
 import { executeOscalCliCommand, installOscalCli, isJavaInstalled, isOscalExecutorInstalled } from './env.js';
@@ -40,20 +40,51 @@ function getAjv(): Ajv {
 }
 
 
+async function executeSarifValidationWithFileUpload(document: OscalJsonPackage, options: OscalServerValidationOptions): Promise<{isValid: boolean, log: Log}> {
+  try {
+    const constraint = (options.extensions || []).map(toUri);
+    const client = await getServerClient();
+    
+    const { response, error, data } = await client.POST('/validate', {      
+      body: JSON.stringify(document),
+      params: {
+        query: {
+          constraint,
+          flags: options.flags
+        }
+      },
+      parseAs: 'json'
+    });
 
+    if (error) {
+      console.error(error.error);
+    }
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    if (!data) {
+      throw new Error(`HTTP error! missing data`);
+    }
+
+    const responseCode = response.headers.get("exit-status");
+    const isValid = responseCode === "OK";
+    const log = data as any;
+    
+    return { isValid, log };
+  } catch (error) {
+    console.error('Error during validation:', error);
+    throw error;
+  }
+}
 export async function validate(
   document: OscalJsonPackage,
   options: OscalValidationOptions = {extensions: []},
   executor:OscalExecutorOptions='oscal-server'
 ): Promise<{isValid:boolean,log:Log}> {
-  if (executor==='oscal-server') {
-    console.log(document)
-    let tempFilePath: string | null = null;
-        // Create a temporary file
-        tempFilePath = path.resolve(tmpdir(), `temp-${Date.now()}.json`);
-        fs.writeFileSync(tempFilePath, JSON.stringify(document));
-
-    return executeSarifValidationViaServer((tempFilePath),{...options,inline:true});
+  if (executor === 'oscal-server') {
+    return executeSarifValidationWithFileUpload(document, {...options, inline: true});
   }
 
   const javaInstalled = await isJavaInstalled();
@@ -95,6 +126,7 @@ export async function validateDocument(
     options: OscalValidationOptions = {},
     executor: OscalExecutorOptions
   ): Promise<{ isValid: boolean; log: Log }> {
+
     const additionalArgs = (options.extensions || []).flatMap(x => ["-c", x]);
   
     if (executor === 'oscal-server') {
@@ -298,9 +330,9 @@ export const validateCommand =async function(fileArg,commandOptions: { file?: st
     fedramp_extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-constraints.xml")
     fedramp_extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/oscal-external-constraints.xml")
     fedramp_extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-allowed-values.xml")
-    options.extensions=[...fedramp_extensions,...options.extensions.filter(x=>x!=='fedramp')];
+    options.extensions=fedramp_extensions;
   }
-  file = fileArg || file;
+  file = path.resolve(fileArg || file);
   if (typeof file === 'undefined') {
     const answer = await inquirer.prompt<{ file: string }>([{
       type: 'input',
@@ -328,7 +360,8 @@ export const validateCommand =async function(fileArg,commandOptions: { file?: st
       if (recursive) {
         console.warn('The --recursive option is ignored for single files.');
       }
-      await validateDocument(file, options,executor);
+     const {isValid,log}= await validateDocument(file, options,executor);
+     !isValid&&console.log(formatSarifOutput(log));
     }
   } catch (error) {
     console.error('Error during validation:', error);
@@ -483,11 +516,56 @@ function buildSarif(runs: Run[]): Log {
 
   return log;
 }
-export const validateWithSarif= async (args: string[], quiet?: boolean) => {
-  console.warn("This functions is deprecated, use validateDocument or validate instead.")
-  const outputfile = resolve(path.join(".",randomUUID()+'.sarif'))
-  await executeOscalCliCommand('validate',[...args,'-o',outputfile],!quiet,quiet)
-  var response=fs.readFileSync(outputfile,{encoding:'utf8'})
-  fs.unlinkSync(outputfile);
-  return response
+
+export const validateWithSarif = async ( args: string[]): Promise<Log> => {
+  console.warn(chalk.yellow("[WARN]")+chalk.red("validateWithSarif")+" is deprecated, please use validateDocument or validate")
+  const tempFile = path.join(`oscal-cli-sarif-log-${v4()}.json`);
+  const sarifArgs = [...args, '-o', tempFile,"--sarif-include-pass"];
+
+  try {
+    await executeOscalCliCommand('validate', sarifArgs, false);
+  } catch (error) {
+    console.error("Error executing oscal cli command validate "+sarifArgs);
+    const sarifOutput = readFileSync(tempFile, 'utf8');
+    rmSync(tempFile);
+    return JSON.parse(sarifOutput) as Log;
+  }
+  try {
+    const sarifOutput = readFileSync(tempFile, 'utf8');
+    rmSync(tempFile);
+    return JSON.parse(sarifOutput) as Log;
+  } catch (error) {
+    console.error("ERRORING",error);
+    throw new Error(`Failed to read or parse SARIF output: ${error}`);
+  }
 };
+function formatSarifOutput(log:Log) {
+  try {
+    // Check if log is valid
+    if (!log || !log.runs || !log.runs[0] || !log.runs[0].results) {
+      return chalk.red('Invalid SARIF log format');
+    }
+
+    // Extract and join all messages
+    const results = log.runs[0].results
+ 
+    // Format the output with different chalk styles
+    const formattedOutput = results.filter(x=>x.kind!='informational'&&x.kind!=='pass')
+      .map(result => {
+        // Highlight error messages
+        
+        if (result.kind=='fail') {
+          return chalk.red.bold("["+result.level?.toUpperCase()+"] ")+chalk.yellow(((result.locations![0] as any).logicalLocation!.decoratedName))+"\n"+chalk.red(result.message.text);
+        }
+        // Highlight warning messages
+        if (result.kind=='review') {
+          return chalk.yellow.bold(result.message.text);
+        }
+      })
+      .join('\n\n');
+
+    return formattedOutput;
+  } catch (error:any) {
+    return chalk.red(`Error processing SARIF log: ${error}`);
+  }
+}

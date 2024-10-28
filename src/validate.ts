@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import fs, { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import inquirer from 'inquirer';
 import { tmpdir } from 'os';
-import path from 'path';
+import path, { resolve } from 'path';
 import { Location, Log, ReportingDescriptor, Result, Run } from 'sarif';
 import { v4 } from 'uuid';
 import { executeOscalCliCommand, installOscalCli, isJavaInstalled, isOscalExecutorInstalled } from './env.js';
@@ -485,7 +485,7 @@ function buildSarif(runs: Run[]): Log {
 }
 export const validateWithSarif= async (args: string[], quiet?: boolean) => {
   console.warn("This functions is deprecated, use validateDocument or validate instead.")
-  const outputfile = randomUUID()+'.sarif'
+  const outputfile = resolve(path.join(".",randomUUID()+'.sarif'))
   await executeOscalCliCommand('validate',[...args,'-o',outputfile],!quiet,quiet)
   var response=fs.readFileSync(outputfile,{encoding:'utf8'})
   fs.unlinkSync(outputfile);

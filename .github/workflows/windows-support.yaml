@@ -30,9 +30,6 @@ jobs:
     - name: Build javacsript distribution
       run: npm run build
 
-    - name: Use latest oscal
-      run: node ./dist/cli.js use latest
-
     - name: Update Server
       run: node ./dist/cli.js server update
 

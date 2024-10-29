@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
-import { readFileSync, unlinkSync, writeFileSync } from 'fs';
-import path, { resolve } from 'path';
+import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import path, { dirname, resolve } from 'path';
 import { promisify } from 'util';
 import { v4 } from 'uuid';
 import { Catalog, Profile } from './types.js';
@@ -115,7 +115,7 @@ async function resolveFileWithServer(
 ): Promise<void> {
   try {
     const encodedArgs = `${inputFile.trim()}`;
-    const outputDir = path.dirname(outputFile);
+    const outputDir = dirname(outputFile);
     mkdirSync(outputDir, { recursive: true });
 
     // Determine the Accept header based on options.outputFormat

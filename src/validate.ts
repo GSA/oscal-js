@@ -13,6 +13,7 @@ import { oscalSchema } from './schema/oscal.complete.js';
 import { getServerClient } from './server.js';
 import { OscalJsonPackage, ResourceHypertextReference } from './types.js';
 import { OscalExecutorOptions } from './utils.js';
+import {  resolveUri } from './utils.js';
 
 export type OscalValidationOptions = {
     extensions?: ResourceHypertextReference[],
@@ -133,7 +134,7 @@ export async function validateDocument(
   
     if (executor === 'oscal-server') {
       try {
-        return await executeSarifValidationViaServer(resolve(filePath), { ...options, inline: false });
+        return await executeSarifValidationViaServer(resolveUri(filePath), { ...options, inline: false });
       } catch (error) {
         console.warn("Server validation failed. Falling back to CLI validation.");
         executor = 'oscal-cli';

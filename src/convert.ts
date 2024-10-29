@@ -6,6 +6,7 @@ import { executeOscalCliCommand } from './env.js';
 import { getServerClient } from './server.js';
 import { OscalJsonPackage } from './types.js';
 import { OscalExecutorOptions } from './utils.js';
+import {  resolveUri } from './utils.js';
 
 export type OscalConvertOptions = {
   outputFormat: 'json'|'yaml'|'xml',

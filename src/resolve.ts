@@ -11,6 +11,7 @@ import { OscalConvertOptions } from './convert.js';
 import { getServerClient } from './server.js';
 import { ResolveOptions } from 'dns';
 import { randomUUID } from 'crypto';
+import {  resolveUri } from './utils.js';
 
 const execAsync = promisify(exec);
 export type OscalResolveOptions = {
@@ -75,7 +76,7 @@ export async function resolveProfileDocument(
 ): Promise<void> {
   if (executor === 'oscal-server') {
     try {
-      await resolveFileWithServer(resolve(filePath), outputPath, options);
+      await resolveFileWithServer(resolveUri(filePath), outputPath, options);
       return;
     } catch (error) {
       console.warn("Server resolution failed. Falling back to CLI resolve-profile.");

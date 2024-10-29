@@ -2,7 +2,7 @@ import xml2js from 'xml2js';
 import yaml from 'js-yaml'; // Make sure to import js-yaml
 import { exec } from "child_process";
 import { existsSync, readFileSync } from "fs";
-import path, { dirname, join } from "path";
+import path, { dirname, join, resolve } from "path";
 import { promisify } from "util";
 import { fileURLToPath } from 'url';
 
@@ -115,3 +115,6 @@ export function findFedrampExtensionsFile() {
     // If we couldn't find the file, return null
     return null;
   }
+export function resolveUri(uri:string):string{
+  return resolve(uri).split("\\").join("/")
+}

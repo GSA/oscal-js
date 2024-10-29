@@ -137,7 +137,7 @@ async function resolveFileWithServer(
     const client =await getServerClient();
     const { response, error,data } = await client.GET('/resolve', {
       params: { query: { document: encodedArgs,format:options.outputFormat } },
-      parseAs: "text" ,
+      parseAs: "blob" ,
       headers: { Accept: acceptHeader }
     });
 
@@ -151,7 +151,7 @@ async function resolveFileWithServer(
     }
 
     // Convert blob to text
-    const fileOutput = await data;
+    const fileOutput = await data.text();
 
     writeFileSync(outputFile, fileOutput);
   } catch (error) {

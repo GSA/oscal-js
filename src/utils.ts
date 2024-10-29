@@ -116,6 +116,14 @@ export function findFedrampExtensionsFile() {
     return null;
   }
   export function resolveUri(uri: string): string {
+    // If it's already a valid URL, return it as-is
+    try {
+      new URL(uri);
+      return uri;
+    } catch {
+      // Not a valid URL, continue with processing
+    }
+
     let document = path.resolve(uri).split("\\").join("/");
     
     if (!document.startsWith("http") && !document.startsWith("file")) {

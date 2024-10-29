@@ -92,9 +92,9 @@ export async function evaluateMetapath(options: {
   server?: boolean;
 }): Promise<string | undefined> {
   if(options.server){
-  return await evaluateMetapathWithFileUpload(options) 
+    return await evaluateMetapathWithFileUpload(options) 
   }else{
-    throw ("not implimented")
+    return await evaluateMetapathWithCli(options)
   }
 }
 async function evaluateMetapathWithFileUpload(options: {

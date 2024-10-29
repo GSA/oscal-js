@@ -13,14 +13,6 @@ Feature: OSCAL Operations with Multiple Executors
       | oscal-cli    |
       | oscal-server |
 
-  # Scenario Outline: Install OSCAL tool
-  #   When I install "<tool>"
-  #   Then "<tool>" should be installed
-  #   Examples:
-  #     | tool         |
-  #     | oscal-cli    |
-  #     | oscal-server |
-
   Scenario Outline: Execute OSCAL CLI command
     Given I have an OSCAL document "ssp.xml"
     When I execute the OSCAL CLI command "validate" on the document
@@ -123,3 +115,13 @@ Feature: OSCAL Operations with Multiple Executors
       | oscal-cli    |
       | oscal-server |
 
+
+  Scenario Outline: Evaluate complex Metapath expression
+    Given I have an OSCAL document "ssp.xml"
+    When I evaluate the metapath expression "//control-implementation/implemented-requirement/prop[@name='implementation-status']/@value" using "<executor>"
+    Then I should receive the metapath result
+    And the result should contain implementation status values
+    Examples:
+      | executor     |
+      | oscal-cli    |
+      | oscal-server |

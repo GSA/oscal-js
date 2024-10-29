@@ -4,7 +4,7 @@ import Ajv from 'ajv';
 import addFormats from "ajv-formats";
 import { assert, expect } from 'chai';
 import { existsSync, readFileSync } from 'fs';
-import path from 'path';
+import path, { join } from 'path';
 import { Log } from 'sarif';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -26,7 +26,7 @@ import {
 } from '../../src/validate.js';
 import { convert, convertDocument } from '../../src/convert.js';
 import { resolveProfile, resolveProfileDocument } from '../../src/resolve.js';
-import { evaluateMetapath } from '../../src/evaluate.js';
+import { evaluateMetapath, evaluateMetapathDocument } from '../../src/evaluate.js';
 import { sarifSchema } from '../../src/schema/sarif.js';
 
 startServer()
@@ -59,7 +59,8 @@ let exampleObject: any;
 let constraintId: string;
 let constraintExists: boolean;
 
-
+let metapathResult: string | undefined;
+let oscalObject: any;
 
 Given('I have an OSCAL document {string}', function (filename: string) {
   documentPath = path.resolve(__dirname, '..', '..', 'examples', filename);
@@ -219,7 +220,7 @@ Then('the resolved profile should be valid', async function () {
   if (typeof resolutionResult === 'undefined') {
     throw new Error("Resolution failed");
   }
-  const { isValid, log } = await validate(resolutionResult as any,{},'oscal-cli');
+  const { isValid, log } = await validate(resolutionResult as any);
   expect(isValid).to.be.true;
 });
 
@@ -308,7 +309,7 @@ When('I validate with imported validate function', async function () {
   validateResult = await validate(oscalObject as any,{extensions:metaschemaDocuments});
 });
 When('I validate with imported validateDocument function', async function () {
-  validateResult = await validateDocument(documentPath,{extensions:metaschemaDocuments},'oscal-server');
+  validateResult = await validateDocument(documentPath,{extensions:metaschemaDocuments});
 });
 
 Given('I have an Metaschema extensions document {string}', function (filename: string) {
@@ -328,4 +329,32 @@ When('I resolve it with imported resolve function using oscal-server', async fun
 When('I resolve it with imported resolve function using oscal-cli', async function () {
   await resolveProfileDocument(documentPath,resolutionResultOutputPath,{outputFormat:"json"},'oscal-cli')
   resolutionResult=JSON.parse(readFileSync(resolutionResultOutputPath).toString())
+});
+
+
+
+When('I evaluate the metapath expression {string} using {string}', async function (expression, executor) {          
+          const options = {
+      document: documentPath,
+      expression: expression,
+      server: executor === 'oscal-server'
+  };
+  metapathResult = await evaluateMetapathDocument(options);
+});
+
+
+Then('I should receive the metapath result', function () {
+  expect(metapathResult).to.not.be.undefined;
+});
+
+Then('the result should contain a title', function () {
+  expect(metapathResult).to.match(/title|Title/);
+});
+
+Then('I should receive an empty result', function () {
+  expect(metapathResult).to.be.empty;
+});
+
+Then('the result should contain implementation status values', function () {
+  expect(metapathResult).to.match(/implemented|partial|planned/);
 });

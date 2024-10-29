@@ -41,12 +41,13 @@ function getAjv(): Ajv {
 
 
 async function executeSarifValidationWithFileUpload(document: OscalJsonPackage, options: OscalServerValidationOptions): Promise<{isValid: boolean, log: Log}> {
+  console.log(document);
   try {
     const constraint = (options.extensions || []).map(toUri);
     const client = await getServerClient();
     
     const { response, error, data } = await client.POST('/validate', {      
-      body: JSON.stringify(document),
+      body: document as any, 
       params: {
         query: {
           constraint,
@@ -78,6 +79,7 @@ async function executeSarifValidationWithFileUpload(document: OscalJsonPackage, 
     throw error;
   }
 }
+
 export async function validate(
   document: OscalJsonPackage,
   options: OscalValidationOptions = {extensions: []},

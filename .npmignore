@@ -9,6 +9,6 @@ reports
 .github
 cucumber.json
 .devcontainer
-.devcontainer
 @rerun.txt
 content
+extensions

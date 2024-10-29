@@ -115,7 +115,9 @@ async function resolveFileWithServer(
 ): Promise<void> {
   try {
     const encodedArgs = `${inputFile.trim()}`;
-    
+    const outputDir = path.dirname(outputFile);
+    mkdirSync(outputDir, { recursive: true });
+
     // Determine the Accept header based on options.outputFormat
     let acceptHeader = 'application/json'; // Default to JSON
     if (options.outputFormat) {

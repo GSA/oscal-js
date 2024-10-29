@@ -116,8 +116,9 @@ export function findFedrampExtensionsFile() {
     return null;
   }
 export function resolveUri(uri:string):string{
-  
-  var document = resolve(uri).split("\\").join("/")
-  console.log(document)
+  let document = uri.split("\\").join("/");
+  if (!uri.startsWith("http") && !uri.startsWith("file")) {
+    document = "file://" + document;
+  }  
   return !document.startsWith("http")&&!document.startsWith("file")?"file://"+document:document
 }

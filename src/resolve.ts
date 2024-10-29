@@ -76,7 +76,7 @@ export async function resolveProfileDocument(
 ): Promise<void> {
   if (executor === 'oscal-server') {
     try {
-      await resolveFileWithServer(resolveUri(filePath), outputPath, options);
+      await resolveFileWithServer(resolveUri(filePath),resolveUri(outputPath), options);
       return;
     } catch (error) {
       console.warn("Server resolution failed. Falling back to CLI resolve-profile.");

@@ -52,7 +52,7 @@ export async function convertDocument(
 ): Promise<void> {
   if (executor === 'oscal-server') {
     try {
-      await convertFileWithServer(resolve(documentPath), outputPath, options);
+      await convertFileWithServer(resolveUri(documentPath), resolveUri(outputPath), options);
       return;
     } catch (error) {
       console.warn("Server conversion failed. Falling back to CLI conversion.");

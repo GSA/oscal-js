@@ -121,13 +121,13 @@ async function resolveFileWithServer(
     if (options.outputFormat) {
       switch (options.outputFormat.toLowerCase()) {
         case 'json':
-          acceptHeader = 'application/json';
+          acceptHeader = 'text/json';
           break;
         case 'xml':
-          acceptHeader = 'application/xml';
+          acceptHeader = 'text/xml';
           break;
         case 'yaml':
-          acceptHeader = 'application/yaml';
+          acceptHeader = 'text/yaml';
           break;
         // Add more cases as needed
         default:
@@ -137,7 +137,7 @@ async function resolveFileWithServer(
     const client =await getServerClient();
     const { response, error,data } = await client.GET('/resolve', {
       params: { query: { document: encodedArgs,format:options.outputFormat } },
-      parseAs: "blob" ,
+      parseAs: "text" ,
       headers: { Accept: acceptHeader }
     });
 
@@ -151,7 +151,7 @@ async function resolveFileWithServer(
     }
 
     // Convert blob to text
-    const fileOutput = await data.text();
+    const fileOutput = await data;
 
     writeFileSync(outputFile, fileOutput);
   } catch (error) {

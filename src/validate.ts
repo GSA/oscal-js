@@ -318,6 +318,7 @@ export async function validateDirectory(dirPath: string, options: OscalValidatio
   
   // Check if all validations passed
   const isValid = results.every(result => result.isValid === true);
+     
   const runs = results.map(result => (result.log?.runs||[])).reduce((a,b)=>[...a,...b]);
   let log=buildSarif(runs);
   return {isValid,log};
@@ -555,12 +556,9 @@ function formatSarifOutput(log:Log) {
     const formattedOutput = results.filter(x=>x.kind!='informational'&&x.kind!=='pass')
       .map(result => {
         // Highlight error messages
-        
         if (result.kind=='fail') {
-          return chalk.red.bold("["+result.level?.toUpperCase()+"] ")+chalk.yellow(((result.locations![0] as any).logicalLocation!.decoratedName))+"\n"+chalk.red(result.message.text);
-        }
-        // Highlight warning messages
-        if (result.kind=='review') {
+          return chalk.red.bold("["+result.level?.toUpperCase()+"] ")+chalk.gray(result.ruleId+" "||" ")+chalk.red(((result.locations![0] as any)?.logicalLocation?.decoratedName||result.ruleId||result.guid))+"\n"+chalk.hex("#b89642")(result.message.text);
+        }else{
           return chalk.yellow.bold(result.message.text);
         }
       })

@@ -43,7 +43,7 @@ const loggingMiddleware: Middleware = {
     const url = new URL(request.url);
 
     console.log(
-      chalk.blue('oscal-server') + ' ' +decodeURIComponent(url.href)
+      chalk.blue('oscal-server')+' ' + request.method +' ' +decodeURIComponent(url.href)
     );
 
     return request;

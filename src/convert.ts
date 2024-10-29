@@ -1,11 +1,11 @@
-import fs, { readFileSync, unlinkSync, writeFileSync } from 'fs';
-import path from 'path';
-import { executeOscalCliCommand, installOscalCli, isOscalExecutorInstalled } from './env.js';
-import inquirer from 'inquirer';
-import { detectOscalDocumentType, OscalExecutorOptions } from './utils.js';
-import { OscalJsonPackage } from './types.js';
 import { randomUUID } from 'crypto';
+import fs, { readFileSync, unlinkSync, writeFileSync } from 'fs';
+import inquirer from 'inquirer';
+import path, { resolve } from 'path';
+import { executeOscalCliCommand } from './env.js';
 import { getServerClient } from './server.js';
+import { OscalJsonPackage } from './types.js';
+import { OscalExecutorOptions } from './utils.js';
 
 export type OscalConvertOptions = {
   outputFormat: 'json'|'yaml'|'xml',
@@ -51,7 +51,7 @@ export async function convertDocument(
 ): Promise<void> {
   if (executor === 'oscal-server') {
     try {
-      await convertFileWithServer(documentPath, outputPath, options);
+      await convertFileWithServer(resolve(documentPath), outputPath, options);
       return;
     } catch (error) {
       console.warn("Server conversion failed. Falling back to CLI conversion.");

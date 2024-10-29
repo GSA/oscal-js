@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import fs, { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import inquirer from 'inquirer';
 import { tmpdir } from 'os';
-import path from 'path';
+import path, { resolve } from 'path';
 import { Location, Log, ReportingDescriptor, Result, Run } from 'sarif';
 import { v4 } from 'uuid';
 import { executeOscalCliCommand, installOscalCli, isJavaInstalled, isOscalExecutorInstalled } from './env.js';
@@ -133,7 +133,7 @@ export async function validateDocument(
   
     if (executor === 'oscal-server') {
       try {
-        return await executeSarifValidationViaServer(filePath, { ...options, inline: false });
+        return await executeSarifValidationViaServer(resolve(filePath), { ...options, inline: false });
       } catch (error) {
         console.warn("Server validation failed. Falling back to CLI validation.");
         executor = 'oscal-cli';

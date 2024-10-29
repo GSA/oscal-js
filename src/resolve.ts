@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { readFileSync, unlinkSync, writeFileSync } from 'fs';
-import path from 'path';
+import path, { resolve } from 'path';
 import { promisify } from 'util';
 import { v4 } from 'uuid';
 import { Catalog, Profile } from './types.js';
@@ -75,7 +75,7 @@ export async function resolveProfileDocument(
 ): Promise<void> {
   if (executor === 'oscal-server') {
     try {
-      await resolveFileWithServer(filePath, outputPath, options);
+      await resolveFileWithServer(resolve(filePath), outputPath, options);
       return;
     } catch (error) {
       console.warn("Server resolution failed. Falling back to CLI resolve-profile.");

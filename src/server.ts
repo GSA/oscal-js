@@ -50,11 +50,11 @@ const loggingMiddleware: Middleware = {
   },onResponse: async ({ response, request }) => {
     const url = new URL(request.url);
     const documentParam = url.searchParams.get('document');
-    const filename = documentParam&&path.basename(documentParam);
+    const filename = documentParam!==null?path.basename(documentParam):"FILE_UPLOAD";
     let exitStatus=(response.headers.get("Exit-Status")||"NA").toString()
     const statusColor= exitStatus==="OK"?chalk.green:chalk.red
     console.log(
-      chalk.blue('oscal-server') + ' ' + filename||'upload'  +' '+chalk.blue(decodeURIComponent(url.pathname.replace("/","")))+' '+ statusColor(exitStatus)
+      chalk.blue('oscal-server') + ' ' + filename  +' '+chalk.blue(decodeURIComponent(url.pathname.replace("/","")))+' '+ statusColor(exitStatus)
     );
   }
 };

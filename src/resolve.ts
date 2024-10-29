@@ -114,7 +114,7 @@ async function resolveFileWithServer(
   options: OscalConvertOptions
 ): Promise<void> {
   try {
-    const encodedArgs = `file://${inputFile.trim()}`;
+    const encodedArgs = `${inputFile.trim()}`;
     
     // Determine the Accept header based on options.outputFormat
     let acceptHeader = 'application/json'; // Default to JSON

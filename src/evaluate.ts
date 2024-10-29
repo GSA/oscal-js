@@ -1,5 +1,5 @@
 import { executeOscalCliCommand } from './env.js';
-import { detectOscalDocumentType } from './utils.js';
+import {  resolveUri } from './utils.js';
 import { getServerClient } from './server.js';
 
 interface EvaluateOptions {
@@ -37,7 +37,7 @@ async function evaluateMetapathWithServer(options: EvaluateOptions): Promise<str
 
       params: { 
         query: { 
-          document: `${options.document.trim()}`,
+          document: resolveUri(`${options.document.trim()}`),
           expression: options.expression
         } 
       },

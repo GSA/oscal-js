@@ -63,6 +63,7 @@ let metapathResult: string | undefined;
 let oscalObject: any;
 
 Given('I have an OSCAL document {string}', function (filename: string) {
+  console.log(filename+"resolving");
   documentPath = path.resolve(__dirname, '..', '..', 'examples', filename);
 });
 
@@ -110,6 +111,7 @@ When('I execute the OSCAL CLI command {string} on the document', async function 
 });
 
 When('I validate with metaschema extensions and sarif output on the document using {string}', async function (executor: OscalExecutorOptions) {
+  console.log(documentPath,metaschemaDocuments);
   validateResult = await validateDocument(documentPath, { extensions: metaschemaDocuments }, executor);
   sarifResult = validateResult.log;
 });

@@ -13,6 +13,7 @@ import { oscalSchema } from './schema/oscal.complete.js';
 import { getServerClient } from './server.js';
 import { OscalJsonPackage, ResourceHypertextReference } from './types.js';
 import { OscalExecutorOptions } from './utils.js';
+import {  resolveUri } from './utils.js';
 
 export type OscalValidationOptions = {
     extensions?: ResourceHypertextReference[],
@@ -41,9 +42,8 @@ function getAjv(): Ajv {
 
 
 async function executeSarifValidationWithFileUpload(document: OscalJsonPackage, options: OscalServerValidationOptions): Promise<{isValid: boolean, log: Log}> {
-  console.log(document);
   try {
-    const constraint = (options.extensions || []).map(toUri);
+    const constraint = (options.extensions || []).map(resolveUri);
     const client = await getServerClient();
     
     const { response, error, data } = await client.POST('/validate', {      
@@ -133,7 +133,7 @@ export async function validateDocument(
   
     if (executor === 'oscal-server') {
       try {
-        return await executeSarifValidationViaServer(resolve(filePath), { ...options, inline: false });
+        return await executeSarifValidationViaServer((filePath), { ...options, inline: false });
       } catch (error) {
         console.warn("Server validation failed. Falling back to CLI validation.");
         executor = 'oscal-cli';
@@ -427,14 +427,11 @@ const executeSarifValidationViaCLI = async (args: string[],quiet:boolean=false):
   }
 };
 
-const toUri =(document:string)=>{
-  return !document.startsWith("http")&&!document.startsWith("file")?"file://"+document:document
-}
 
 async function executeSarifValidationViaServer(document:string,options:OscalServerValidationOptions): Promise<{isValid:boolean,log:Log}> {
   try {
-      let documentUri = toUri(document)
-      const constraint=(options.extensions||[]).map(toUri)
+      let documentUri = resolveUri(document)
+      const constraint=(options.extensions||[]).map(resolveUri)
       
       const params = {query:{document:documentUri,constraint,flags:options.flags}}
       const client = await getServerClient()

@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
-import { readFileSync, unlinkSync, writeFileSync } from 'fs';
-import path, { resolve } from 'path';
+import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import path, { dirname, resolve } from 'path';
 import { promisify } from 'util';
 import { v4 } from 'uuid';
 import { Catalog, Profile } from './types.js';
@@ -11,6 +11,7 @@ import { OscalConvertOptions } from './convert.js';
 import { getServerClient } from './server.js';
 import { ResolveOptions } from 'dns';
 import { randomUUID } from 'crypto';
+import {  resolveUri } from './utils.js';
 
 const execAsync = promisify(exec);
 export type OscalResolveOptions = {
@@ -75,7 +76,7 @@ export async function resolveProfileDocument(
 ): Promise<void> {
   if (executor === 'oscal-server') {
     try {
-      await resolveFileWithServer(resolve(filePath), outputPath, options);
+      await resolveFileWithServer(resolveUri(filePath),resolve(outputPath), options);
       return;
     } catch (error) {
       console.warn("Server resolution failed. Falling back to CLI resolve-profile.");
@@ -113,20 +114,22 @@ async function resolveFileWithServer(
   options: OscalConvertOptions
 ): Promise<void> {
   try {
-    const encodedArgs = `file://${inputFile.trim()}`;
-    
+    const encodedArgs = `${inputFile.trim()}`;
+    const outputDir = dirname(outputFile);
+    mkdirSync(outputDir, { recursive: true });
+
     // Determine the Accept header based on options.outputFormat
     let acceptHeader = 'application/json'; // Default to JSON
     if (options.outputFormat) {
       switch (options.outputFormat.toLowerCase()) {
         case 'json':
-          acceptHeader = 'application/json';
+          acceptHeader = 'text/json';
           break;
         case 'xml':
-          acceptHeader = 'application/xml';
+          acceptHeader = 'text/xml';
           break;
         case 'yaml':
-          acceptHeader = 'application/yaml';
+          acceptHeader = 'text/yaml';
           break;
         // Add more cases as needed
         default:

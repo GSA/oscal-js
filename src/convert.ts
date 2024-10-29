@@ -1,11 +1,12 @@
 import { randomUUID } from 'crypto';
-import fs, { readFileSync, unlinkSync, writeFileSync } from 'fs';
+import fs, { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import inquirer from 'inquirer';
-import path, { resolve } from 'path';
+import path, { dirname, resolve } from 'path';
 import { executeOscalCliCommand } from './env.js';
 import { getServerClient } from './server.js';
 import { OscalJsonPackage } from './types.js';
 import { OscalExecutorOptions } from './utils.js';
+import {  resolveUri } from './utils.js';
 
 export type OscalConvertOptions = {
   outputFormat: 'json'|'yaml'|'xml',
@@ -51,7 +52,7 @@ export async function convertDocument(
 ): Promise<void> {
   if (executor === 'oscal-server') {
     try {
-      await convertFileWithServer(resolve(documentPath), outputPath, options);
+      await convertFileWithServer(resolveUri(documentPath), resolve(outputPath), options);
       return;
     } catch (error) {
       console.warn("Server conversion failed. Falling back to CLI conversion.");
@@ -139,7 +140,7 @@ async function convertFileWithServer(
   options: OscalConvertOptions
 ): Promise<void> {
   try {
-    const encodedArgs = `file://${inputFile.trim()}`;
+    const encodedArgs = `${inputFile.trim()}`;
     
     // Determine the Accept header based on options.outputFormat
     let acceptHeader = 'application/json'; // Default to JSON
@@ -174,6 +175,9 @@ async function convertFileWithServer(
       console.error("Data not found");
       throw new Error(`HTTP error! missing data!`);
     }
+    const outputDir = dirname(outputFile);
+    mkdirSync(outputDir, { recursive: true });
+
     const fileOutput = await data.text()
     fs.writeFileSync(outputFile,fileOutput);
   } catch (error) {

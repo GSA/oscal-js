@@ -74,7 +74,7 @@ Feature: OSCAL Operations with Multiple Executors
     Examples:
       | executor     | oscal_document|
       | oscal-cli    | ssp.xml|
-      | oscal-server |invalid-|
+      | oscal-server |invalid-ssp.xml|
 
   Scenario Outline: Get sarif output for invalid XML with metaschema extensions
     Given I have an OSCAL document "invalid-ssp.xml"

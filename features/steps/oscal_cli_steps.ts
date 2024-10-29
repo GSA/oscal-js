@@ -219,7 +219,7 @@ Then('the resolved profile should be valid', async function () {
   if (typeof resolutionResult === 'undefined') {
     throw new Error("Resolution failed");
   }
-  const { isValid, log } = await validate(resolutionResult as any);
+  const { isValid, log } = await validate(resolutionResult as any,{},'oscal-cli');
   expect(isValid).to.be.true;
 });
 

@@ -115,7 +115,6 @@ export function findFedrampExtensionsFile() {
     // If we couldn't find the file, return null
     return null;
   }
-  
   export function resolveUri(uri: string): string {
     // If it's already a valid URL, return it as-is
     try {
@@ -125,19 +124,11 @@ export function findFedrampExtensionsFile() {
       // Not a valid URL, continue with processing
     }
 
-    // Check if the uri contains an http(s) URL anywhere in it
-    const urlMatch = uri.match(/(https?:\/\/[^\s]+)/);
-    if (urlMatch) {
-      // If we found a URL in the string, return just that URL
-      return urlMatch[1];
-    }
-
-    // If we get here, treat it as a local file path
-    const cleanPath = uri.replace(/^file:\/+/, ''); // Remove any existing file:// prefix
-    const resolvedPath = path.resolve(cleanPath).split('\\').join('/');
+    let document = path.resolve(uri).split("\\").join("/");
     
-    // Add file:// prefix for local paths
-    return resolvedPath.startsWith('/') 
-      ? `file://${resolvedPath}`
-      : `file:///${resolvedPath}`;
+    if (!document.startsWith("http") && !document.startsWith("file")) {
+      document = "file://" + document;
+    }
+    
+    return document;
   }

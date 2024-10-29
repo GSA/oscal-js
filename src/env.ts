@@ -322,7 +322,16 @@ export const findOscalCliPath = async (): Promise<string> => {
       }  } catch (error) {
       // Command failed or oscal-cli not found
     }
-  
+    // try default install location if its not in the path
+    if (process.platform !== 'win32') {
+      const localBinPath = path.join(homedir(), '.local', 'bin', 'oscal-server');
+      if (fs.existsSync(localBinPath)) {
+          const stats = await fs.promises.stat(localBinPath);
+          if (stats.isFile()) {
+              return localBinPath;
+          }
+      }
+    }  
     throw new Error("OSCAL SERVER not found");
   };
 

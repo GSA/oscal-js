@@ -1,0 +1,147 @@
+system-security-plan:
+  uuid: 8c1ee2a6-bd14-4f77-b2f7-3d2bc0aaa55a
+  metadata:
+    title: "Oscal npm package Software Development System Security Plan"
+    last-modified: "2024-10-24T00:00:00Z"
+    version: "1.0"
+    oscal-version: "1.0.4"
+    parties:
+      - uuid: 11111111-0000-4000-9000-100000000002
+        type: organization
+        name: "General Servicies administration"
+        short-name: "GSA"
+    roles:  
+      - id: system-owner
+        title: System Owner
+      - id: security-officer 
+        title: Security Officer
+      - id: developer
+        title: Software Developer
+      - id: security-engineer
+        title: Security Engineer
+
+    responsible-parties:
+      - role-id: system-owner
+        party-uuids:
+          - 11111111-0000-4000-9000-100000000001
+      - role-id: security-officer
+        party-uuids:
+          - 11111111-0000-4000-9000-100000000001
+
+  import-profile:
+    href: "profile.oscal.yaml"
+
+  system-characteristics:
+    system-ids:
+      - id: "ESC-DEV-001"
+        identifier-type: https://fedramp.gov
+    system-name: "Enterprise Software Development Environment"
+    description: >-
+      Primary software development environment for GSA,
+      including development, testing, and build infrastructure.
+    security-sensitivity-level: moderate
+    system-information:
+      information-types:
+        - title: "Software Development Information"
+          uuid: 370026f8-582b-4c02-9331-a5c84afdbfd8
+          description: "Source code, build configurations, and development artifacts"
+          confidentiality-impact:
+            level: moderate
+          integrity-impact:
+            level: moderate
+          availability-impact:
+            level: moderate
+
+  system-implementation:
+    users:
+      - uuid: 33333333-0000-4000-9000-100000000003
+        title: "Development Team"
+        description: "Software developers and engineers"
+        role-ids:
+          - developer
+      - uuid: 44444444-0000-4000-9000-100000000004
+        title: "Security Team"
+        description: "Security engineers and analysts"
+        role-ids:
+          - security-engineer
+    components:
+      - uuid: 55555555-0000-4000-9000-100000000005
+        type: "software"
+        title: "Source Control System"
+        description: "Git-based version control system"
+        status:
+          state: operational
+        responsible-roles:
+          security-officer:
+            party-uuids:
+              - 11111111-0000-4000-9000-100000000001
+      - uuid: 66666666-0000-4000-9000-100000000006
+        type: "software"
+        title: "CI/CD Pipeline"
+        description: "Continuous Integration and Deployment System"
+        status:
+          state: operational
+        responsible-roles:
+          security-officer:
+            party-uuids:
+              - 11111111-0000-4000-9000-100000000001
+
+  control-implementation:
+    implemented-requirements:
+      # Prepare the Organization (PO) Controls
+      - uuid: 77777777-0000-4000-9000-100000000007
+        control-id: po1
+        by-components:
+          - component-uuid: 55555555-0000-4000-9000-100000000005
+            implementation-status:
+              state: planned
+            description: >-
+              Security requirements for software development are documented and maintained
+              in the organization's security policy repository. Requirements are reviewed
+              quarterly and updated based on emerging threats and compliance needs.
+
+      - uuid: 77777777-0000-4000-9000-100000000008
+        control-id: po2
+        by-components:
+          - component-uuid: 55555555-0000-4000-9000-100000000005
+            implementation-status:
+              state: planned
+            description: >-
+              Development team roles and responsibilities are clearly defined in the
+              organization's RACI matrix. Security training is provided quarterly
+              and tracked in the learning management system.
+
+      # Protect Software (PS) Controls
+      - uuid: 77777777-0000-4000-9000-100000000009
+        control-id: ps1
+        by-components:
+          - component-uuid: 55555555-0000-4000-9000-100000000005
+            implementation-status:
+              state: planned
+            description: >-
+              Source code access is restricted using role-based access control.
+              All code changes require peer review and approval before merging.
+
+      # Produce Well-Secured Software (PW) Controls
+      - uuid: 77777777-0000-4000-9000-100000000010
+        control-id: pw1
+        by-components:
+          - component-uuid: 66666666-0000-4000-9000-100000000006
+            implementation-status:
+              state: planned
+            description: >-
+              Threat modeling is performed during design phase. Security requirements
+              are tracked in the issue management system. Design decisions are
+              documented in architecture decision records.
+
+      # Respond to Vulnerabilities (RV) Controls
+      - uuid: 77777777-0000-4000-9000-100000000011
+        control-id: rv1
+        by-components:
+          - component-uuid: 66666666-0000-4000-9000-100000000006
+            implementation-status:
+              state: planned
+            description: >-
+              Vulnerability scanning is automated in the CI/CD pipeline.
+              Security findings are tracked and remediated based on severity.
+              A bug bounty program is maintained for external security researchers.

@@ -1,0 +1,16 @@
+component-definition:
+  uuid: 2862dbd1-1d58-4caf-8b57-cb29d150d232
+  metadata:
+    title: OSCAL NPM Package Component Definition
+    last-modified: "2024-10-17T12:00:00Z"
+    version: "1.0"
+    oscal-version: "1.1.2"
+  components:
+    - uuid: 2862dbd1-1d58-4caf-8b57-cb29d150d231
+      type: service
+      title: OSCAL npm package
+      description: >
+        A package for installing and managing oscal-server and oscal-cli 
+      remarks: >
+        This component definition describes the OSCAL npm package, which provides
+        file conversion, validation and profile resolution via OSCAL-CLI and OSCAL-SERVER

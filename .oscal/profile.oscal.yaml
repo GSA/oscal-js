@@ -1,0 +1,107 @@
+profile:
+  uuid: 8c1ee2a6-bd14-4f77-b2f7-3d2bc0aaa55e
+  metadata:
+    title: "Software Development Security Controls Profile"
+    last-modified: "2024-10-24T00:00:00Z"
+    version: "1.0"
+    oscal-version: "1.1.2"
+    parties:
+      - uuid: 11111111-0000-4000-9000-100000000001
+        type: organization
+        name: "Metaschema Framework Organization"
+        short-name: "MFO"
+    roles:
+      - id: profile-author
+        title: Profile Author
+    responsible-parties:
+      - role-id: profile-author
+        party-uuids:
+          - 11111111-0000-4000-9000-100000000001
+
+  imports:
+    - href: "#"
+      include-controls:
+        - with-ids:
+            - po1
+            - po2
+            - po3
+            - po4
+            - po5
+            - ps1
+            - ps2
+            - ps3
+            - pw1
+            - pw2
+            - pw4
+            - pw5
+            - pw6
+            - pw7
+            - pw8
+            - pw9
+            - rv1
+            - rv2
+            - rv3
+
+  merge:
+    as-is: true
+
+  modify:
+    set-parameters:
+      - param-id: po1_prm_1
+        values:
+          - "quarterly"
+      - param-id: ps1_prm_1
+        values:
+          - "role-based access control"
+          - "peer review"
+      - param-id: pw1_prm_1
+        values:
+          - "design phase"
+      - param-id: rv1_prm_1
+        values:
+          - "severity-based"
+
+    alters:
+      - control-id: po1
+        adds:
+          - by-id: po1_req
+            position: starting
+            parts:
+              - id: po1_stmt
+                name: statement
+                prose: >-
+                  Security requirements for software development must be documented and maintained
+                  in the organization's security policy repository with quarterly reviews.
+
+      - control-id: ps1
+        adds:
+          - by-id: ps1_req
+            position: starting
+            parts:
+              - id: ps1_stmt
+                name: statement
+                prose: >-
+                  Source code access must be controlled through role-based access control
+                  and all code changes require peer review approval before merging.
+
+      - control-id: pw1
+        adds:
+          - by-id: pw1_req
+            position: starting
+            parts:
+              - id: pw1_stmt
+                name: statement
+                prose: >-
+                  Threat modeling must be performed during the design phase and security
+                  requirements must be tracked in the issue management system.
+
+      - control-id: rv1
+        adds:
+          - by-id: rv1_req
+            position: starting
+            parts:
+              - id: rv1_stmt
+                name: statement
+                prose: >-
+                  Automated vulnerability scanning must be implemented in the CI/CD pipeline
+                  with findings tracked and remediated based on severity.

@@ -1,0 +1,1058 @@
+catalog:
+  uuid: 4eb58c88-beca-490e-8870-655ffb5ffad1
+  groups:
+    - id: po
+      parts:
+        - name: overview
+          prose: >-
+            Organizations should ensure that their people,  processes, and
+            technology are prepared to perform secure software development at
+            the  organization level. Many organizations will find some PO
+            practices to also be applicable  to subsets of their software
+            development, like individual development groups or projects.
+      props:
+        - name: label
+          value: PO
+      title: Prepare the Organization
+      controls:
+        - id: po1
+          parts:
+            - name: overview
+              prose: >-
+                Ensure that security  requirements for software development are 
+                known at all times so that they can be taken into account
+                throughout the SDLC and duplication of  effort can be minimized
+                because the  requirements information can be collected once  and
+                shared. This includes requirements from internal sources (e.g.,
+                the organization’s policies, business objectives, and risk
+                management  strategy) and external sources (e.g., applicable 
+                laws and regulations)
+            - name: statement
+              props:
+                - name: label
+                  value: PO.1.1
+              prose: >-
+                Identify and document all security  requirements for the
+                organization’s software  development infrastructures and
+                processes, and  maintain the requirements over time.
+            - name: statement
+              props:
+                - name: label
+                  value: PO.1.2
+              prose: >-
+                Identify and document all security requirements for
+                organization-developed software to meet, and maintain the
+                requirements over time.
+            - name: statement
+              props:
+                - name: label
+                  value: PO.1.3
+              prose: >-
+                Communicate requirements to all third parties who will provide
+                commercial software components to the organization for reuse by
+                the organization’s own software.
+          props:
+            - name: label
+              value: PO.1
+          title: Define Security Requirements for Software Development
+        - id: po2
+          parts:
+            - name: overview
+              prose: >-
+                Ensure that everyone inside and outside of the organization
+                involved in the SDLC is prepared to perform their SDLC-related
+                roles and responsibilities throughout the SDLC
+            - name: statement
+              props:
+                - name: label
+                  value: PO.2.1
+              prose: >-
+                Create new roles and alter responsibilities for existing roles
+                as needed to encompass all parts of the SDLC. Periodically
+                review and maintain the defined roles and responsibilities,
+                updating them as needed.
+            - name: statement
+              props:
+                - name: label
+                  value: PO.2.2
+              prose: >-
+                Provide role-based training for all personnel with
+                responsibilities that contribute to secure development.
+                Periodically review personnel proficiency and role-based
+                training, and update the training as needed
+            - name: statement
+              props:
+                - name: label
+                  value: PO.2.3
+              prose: >-
+                Obtain upper management or authorizing official commitment to
+                secure development, and convey that commitment to all with
+                development- related roles and responsibilities.
+          props:
+            - name: label
+              value: PO.2
+          title: Implement Roles and Responsibilities
+        - id: po3
+          parts:
+            - name: overview
+              prose: >-
+                Use automation to reduce human effort and improve the accuracy,
+                reproducibility, usability, and comprehensiveness of security
+                practices throughout the SDLC, as well as provide a way to
+                document and demonstrate the use of these practices. Toolchains
+                and tools may be used at different levels of the organization,
+                such as organization-wide or project-specific, and may address a
+                particular part of the SDLC, like a build pipeline
+            - name: statement
+              props:
+                - name: label
+                  value: PO.3.1
+              prose: >-
+                Specify which tools or tool types must or should be included in
+                each toolchain to mitigate identified risks, as well as how the
+                toolchain components are to be integrated with each oth
+            - name: statement
+              props:
+                - name: label
+                  value: PO.3.2
+              prose: >-
+                Follow recommended security practices to deploy, operate, and
+                maintain tools and toolchain
+            - name: statement
+              props:
+                - name: label
+                  value: PO.3.3
+              prose: >-
+                Configure tools to generate artifacts6 of their support of
+                secure software development practices as defined by the
+                organization
+          props:
+            - name: label
+              value: PO.3
+          title: Implement Supporting Toolchains
+        - id: po4
+          parts:
+            - name: overview
+              prose: >-
+                Help ensure that the software resulting from the SDLC meets the
+                organization’s expectations by defining and using criteria for
+                checking the software’s security during development.
+            - name: statement
+              props:
+                - name: label
+                  value: PO.4.1
+              prose: >-
+                Define criteria for software security checks and track
+                throughout the SDLC.
+            - name: statement
+              props:
+                - name: label
+                  value: PO.4.2
+              prose: >-
+                Implement processes, mechanisms, etc. to gather and safeguard
+                the necessary information in support of the criteria.
+          props:
+            - name: label
+              value: PO.4
+          title: Implement Supporting Toolchains
+        - id: po5
+          parts:
+            - name: overview
+              prose: >-
+                Ensure that all components of the environments for software
+                development are strongly protected from internal and external
+                threats to prevent compromises of the environments or the
+                software being developed or maintained within them. Examples of
+                environments for software development include development,
+                build, test, and distribution environments.
+            - name: statement
+              props:
+                - name: label
+                  value: PO.5.1
+              prose: >-
+                Separate and protect each environment involved in software
+                developme
+            - name: statement
+              props:
+                - name: label
+                  value: PO.5.2
+              prose: >-
+                Secure and harden development endpoints (i.e., endpoints for
+                software designers, developers, testers, builders, etc.) to
+                perform development-related tasks using a risk-based approach
+          props:
+            - name: label
+              value: PO.5
+          title: Implement and Maintain Secure Environments for Software Development
+    - id: ps
+      parts:
+        - name: overview
+          prose: >-
+            Organizations should protect all components of their software from
+            tampering and unauthorized access.
+      props:
+        - name: label
+          value: PS
+      title: Protect the Software
+      controls:
+        - id: ps1
+          parts:
+            - name: overview
+              prose: >-
+                Help prevent unauthorized changes to code, both inadvertent and
+                intentional, which could circumvent or negate the intended
+                security characteristics of the software. For code that is not
+                intended to be publicly accessible, this helps prevent theft of
+                the software and may make it more difficult or time-consuming
+                for attackers to find vulnerabilities in the software.
+            - name: statement
+              props:
+                - name: label
+                  value: PS.1.1
+              prose: >-
+                Store all forms of code – including source code, executable
+                code, and configuration-as-code – based on the principle of
+                least privilege so that only authorized personnel, tools,
+                services, etc. have access.
+          props:
+            - name: label
+              value: PS.1
+          title: Protect All Forms of Code from Unauthorized Access and Tampering
+        - id: ps2
+          parts:
+            - name: overview
+              prose: >-
+                Help software acquirers ensure that the software they acquire is
+                legitimate and has not been tampered with.
+            - name: statement
+              props:
+                - name: label
+                  value: PS.2.1
+              prose: >-
+                Make software integrity verification information available to
+                software acquirers.
+          props:
+            - name: label
+              value: PS.2
+          title: Provide a Mechanism for Verifying Software Release Integrity
+        - id: ps3
+          parts:
+            - name: overview
+              prose: >-
+                Preserve software releases in order to help identify, analyze,
+                and eliminate vulnerabilities discovered in the software after
+                release.
+            - name: statement
+              props:
+                - name: label
+                  value: PS.3.1
+              prose: >-
+                Securely archive the necessary files and supporting data (e.g.,
+                integrity verification information, provenance data) to be
+                retained for each software release.
+            - name: statement
+              props:
+                - name: label
+                  value: PS.3.2
+              prose: >-
+                Collect, safeguard, maintain, and share provenance data for all
+                components of each software release (e.g., in a software bill of
+                materials [SBOM]).
+          props:
+            - name: label
+              value: PS.3
+          title: Archive and Protect Each Software Release
+    - id: pw
+      parts:
+        - name: overview
+          prose: >-
+            Organizations should produce well-secured software with minimal
+            security vulnerabilities in its releases.
+      props:
+        - name: label
+          value: PW
+      title: Produce Well-Secured Software
+      controls:
+        - id: pw1
+          parts:
+            - name: overview
+              prose: >-
+                Identify and evaluate the security requirements for the
+                software; determine what security risks the software is likely
+                to face during operation and how the software’s design and
+                architecture should mitigate those risks; and justify any cases
+                where risk-based analysis indicates that security requirements
+                should be relaxed or waived. Addressing security requirements
+                and risks during software design (secure by design) is key for
+                improving software security and also helps improve development
+                efficiency.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.1.1
+              prose: >-
+                Use forms of risk modeling – such as threat modeling, attack
+                modeling, or attack surface mapping – to help assess the
+                security risk for the software.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.1.2
+              prose: >-
+                Track and maintain the software’s security requirements, risks,
+                and design decisions.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.1.3
+              prose: >-
+                Where appropriate, build in support for using standardized
+                security features and services (e.g., enabling software to
+                integrate with existing log management, identity management,
+                access control, and vulnerability management systems) instead of
+                creating proprietary implementations of security features and
+                service.
+          props:
+            - name: label
+              value: PW.1
+          title: >-
+            Design Software to Meet Security Requirements and Mitigate Security
+            Risks
+        - id: pw2
+          parts:
+            - name: overview
+              prose: >-
+                Help ensure that the software will meet the security
+                requirements and satisfactorily address the identified risk
+                information.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.2.1
+              prose: >-
+                Have 1) a qualified person (or people) who were not involved
+                with the design and/or 2) automated processes instantiated in
+                the toolchain review the software design to confirm and enforce
+                that it meets all of the security requirements and
+                satisfactorily addresses the identified risk information.
+          props:
+            - name: label
+              value: PW.2
+          title: >-
+            Review the Software Design to Verify Compliance with Security
+            Requirements and Risk Information.
+        - id: pw3
+          links:
+            - rel: moved-to
+              href: '#pw4'
+          parts:
+            - name: statement
+              props:
+                - name: label
+                  value: PW.3.1
+              prose: '*Moved to PO.1.3*'
+            - name: statement
+              props:
+                - name: label
+                  value: PW.3.1
+              prose: '*Moved to PW.4.4*'
+          props:
+            - name: label
+              value: PW.3
+            - name: status
+              value: withdrawn
+          title: Verify Third-Party Software Complies with Security Requirements
+        - id: pw4
+          parts:
+            - name: overview
+              prose: >-
+                Lower the costs of software development, expedite software
+                development, and decrease the likelihood of introducing
+                additional security vulnerabilities into the software by reusing
+                software modules and services that have already had their
+                security posture checked. This is particularly important for
+                software that implements security functionality, such as
+                cryptographic modules and protocols.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.4.1
+              prose: >-
+                Acquire and maintain well-secured software components (e.g.,
+                software libraries, modules, middleware, frameworks) from
+                commercial, open- source, and other third-party developers for
+                use by the organization’s software
+            - name: statement
+              props:
+                - name: label
+                  value: PW.4.2
+              prose: >-
+                Create and maintain well-secured software components in-house
+                following SDLC processes to meet common internal software
+                development needs that cannot be better met by third-party
+                software components.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.4.3
+                - name: marking
+                  value: withdrawn
+              prose: '*Moved to PW.1.3*'
+            - name: statement
+              props:
+                - name: label
+                  value: PW.4.4
+              prose: >-
+                Verify that acquired commercial, open-source, and all other
+                third-party software components comply with the requirements, as
+                defined by the organization, throughout their life cycles.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.4.5
+              prose: '*Moved to PW.4.1 and PW.4.4*'
+          props:
+            - name: label
+              value: PW.4
+          title: >-
+            Reuse Existing, Well-Secured Software When Feasible Instead of
+            Duplicating Functionality
+        - id: pw5
+          parts:
+            - name: overview
+              prose: >-
+                Decrease the number of security vulnerabilities in the software,
+                and reduce costs by minimizing vulnerabilities introduced during
+                source code creation that meet or exceed organization-defined
+                vulnerability severity criteria
+            - name: statement
+              props:
+                - name: label
+                  value: PW.5.1
+              prose: >-
+                Follow all secure coding practices that are appropriate to the
+                development languages and environment to meet the organization’s
+                requirements.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.5.2
+              prose: '*Moved to PW.5.1 as example*'
+          props:
+            - name: label
+              value: PW.5
+          title: Create Source Code by Adhering to Secure Coding Practices
+        - id: pw6
+          parts:
+            - name: overview
+              prose: >-
+                Decrease the number of security vulnerabilities in the software
+                and reduce costs by eliminating vulnerabilities before testing
+                occurs.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.6.1
+              prose: >-
+                Use compiler, interpreter, and build tools that offer features
+                to improve executable security.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.6.2
+              prose: >-
+                Determine which compiler, interpreter, and build tool features
+                should be used and how each should be configured, then implement
+                and use the approved configurations.
+          props:
+            - name: label
+              value: PW.6
+          title: >-
+            Configure the Compilation, Interpreter, and Build Processes to
+            Improve Executable Security
+        - id: pw7
+          parts:
+            - name: overview
+              prose: >-
+                Help identify vulnerabilities so that they can be corrected
+                before the software is released to prevent exploitation. Using
+                automated methods lowers the effort and resources needed to
+                detect vulnerabilities. Human-readable code includes source
+                code, scripts, and any other form of code that an organization
+                deems human- readable.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.7.1
+              prose: >-
+                Determine whether code *review* (a person looks directly at the
+                code to find issues) and/or code *analysis* (tools are used to
+                find issues in code, either in a fully automated way or in
+                conjunction with a person) should be used, as defined by the
+                organization
+            - name: statement
+              props:
+                - name: label
+                  value: PW.7.2
+              prose: >-
+                Perform the code review and/or code analysis based on the
+                organization’s secure coding standards, and record and triage
+                all discovered issues and recommended remediations in the
+                development team’s workflow or issue tracking system.
+          props:
+            - name: label
+              value: PW.7
+          title: >-
+            Review and/or Analyze Human-Readable Code to Identify
+            Vulnerabilities and Verify Compliance with Security Requirements
+        - id: pw8
+          parts:
+            - name: overview
+              prose: >-
+                Help identify vulnerabilities so that they can be corrected
+                before the software is released in order to prevent
+                exploitation. Using automated methods lowers the effort and
+                resources needed to detect vulnerabilities and improves
+                traceability and repeatability. Executable code includes
+                binaries, directly executed bytecode and source code, and any
+                other form of code that an organization deems executable.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.8.1
+              prose: >-
+                Determine whether executable code testing should be performed to
+                find vulnerabilities not identified by previous reviews,
+                analysis, or testing and, if so, which types of testing should
+                be used.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.8.2
+              prose: >-
+                Scope the testing, design the tests, perform the testing, and
+                document the results, including recording and triaging all
+                discovered issues and recommended remediations in the
+                development team’s workflow or issue tracking system.
+          props:
+            - name: label
+              value: PW.8
+          title: >-
+            Test Executable Code to Identify Vulnerabilities and Verify
+            Compliance with Security Requirements
+        - id: pw9
+          parts:
+            - name: overview
+              prose: >-
+                Help improve the security of the software at the time of
+                installation to reduce the likelihood of the software being
+                deployed with weak security settings, putting it at greater risk
+                of compromise.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.9.1
+              prose: >-
+                Define a secure baseline by determining how to configure each
+                setting that has an effect on security or a security-related
+                setting so that the default settings are secure and do not
+                weaken the security functions provided by the platform, network
+                infrastructure, or services.
+            - name: statement
+              props:
+                - name: label
+                  value: PW.9.2
+              prose: >-
+                Implement the default settings (or groups of default settings,
+                if applicable), and document each setting for software
+                administrators.
+          props:
+            - name: label
+              value: PW.9
+          title: Configure Software to Have Secure Settings by Default
+    - id: rv
+      parts:
+        - name: overview
+          prose: >-
+            Organizations should identify residual vulnerabilities in their
+            software releases and respond appropriately to address those
+            vulnerabilities and prevent similar ones from occurring in the
+            future
+      props:
+        - name: label
+          value: RV
+      title: Respond to Vulnerabilities
+      controls:
+        - id: rv1
+          parts:
+            - name: overview
+              prose: >-
+                Help ensure that vulnerabilities are identified more quickly so
+                that they can be remediated more quickly in accordance with
+                risk, reducing the window of opportunity for attackers.
+            - name: statement
+              props:
+                - name: label
+                  value: RV.1.1
+              prose: >-
+                Gather information from software acquirers, users, and public
+                sources on potential vulnerabilities in the software and
+                third-party components that the software uses, and investigate
+                all credible reports.
+            - name: statement
+              props:
+                - name: label
+                  value: RV.1.2
+              prose: >-
+                Review, analyze, and/or test the software’s code to identify or
+                confirm the presence of previously undetected vulnerabilities.
+            - name: statement
+              props:
+                - name: label
+                  value: RV.1.3
+              prose: >-
+                Have a policy that addresses vulnerability disclosure and
+                remediation, and implement the roles, responsibilities, and
+                processes needed to support that policy.
+          props:
+            - name: label
+              value: RV.1
+          title: Identify and Confirm Vulnerabilities on an Ongoing Basis
+        - id: rv2
+          parts:
+            - name: overview
+              prose: >-
+                Help ensure that vulnerabilities are remediated in accordance
+                with risk to reduce the window of opportunity for attackers.
+            - name: statement
+              props:
+                - name: label
+                  value: RV.2.1
+              prose: >-
+                Analyze each vulnerability to gather sufficient information
+                about risk to plan its remediation or other risk response.
+            - name: statement
+              props:
+                - name: label
+                  value: RV.2.2
+              prose: Plan and implement risk responses for vulnerabilities.
+          props:
+            - name: label
+              value: RV.2
+          title: Assess, Prioritize, and Remediate Vulnerabilities
+        - id: rv3
+          parts:
+            - name: overview
+              prose: Help reduce the frequency of vulnerabilities in the future.
+            - name: statement
+              props:
+                - name: label
+                  value: RV.3.1
+              prose: >-
+                Analyze identified vulnerabilities to determine their root
+                causes.
+            - name: statement
+              props:
+                - name: label
+                  value: RV.3.2
+              prose: >-
+                Analyze the root causes over time to identify patterns, such as
+                a particular secure coding practice not being followed
+                consistently.
+            - name: statement
+              props:
+                - name: label
+                  value: RV.3.3
+              prose: >-
+                Review the software for similar vulnerabilities to eradicate a
+                class of vulnerabilities, and proactively fix them rather than
+                waiting for external reports.
+            - name: statement
+              props:
+                - name: label
+                  value: RV.3.4
+              prose: >-
+                Review the SDLC process, and update it if appropriate to prevent
+                (or reduce the likelihood of) the root cause recurring in
+                updates to the software or in new software that is created.
+          props:
+            - name: label
+              value: RV.3
+          title: Analyze Vulnerabilities to Identify Their Root Causes
+  metadata:
+    links:
+      - rel: canonical
+        href: >-
+          https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-218.pdf
+    props:
+      - name: keywords
+        value: >-
+          secure software development,Secure Software Development Framework
+          (SSDF),secure software development practices,software
+          acquisition,software development,software development life cycle
+          (SDLC),software security
+    roles:
+      - id: creator
+        title: Creator of the Original Content
+      - id: prepared-by
+        title: Author of Content in OSCAL Format
+    title: >-
+      Secure Software Development Framework (SSDF) Version 1.1: Recommendations
+      for Mitigating the Risk of Software Vulnerabilities
+    parties:
+      - name: National Institute of Standards and Technology
+        type: organization
+        uuid: 9609a569-3a70-43bb-8ff2-9149f1779d70
+        addresses:
+          - city: Gaithersburg
+            state: MD
+            addr-lines:
+              - 100 Bureau Drive
+              - Mail Stop 2000
+            postal-code: 20899-2000
+        short-name: NIST
+        email-addresses:
+          - dig-comments@nist.gov
+      - name: Easy Dynamics Corp.
+        type: organization
+        uuid: c9dbf135-b1ab-48c1-862c-655054ec669c
+        addresses:
+          - city: McLean
+            state: VA
+            addr-lines:
+              - 2000 Corporate Ridge
+              - Suite 240
+            postal-code: '22102'
+        short-name: EDC
+        email-addresses:
+          - oscal@easydynamics.com
+    remarks: >-
+      This is a **DRAFT** translation of the Secure Software Development
+      Framework in OSCAL. Refer to the source document for examples and
+      references.
+    version: '1.1'
+    published: '1900-01-01T00:00:00.000Z'
+    document-ids:
+      - scheme: http://www.doi.org/
+        identifier: https://doi.org/10.6028/NIST.SP.800-218
+    last-modified: '2024-08-23T18:31:49.500Z'
+    oscal-version: 1.0.4
+    responsible-parties:
+      - role-id: creator
+        party-uuids:
+          - 9609a569-3a70-43bb-8ff2-9149f1779d70
+      - role-id: prepared-by
+        party-uuids:
+          - c9dbf135-b1ab-48c1-862c-655054ec669c
+  back-matter:
+    resources:
+      - uuid: 8a086422-3948-46e9-a9da-0648d0e32444
+        title: BSAFSS
+        rlinks:
+          - href: >-
+              https://www.bsa.org/files/reports/bsa_framework_secure_software_update_2020.pdf
+            media-type: application/pdf
+        citation:
+          text: >-
+            BSA (2020) *The BSA Framework for Secure Software: A New Approach to
+            Securing the Software Lifecycle, Version 1.1*.
+      - uuid: c3403865-69df-444f-a9aa-cf94d210c261
+        title: BSIMM
+        rlinks:
+          - href: >-
+              https://www.bsimm.com/content/dam/bsimm/reports/bsimm12-foundations.pdf
+            media-type: application/pdf
+        citation:
+          text: >-
+            Migues S, Erlikhman E, Ewers J, Nassery K (2021) *BSIMM12 2021
+            Foundations Report*.
+      - uuid: 808989fe-67a1-4479-86fa-ba1553cc86d6
+        title: CNCFSSCP
+        rlinks:
+          - href: >-
+              https://github.com/cncf/tag-security/tree/main/supply-chain-security/supply-chain-security-paper
+        citation:
+          text: >-
+            Cloud Native Computing Foundation (2021) *Software Supply Chain Best
+            Practices*.
+      - uuid: c1ec0998-e16e-4eb5-8ca4-c76382994a45
+        title: EO14028
+        rlinks:
+          - href: https://www.govinfo.gov/app/details/DCPD-202100401
+        citation:
+          text: >-
+            Executive Order 14028 (2021) Improving the Nation’s Cybersecurity.
+            (The White House, Washington, DC), DCPD-202100401, May 12, 2021
+      - uuid: efb452e3-f9a1-4a89-b509-8e5d23a1bdd3
+        title: ISASOAR
+        rlinks:
+          - href: >-
+              https://www.ida.org/research-and-publications/publications/all/s/st/stateoftheart-resources-soar-for-software-vulnerability-detection-test-and-evaluation-2016
+        citation:
+          text: >-
+            Hong Fong EK, Wheeler D, Henninger A (2016) State-of-the-Art
+            Resources (SOAR) for Software Vulnerability Detection, Test, and
+            Evaluation 2016. (Institute for Defense Analyses [IDA], Alexandria,
+            VA), IDA Paper P-8005.
+      - uuid: f9ae6d45-d78e-4e6e-a01b-6260d1ee49f8
+        title: IEC62443
+        rlinks:
+          - href: https://webstore.iec.ch/publication/33615
+        citation:
+          text: >-
+            International Electrotechnical Commission (IEC), Security for
+            industrial automation and control systems – Part 4-1: Secure product
+            development lifecycle requirements, IEC 62443-4-1, 2018.
+      - uuid: bad0edc0-f8b2-481a-96fa-f48e3ac14140
+        title: IR7692
+        rlinks:
+          - href: https://doi.org/10.6028/NIST.IR.7864
+            media-type: application/pdf
+        citation:
+          text: >-
+            Waltermire DA, Scarfone KA, Casipe M (2011) Specification for the
+            Open Checklist Interactive Language (OCIL) Version 2.0. (National
+            Institute of Standards and Technology, Gaithersburg, MD), NIST
+            Interagency or Internal Report (IR) 7692.
+      - uuid: b3e40157-08ec-4171-ab8b-30c3285bd127
+        title: IR7864
+        rlinks:
+          - href: https://doi.org/10.6028/NIST.IR.7864
+            media-type: application/pdf
+        citation:
+          text: >-
+            LeMay E, Scarfone KA, Mell PM (2012) The Common Misuse Scoring
+            System (CMSS): Metrics for Software Feature Misuse Vulnerabilities.
+            (National Institute of Standards and Technology, Gaithersburg, MD),
+            NIST Interagency or Internal Report (IR) 7864.
+      - uuid: deda0dda-d2d0-4d57-a8f2-37e91c6affe0
+        title: IR8397
+        rlinks:
+          - href: https://doi.org/10.6028/NIST.IR.8397
+            media-type: application/pdf
+        citation:
+          text: >-
+            Black P, Guttman B, Okun V (2021) Guidelines on Minimum Standards
+            for Developer Verification of Software. (National Institute of
+            Standards and Technology, Gaithersburg, MD), NIST Interagency or
+            Internal Report (IR) 8397.
+      - uuid: 7061f193-d793-46ae-b0bf-679cfc253297
+        title: ISO27034
+        rlinks:
+          - href: https://www.iso.org/standard/44378.html
+        citation:
+          text: >-
+            International Organization for Standardization (ISO)/International
+            Electrotechnical Commission (IEC), Information technology – Security
+            techniques – Application security – Part 1: Overview and concepts,
+            ISO/IEC 27034-1:2011, 2011.
+      - uuid: ea4e1fe7-dabc-477b-980f-6f0d8e522180
+        title: ISO29147
+        rlinks:
+          - href: https://www.iso.org/standard/72311.html
+        citation:
+          text: >-
+            International Organization for Standardization (ISO)/International
+            Electrotechnical Commission (IEC), Information technology – Security
+            techniques – Vulnerability disclosure, ISO/IEC 29147:2018, 2018.
+      - uuid: 1754c2c0-0762-40aa-9cc8-4322f4ed11fa
+        title: ISO30111
+        rlinks:
+          - href: https://www.iso.org/standard/69725.html
+        citation:
+          text: >-
+            International Organization for Standardization (ISO)/International
+            Electrotechnical Commission (IEC), Information technology – Security
+            techniques – Vulnerability handling processes, ISO/IEC 30111:2019,
+            2019.
+      - uuid: 76083d23-8059-4107-b4c8-c4e3fd984b95
+        title: MSSDL
+        rlinks:
+          - href: https://www.microsoft.com/en-us/securityengineering/sdl/
+            media-type: text/html
+        citation:
+          text: Microsoft (2021) *Security Development Lifecycle*.
+      - uuid: cbc61673-68f7-4b68-bdff-f5f2d97a4c5b
+        title: NISTCSF
+        rlinks:
+          - href: https://doi.org/10.6028/NIST.CSWP.04162018
+            media-type: application/pdf
+        citation:
+          text: >-
+            National Institute of Standards and Technology (2018) Framework for
+            Improving Critical Infrastructure Cybersecurity, Version 1.1.
+            (National Institute of Standards and Technology, Gaithersburg, MD).
+      - uuid: b508122a-587b-4f23-9681-6dea8ee97058
+        title: NISTLABEL
+        rlinks:
+          - href: >-
+              https://www.nist.gov/itl/executive-order-improving-nations-cybersecurity
+            media-type: text/html
+        citation:
+          text: >-
+            Ogata M, Haney J, Merkel W, Phelps A (2022) Recommended Criteria for
+            Cybersecurity Labeling of Consumer Software. (National Institute of
+            Standards and Technology, Gaithersburg, MD).
+      - uuid: 1373fbd6-a2f4-4e82-a606-a620ca7a6db7
+        title: NTIASBOM
+        rlinks:
+          - href: >-
+              https://www.ntia.doc.gov/report/2021/minimum-elements-software-bill-materials-sbom
+        citation:
+          text: >-
+            National Telecommunications and Information Administration (NTIA)
+            (2021) *The Minimum Elements For a Software Bill of Materials
+            (SBOM)*.
+      - uuid: 27bfcef8-3857-424c-9d63-4bb259d72a35
+        title: OWASPASVS
+        rlinks:
+          - href: https://github.com/OWASP/ASVS
+        citation:
+          text: >-
+            Open Web Application Security Project (2021) *OWASP Application
+            Security Verification Standard 4.0.3*.
+      - uuid: 6f5613b7-560c-404c-b591-7c0550f5c9a8
+        title: OWASPMASVS
+        rlinks:
+          - href: https://github.com/OWASP/owasp-masvs/releases
+        citation:
+          text: >-
+            Open Web Application Security Project (2021) *OWASP Mobile
+            Application Security Verification Standard, Version 1.4.2*.
+      - uuid: ad2ae407-da60-46fc-b3f8-83430c004997
+        title: OWASPSAMM
+        rlinks:
+          - href: https://www.owasp.org/index.php/OWASP_SAMM_Project
+        citation:
+          text: >-
+            Open Web Application Security Project (2017) *Software Assurance
+            Maturity Model Version 1.5*.
+      - uuid: 09cc20d1-869d-469e-b162-cea7c84c0718
+        title: OWASPSCVS
+        rlinks:
+          - href: https://github.com/OWASP/Software-Component-Verification-Standard
+        citation:
+          text: >-
+            Open Web Application Security Project (2020) *OWASP Software
+            Component Verification Standard, Version 1.0*.
+      - uuid: 2d19aaff-82e6-4b13-bcc3-65c1c02ba83e
+        title: PCISSLC
+        rlinks:
+          - href: >-
+              https://www.pcisecuritystandards.org/document_library?category=sware_sec#results
+        citation:
+          text: >-
+            Payment Card Industry (PCI) Security Standards Council (2021)
+            *Secure Software Lifecycle (Secure SLC) Requirements and Assessment
+            Procedures Version 1.1*.
+      - uuid: 87cb65be-2dc4-4943-be3e-00c679157778
+        title: SCAGILE
+        rlinks:
+          - href: >-
+              http://www.safecode.org/publication/SAFECode_Agile_Dev_Security0712.pdf
+            media-type: application/pdf
+        citation:
+          text: >-
+            Software Assurance Forum for Excellence in Code (2012) *Practical
+            Security Stories and Security Tasks for Agile Development
+            Environments*.
+      - uuid: b07bfd85-a085-445c-939b-e76fe2ac2816
+        title: SCFPSSD
+        rlinks:
+          - href: >-
+              https://safecode.org/wp-content/uploads/2018/03/SAFECode_Fundamental_Practices_for_Secure_Software_Development_March_2018.pdf
+            media-type: application/pdf
+        citation:
+          text: >-
+            Software Assurance Forum for Excellence in Code (2018) *Fundamental
+            Practices for Secure Software Development: Essential Elements of a
+            Secure Development Lifecycle Program, Third Edition*.
+      - uuid: 1ff3a4f7-780c-46b6-b26f-2ccaa9491a4d
+        title: SCSIC
+        rlinks:
+          - href: >-
+              http://www.safecode.org/publication/SAFECode_Software_Integrity_Controls0610.pdf
+            media-type: application/pdf
+        citation:
+          text: >-
+            Software Assurance Forum for Excellence in Code (2010) *Software
+            Integrity Controls: An Assurance-Based Approach to Minimizing Risks
+            in the Software Supply Chain*.
+      - uuid: 68abc9f7-c45c-4648-a5c2-0526264ec366
+        title: SCTPC
+        rlinks:
+          - href: >-
+              https://www.safecode.org/wp-content/uploads/2017/05/SAFECode_TPC_Whitepaper.pdf
+            media-type: application/pdf
+        citation:
+          text: >-
+            Software Assurance Forum for Excellence in Code (2017) *Managing
+            Security Risks Inherent in the Use of Third-Party Components*.
+      - uuid: c8a8d56e-e2ce-4ee6-bb34-7b4d57fdecef
+        title: SCTTM
+        rlinks:
+          - href: >-
+              https://www.safecode.org/wp-content/uploads/2017/05/SAFECode_TM_Whitepaper.pdf
+            media-type: application/pdf
+        citation:
+          text: >-
+            Software Assurance Forum for Excellence in Code (2017) *Tactical
+            Threat Modeling*.
+      - uuid: 530e65a6-7742-49b6-a7f6-97f48665f46a
+        title: SP80053
+        rlinks:
+          - href: https://doi.org/10.6028/NIST.SP.800-53r5
+            media-type: application/pdf
+        citation:
+          text: >-
+            Joint Task Force (2020) Security and Privacy Controls for
+            Information Systems and Organizations. (National Institute of
+            Standards and Technology, Gaithersburg, MD), NIST Special
+            Publication (SP) 800-53, Rev. 5. Includes updates as of December 10,
+            2020.
+      - uuid: 0e01d884-fb67-45ac-9e06-0c4aa37d9932
+        title: SP800160
+        rlinks:
+          - href: https://doi.org/10.6028/NIST.SP.800-160v1
+            media-type: application/pdf
+        citation:
+          text: >-
+            Ross R, McEvilley M, Oren J (2016) Systems Security Engineering:
+            Considerations for a Multidisciplinary Approach in the Engineering
+            of Trustworthy Secure Systems. (National Institute of Standards and
+            Technology, Gaithersburg, MD), NIST Special Publication (SP)
+            800-160, Volume 1. Includes updates as of March 21, 2018.
+      - uuid: e1abda75-f19f-4d3b-9676-791e7c37a2b8
+        title: SP800161
+        rlinks:
+          - href: https://doi.org/10.6028/NIST.SP.800-161r1-draft2
+            media-type: application/pdf
+        citation:
+          text: >-
+            Boyens J, Smith A, Bartol N, Winkler K, Holbrook A, Fallon M (2021)
+            Cybersecurity Supply Chain Risk Management Practices for Systems and
+            Organizations. (National Institute of Standards and Technology,
+            Gaithersburg, MD), Second Draft NIST Special Publication (SP)
+            800-161, Rev. 1.
+      - uuid: a08f59a9-7c98-497c-b75f-157b699d0b7b
+        title: SP800181
+        rlinks:
+          - href: https://doi.org/10.6028/NIST.SP.800-181
+            media-type: application/pdf
+        citation:
+          text: >-
+            Newhouse W, Keith S, Scribner B, Witte G (2017) National Initiative
+            for Cybersecurity Education (NICE) Cybersecurity Workforce
+            Framework. (National Institute of Standards and Technology,
+            Gaithersburg, MD), NIST Special Publication (SP) 800-181.
+      - uuid: 140fc9d9-97db-4185-9c1c-51a4107f240f
+        title: SP800216
+        rlinks:
+          - href: https://doi.org/10.6028/NIST.SP.800-216-draft
+            media-type: application/pdf
+        citation:
+          text: >-
+            Schaffer K, Mell P, Trinh H (2021) Recommendations for Federal
+            Vulnerability Disclosure Guidelines. (National Institute of
+            Standards and Technology, Gaithersburg, MD), Draft NIST Special
+            Publication (SP) 800- 216.

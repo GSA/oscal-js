@@ -45,7 +45,7 @@ function getAjv(): Ajv {
 async function executeSarifValidationWithFileUpload(document: OscalJsonPackage, options: OscalServerValidationOptions): Promise<{isValid: boolean, log: Log}> {
   try {
     const constraint = (options.extensions || []).map(resolveUri);
-    const client = await getServerClient();
+    const client = await getServerClient("http://localhost",8888,options.quiet);
     
     const { response, error, data } = await client.POST('/validate', {      
       body: document as any, 
@@ -441,7 +441,7 @@ async function executeSarifValidationViaServer(document:string,options:OscalServ
       const constraint=(options.extensions||[]).map(resolveUri)
       
       const params = {query:{document:documentUri,constraint,flags:options.flags}}
-      const client = await getServerClient()
+      const client = await getServerClient("http://localhost",8888,options.quiet);
       const {response,error,data} =await client.GET('/validate',{params,
         parseAs:'json'
       })

@@ -59,15 +59,15 @@ const loggingMiddleware: Middleware = {
   }
 };
 
-export const getServerClient: (baseUrl?: string, port?: number) => Promise<Client<paths, `${string}/${string}`>> = async (
+export const getServerClient: (baseUrl?: string, port?: number,quiet?:boolean) => Promise<Client<paths, `${string}/${string}`>> = async (
   baseUrl = "http://localhost",
-  port: number = 8888
+  port: number = 8888,quiet=false
 ) => {
   const fullBaseUrl = `${baseUrl}:${port}/`;
   const client= createClient<paths>({
     baseUrl: fullBaseUrl,
   });
-  client.use(loggingMiddleware);
+  !quiet && client.use(loggingMiddleware);
   return client;
 }
 

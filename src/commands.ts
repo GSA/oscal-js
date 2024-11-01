@@ -15,6 +15,8 @@ program
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions...>', 'List of extension namespaces')
   .option('-r, --recursive', 'Recursively validate files in directories')
+  .option('-q, --quiet', 'Only Return Errors')
+  .option('-d, --disableSchema', 'Disable Schema validation')
   .description('Validate the OSCAL document(s)')
   .action(validateCommand);
 

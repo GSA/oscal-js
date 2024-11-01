@@ -343,8 +343,7 @@ export const executeOscalCliCommand = async (command: string, args: string[], sh
     findOscalCliPath().then(oscalCliPath => {
       const isWindows = process.platform === 'win32';
       const fullArgs = [...command.split(" "), ...args];
-
-      console.log(chalk.green("oscal-cli ") + chalk.blue(command)+' '+(args.join(" ")));
+      !quiet && console.log(chalk.green("oscal-cli ") + chalk.blue(command)+' '+(args.join(" ")));
 
       let spawnArgs: [string, string[], object];
       if (isWindows) {

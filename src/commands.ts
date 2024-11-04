@@ -14,6 +14,7 @@ program
   .option('-s, --server', 'Use OSCAL server for operations')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions...>', 'List of extension namespaces')
+  .option('-m, --module <module_path>', 'Metaschema module uri (future builds)')
   .option('-r, --recursive', 'Recursively validate files in directories')
   .option('-q, --quiet', 'Only Return Errors')
   .option('-d, --disableSchema', 'Disable Schema validation')

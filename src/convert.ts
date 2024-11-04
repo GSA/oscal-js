@@ -5,18 +5,18 @@ import path, { dirname, resolve } from 'path';
 import { executeOscalCliCommand } from './env.js';
 import { getServerClient } from './server.js';
 import { OscalJsonPackage } from './types.js';
-import { OscalExecutorOptions } from './utils.js';
+import { ExecutorOptions } from './utils.js';
 import {  resolveUri } from './utils.js';
 
-export type OscalConvertOptions = {
+export type ConvertOptions = {
   outputFormat: 'json'|'yaml'|'xml',
 } 
 
 
 export async function convert(
   document: OscalJsonPackage,
-  options: OscalConvertOptions,
-  executor: OscalExecutorOptions = 'oscal-server'
+  options: ConvertOptions,
+  executor: ExecutorOptions = 'oscal-server'
 ): Promise<string|OscalJsonPackage> {
   const tempInputFile = path.resolve(process.cwd(), `oscal-cli-tmp-input-${randomUUID()}.json`);
   const tempOutputFile = path.resolve(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
@@ -47,8 +47,8 @@ export async function convert(
 export async function convertDocument(
   documentPath: string,
   outputPath: string,
-  options: OscalConvertOptions = { outputFormat: 'xml' },
-  executor: OscalExecutorOptions = 'oscal-server'
+  options: ConvertOptions = { outputFormat: 'xml' },
+  executor:ExecutorOptions = 'oscal-server'
 ): Promise<void> {
   if (executor === 'oscal-server') {
     try {
@@ -75,8 +75,8 @@ export async function convertDocument(
 async function handleFolderConversion(
   inputFolder: string,
   outputFolder: string,
-  options: OscalConvertOptions,
-  executor:OscalExecutorOptions
+  options: ConvertOptions,
+  executor:ExecutorOptions
 ): Promise<void> {
   const { outputFormat } = options;
   const validTypes = ['json', 'yaml', 'xml'];
@@ -105,8 +105,8 @@ async function handleFolderConversion(
 export async function handleSingleFileConversion(
   inputFile: string,
   output: string,
-  options: OscalConvertOptions,
-  executor: OscalExecutorOptions = 'oscal-cli'
+  options: ConvertOptions,
+  executor: ExecutorOptions = 'oscal-cli'
 ): Promise<void> {
   const outputExt = path.extname(output).toLowerCase();
   if (['.json', '.yaml', '.xml'].includes(outputExt)) {
@@ -126,7 +126,7 @@ export async function handleSingleFileConversion(
 async function convertFileWithCli(
   inputFile: string,
   outputFile: string,
-  options: OscalConvertOptions
+  options: ConvertOptions
 ): Promise<void> {
   const args = [`--to=${options.outputFormat}`, inputFile, outputFile, "--overwrite"];
   const [result, errors] = await executeOscalCliCommand("convert", args);
@@ -137,7 +137,7 @@ async function convertFileWithCli(
 async function convertFileWithServer(
   inputFile: string,
   outputFile: string,
-  options: OscalConvertOptions
+  options: ConvertOptions
 ): Promise<void> {
   try {
     const encodedArgs = `${inputFile.trim()}`;
@@ -191,7 +191,7 @@ export const convertCommand = async (
   commandOptions: { file?: string; output?: string; type?: string; server: boolean }
 ) => {
   let { file, output, type, server } = commandOptions;
-  const options: OscalConvertOptions = { outputFormat: type as 'json' | 'yaml' | 'xml'  };
+  const options: ConvertOptions = { outputFormat: type as 'json' | 'yaml' | 'xml'  };
   const executor = server ? "oscal-server" : 'oscal-cli';
   file = fileArg || file;
 

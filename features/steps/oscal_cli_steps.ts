@@ -18,7 +18,7 @@ import {
   isOscalExecutorInstalled,
   installOscalServer
 } from '../../src/env.js';
-import { detectOscalDocumentType, OscalExecutorOptions } from '../../src/utils.js';
+import { detectOscalDocumentType, ExecutorOptions } from '../../src/utils.js';
 import {
   validate,
   validateDefinition,
@@ -96,7 +96,7 @@ When('I install {string}', async function (tool: string) {
   }
 });
 
-Then('{string} should be installed', async function (tool: OscalExecutorOptions) {
+Then('{string} should be installed', async function (tool: ExecutorOptions) {
   executorInstalled = await isOscalExecutorInstalled(tool);
   if(tool=='oscal-server'){
     startServer(true);
@@ -110,7 +110,7 @@ When('I execute the OSCAL CLI command {string} on the document', async function 
     [executionResult, executionErrors] = await executeOscalCliCommand(cmd, args);
 });
 
-When('I validate with metaschema extensions and sarif output on the document using {string}', async function (executor: OscalExecutorOptions) {
+When('I validate with metaschema extensions and sarif output on the document using {string}', async function (executor: ExecutorOptions) {
   console.log(documentPath,metaschemaDocuments);
   validateResult = await validateDocument(documentPath, { extensions: metaschemaDocuments }, executor);
   sarifResult = validateResult.log;
@@ -135,7 +135,7 @@ When('I convert the document to YAML using {string}', async function (executor: 
   }
 });
 
-When('I validate with sarif output on the document using {string}', async function (executor: OscalExecutorOptions) {
+When('I validate with sarif output on the document using {string}', async function (executor: ExecutorOptions) {
   validateResult = await validateDocument(documentPath, {extensions:[]}, executor);
   sarifResult = validateResult.log;
 });
@@ -181,7 +181,7 @@ Then('conversion result is a yaml', async function () {
   expect(isValidYaml).to.be.true;
 });
 
-When('I validate with imported validate function using {string}', async function (executor: OscalExecutorOptions) {
+When('I validate with imported validate function using {string}', async function (executor: ExecutorOptions) {
   validateResult = await validateDocument(documentPath, {extensions:metaschemaDocuments}, executor);
 });
 
@@ -214,7 +214,7 @@ Given('I want to resolve the profile', function () {
   // This step is just for setup, no implementation needed
 });
 
-When('I resolve it with imported resolve function using {string}', async function (executor: OscalExecutorOptions) {
+When('I resolve it with imported resolve function using {string}', async function (executor: ExecutorOptions) {
   resolutionResult = await resolveProfile(documentPath, {outputFormat:'json'}, executor);
 });
 

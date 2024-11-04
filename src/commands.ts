@@ -65,7 +65,7 @@ program.command('metaquery [document]')
     const args = process.argv.slice(2);
     const command = args[0];
   
-    if (command === 'use'||command=='server'||command=='scaffold') {
+    if (command === 'use'||command=='server'||command=='scaffold'||args.includes("-s")||args.includes("--server")) {
       // If the command is 'use', directly parse the arguments without checking for OSCAL CLI installation
       program.parse(process.argv);
     }else {

@@ -60,71 +60,132 @@ export const isJavaInstalled = async (): Promise<boolean> => {
   const javaPath = await whichPromise('java');
   return !!javaPath;
 };
-
 export const installOscalCli = async (version = "latest"): Promise<void> => {
-    try {
+  try {
       const { versions, latestVersion } = await getVersionsFromMaven();
       
       if (version === "latest") {
-        version = latestVersion;
+          version = latestVersion;
       } else if (!versions.includes(version)) {
-        console.error("Unknown OSCAL version: " + version);
-        console.error(chalk.blue(versions.join(', ')));
-        return;
+          console.error("Unknown OSCAL version: " + version);
+          console.error(chalk.blue(versions.join(', ')));
+          return;
       }
-  
+
       console.log("Installing version:", chalk.blue(version));
-  
+
       const isWindows = process.platform === 'win32';
-      const npmPrefix = execSync('npm config get prefix').toString().trim();
-  
-      const binPath = isWindows ? npmPrefix : path.resolve(npmPrefix, 'bin');
-      const oscalCliPath = path.resolve(npmPrefix, 'lib', 'node_modules', 'oscal-cli');
+      const npmPrefix = execSync('npm root').toString().trim();
+      const binPath = path.resolve(npmPrefix, '.bin');
+      const oscalCliPath = path.resolve(npmPrefix, 'oscal-cli');
       const oscalCliExecutablePath = path.resolve(oscalCliPath, 'bin', 'oscal-cli');
-  
+
       // Create necessary directories
       fs.mkdirSync(oscalCliPath, { recursive: true });
-  
+      fs.mkdirSync(binPath, { recursive: true });
+
       // Download the zip file
       console.log(`Downloading OSCAL CLI...`);
       const zipBuffer = await downloadFromMaven(version);
-  
+
       // Unzip the file to oscal-cli directory
       console.log(`Extracting OSCAL CLI...`);
       const zip = new AdmZip(Buffer.from(zipBuffer));
       zip.extractAllTo(oscalCliPath, true);
-  
+
       // Make the CLI executable (for non-Windows systems)
       if (!isWindows) {
-        console.log("Setting executable permissions for CLI at " + oscalCliExecutablePath);
-        fs.chmodSync(oscalCliExecutablePath, '755');
+          console.log("Setting executable permissions for CLI at " + oscalCliExecutablePath);
+          fs.chmodSync(oscalCliExecutablePath, '755');
       }
-  
+
       // Create a shortcut (Windows) or symbolic link (other systems)
       console.log(`Creating OSCAL CLI symlink: oscal-cli => ${oscalCliExecutablePath}`);
       const sourceFile = isWindows ? `${oscalCliExecutablePath}.bat` : oscalCliExecutablePath;
       const aliasPath = path.resolve(binPath, 'oscal-cli' + (isWindows ? '.bat' : ''));
-  
+
       if (fs.existsSync(aliasPath)) {
-        fs.unlinkSync(aliasPath); // Remove existing alias if it exists
+          fs.unlinkSync(aliasPath); // Remove existing alias if it exists
       }
-  
+
       if (isWindows) {
-        const batchContent = `@echo off\n"${sourceFile}" %*`;
-        fs.writeFileSync(aliasPath, batchContent, { flag: "w" });
+          const batchContent = `@echo off\n"${sourceFile}" %*`;
+          fs.writeFileSync(aliasPath, batchContent, { flag: "w" });
       } else {
-        fs.symlinkSync(sourceFile, aliasPath, 'file');
+          fs.symlinkSync(sourceFile, aliasPath, 'file');
       }
-  
+
       console.log(`OSCAL CLI installed to ${oscalCliPath}`);
       console.log(`Alias created at ${aliasPath}`);
-  
-    } catch (error: any) {
+
+  } catch (error: any) {
       throw new Error(`Failed to install OSCAL CLI: ${error.message}`);
-    }
-  };
+  }
+};
 
 
+export async function installOscalServer(tag: string = 'latest') {
+  try {
+      const { latestVersion, releaseData } = await getLatestVersionFromGithub();
+      console.log(`Latest version: ${latestVersion}`);
+      
+      const zipBuffer = await downloadFromGithub(releaseData);
+      console.log(`Downloaded ${zipBuffer.byteLength} bytes`);
+      console.log(`Extracting OSCAL SERVER...`);
+
+      const isWindows = process.platform === 'win32';
+      const npmPrefix = execSync('npm root').toString().trim();
+      const binPath = path.resolve(npmPrefix, '.bin');
+      const oscalDir = path.resolve(npmPrefix, 'oscal-server');
+      const installDir = path.resolve(oscalDir, latestVersion);
+      
+      // Create directories
+      fs.mkdirSync(oscalDir, { recursive: true });
+      fs.mkdirSync(binPath, { recursive: true });
+          
+      // Extract zip file
+      const zip = new AdmZip(Buffer.from(zipBuffer));
+      zip.extractAllTo(installDir, true);
+      
+      // Find the executable in the extracted files
+      const executableName = isWindows ? 'oscal-server.bat' : 'oscal-server';
+      const executablePath = await findExecutable(installDir, executableName);
+      
+      if (!executablePath) {
+          throw new Error('Could not find OSCAL server executable in the extracted files');
+      }
+      
+      // Make the executable file executable (for non-Windows systems)
+      if (!isWindows) {
+          execSync(`chmod +x "${executablePath}"`);
+      }
+
+      const aliasPath = path.resolve(binPath, executableName);
+
+      try {
+          fs.unlinkSync(aliasPath);
+      } catch(e) {
+          // Ignore error if file doesn't exist
+      }
+
+      if (isWindows) {
+          const wrapperContent = `@echo off\n"${executablePath.replace(/\\/g, '\\\\')}" %*`;
+          fs.writeFileSync(aliasPath, wrapperContent);
+      } else {
+          fs.symlinkSync(executablePath, aliasPath);
+          fs.chmodSync(aliasPath, '755'); // Make executable
+      }
+
+      console.log(`OSCAL server ${latestVersion} installed successfully`);
+      console.log(`Executable: ${executablePath}`);
+      console.log(`Alias created: ${aliasPath}`);
+      
+      return latestVersion;
+  } catch (error) {
+      console.error('Error installing latest release:', error);
+      throw error;
+  }
+}
 
 export async function getLatestVersionFromGithub() {
   try {
@@ -178,80 +239,6 @@ export async function downloadFromGithub(releaseData) {
 
 // Function to install OSCAL server
 
-export async function installOscalServer(tag: string = 'latest') {
-  try {
-    const { latestVersion, releaseData } = await getLatestVersionFromGithub();
-    console.log(`Latest version: ${latestVersion}`);
-    
-    const zipBuffer = await downloadFromGithub(releaseData);
-    console.log(`Downloaded ${zipBuffer.byteLength} bytes`);
-    console.log(`Extracting OSCAL SERVER...`);
-
-    const homeDir = homedir();
-    const oscalDir = path.resolve(homeDir, '.oscal');
-    const installDir = path.resolve(oscalDir, latestVersion);
-    
-    // Create .oscal directory if it doesn't exist
-    if (!fs.existsSync(oscalDir)) {
-      fs.mkdirSync(oscalDir, { recursive: true });
-    }
-        
-    // Extract zip file
-    const zip = new AdmZip(Buffer.from(zipBuffer));
-    zip.extractAllTo(installDir, true);
-    
-    const isWindows = process.platform === 'win32';
-    // Find the executable in the extracted files
-    const executableName = isWindows ? 'oscal-server.bat' : 'oscal-server';
-    const executablePath = await findExecutable(installDir, executableName);
-    
-    if (!executablePath) {
-      throw new Error('Could not find OSCAL server executable in the extracted files');
-    }
-    
-    // Make the executable file executable (for non-Windows systems)
-    if (!isWindows) {
-      execSync(`chmod +x "${executablePath}"`);
-    }
-
-    let aliasDir;
-    if (isWindows) {
-      aliasDir = path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WindowsApps');
-    } else {
-      aliasDir = path.join(homeDir, '.local', 'bin');
-    }
-    if (!fs.existsSync(aliasDir)) {
-      fs.mkdirSync(aliasDir, { recursive: true });
-    }
-    const aliasPath = path.resolve(aliasDir, executableName);
-
-    try {
-      fs.unlinkSync(aliasPath);
-    } catch(e) {
-      // Ignore error if file doesn't exist
-    }
-
-    if (isWindows) {
-      // Create a wrapper batch script that directly calls the original executable
-      const wrapperContent = `@echo off
-"${executablePath.replace(/\\/g, '\\\\')}" %*
-`;
-      fs.writeFileSync(aliasPath, wrapperContent);
-    } else {
-      fs.symlinkSync(executablePath, aliasPath);
-      fs.chmodSync(aliasPath, '755'); // Make executable
-    }
-
-    console.log(`OSCAL server ${latestVersion} installed successfully`);
-    console.log(`Executable: ${executablePath}`);
-    console.log(`Alias created: ${aliasPath}`);
-    
-    return latestVersion;
-  } catch (error) {
-    console.error('Error installing latest release:', error);
-    throw error;
-  }
-}
 async function findExecutable(dir: string, name: string): Promise<string | null> {
   const files = await fs.promises.readdir(dir);
   for (const file of files) {
@@ -268,73 +255,80 @@ async function findExecutable(dir: string, name: string): Promise<string | null>
 }
   
 export const findOscalCliPath = async (): Promise<string> => {
-    const command = process.platform === 'win32' ? 'where oscal-cli' : 'which -a oscal-cli';
-  
-    try {
+  const npmPrefix = execSync('npm root').toString().trim();
+  const binPath = path.resolve(npmPrefix, '.bin');
+  const localCliPath = path.resolve(binPath, process.platform === 'win32' ? 'oscal-cli.bat' : 'oscal-cli');
+
+  // First check in local node_modules/.bin
+  if (fs.existsSync(localCliPath)) {
+      return localCliPath;
+  }
+
+  // If not found in local, check PATH
+  const command = process.platform === 'win32' ? 'where oscal-cli' : 'which -a oscal-cli';
+
+  try {
       const { stdout } = await execPromise(command);
-      const paths = [...new Set(stdout.trim().split('\n'))]
+      const paths = [...new Set(stdout.trim().split('\n'))];
       if (paths.length > 0) {
-        // Filter paths that include 'node'
-        const nodePaths = paths.filter(path => path.toLowerCase().includes('node'));
-        
-        if (nodePaths.length > 0) {
-          // If node paths are found, use the first one
-          if (nodePaths.length > 1) {
-            console.warn(chalk.yellow(`Detected ${nodePaths.length} node-based installs of oscal-cli in PATH, using ${nodePaths[0]}`));
-          }
-          return nodePaths[0];
-        } else {
-          // If no node paths are found, fall back to the original behavior
-          if (paths.length > 1) {
-            console.warn(chalk.yellow(`Detected ${paths.length} installs of oscal-cli in PATH, defaulting to ${paths[0]} (no node-based install found)`));
-          }
-          return paths[0];
-        }
-      }  } catch (error) {
-      // Command failed or oscal-cli not found
-    }
-  
-    throw new Error("OSCAL CLI not found");
-  };
-  export const findOscalServerPath = async (): Promise<string> => {
-    const command = process.platform === 'win32' ? 'where oscal-server' : 'which -a oscal-server';
-  
-    try {
-      const { stdout } = await execPromise(command);
-      const paths = [...new Set(stdout.trim().split('\n'))]
-      if (paths.length > 0) {
-        // Filter paths that include 'node'
-        const nodePaths = paths.filter(path => path.toLowerCase().includes('node'));
-        
-        if (nodePaths.length > 0) {
-          // If node paths are found, use the first one
-          if (nodePaths.length > 1) {
-            console.warn(chalk.yellow(`Detected ${nodePaths.length} node-based installs of oscal-server in PATH, using ${nodePaths[0]}`));
-          }
-          return nodePaths[0];
-        } else {
-          // If no node paths are found, fall back to the original behavior
-          if (paths.length > 1) {
-            console.warn(chalk.yellow(`Detected ${paths.length} installs of oscal-server in PATH, defaulting to ${paths[0]} (no node-based install found)`));
-          }
-          return paths[0];
-        }
-      }  } catch (error) {
-      // Command failed or oscal-cli not found
-    }
-    // try default install location if its not in the path
-    if (process.platform !== 'win32') {
-      const localBinPath = path.join(homedir(), '.local', 'bin', 'oscal-server');
-      if (fs.existsSync(localBinPath)) {
-          const stats = await fs.promises.stat(localBinPath);
-          if (stats.isFile()) {
-              return localBinPath;
+          const nodePaths = paths.filter(path => path.toLowerCase().includes('node'));
+          
+          if (nodePaths.length > 0) {
+              if (nodePaths.length > 1) {
+                  console.warn(chalk.yellow(`Detected ${nodePaths.length} node-based installs of oscal-cli in PATH, using ${nodePaths[0]}`));
+              }
+              return nodePaths[0];
+          } else {
+              if (paths.length > 1) {
+                  console.warn(chalk.yellow(`Detected ${paths.length} installs of oscal-cli in PATH, defaulting to ${paths[0]} (no node-based install found)`));
+              }
+              return paths[0];
           }
       }
-    }  
-    throw new Error("OSCAL SERVER not found");
-  };
+  } catch (error) {
+      // Command failed or oscal-cli not found
+  }
 
+  throw new Error("OSCAL CLI not found");
+};
+
+export const findOscalServerPath = async (): Promise<string> => {
+  const npmPrefix = execSync('npm root').toString().trim();
+  const binPath = path.resolve(npmPrefix, '.bin');
+  const localServerPath = path.resolve(binPath, process.platform === 'win32' ? 'oscal-server.bat' : 'oscal-server');
+
+  // First check in local node_modules/.bin
+  if (fs.existsSync(localServerPath)) {
+      return localServerPath;
+  }
+
+  // If not found in local, check PATH
+  const command = process.platform === 'win32' ? 'where oscal-server' : 'which -a oscal-server';
+
+  try {
+      const { stdout } = await execPromise(command);
+      const paths = [...new Set(stdout.trim().split('\n'))];
+      if (paths.length > 0) {
+          const nodePaths = paths.filter(path => path.toLowerCase().includes('node'));
+          
+          if (nodePaths.length > 0) {
+              if (nodePaths.length > 1) {
+                  console.warn(chalk.yellow(`Detected ${nodePaths.length} node-based installs of oscal-server in PATH, using ${nodePaths[0]}`));
+              }
+              return nodePaths[0];
+          } else {
+              if (paths.length > 1) {
+                  console.warn(chalk.yellow(`Detected ${paths.length} installs of oscal-server in PATH, defaulting to ${paths[0]} (no node-based install found)`));
+              }
+              return paths[0];
+          }
+      }
+  } catch (error) {
+      // Command failed or oscal-server not found
+  }
+
+  throw new Error("OSCAL SERVER not found");
+};
   export type stdIn = string;
 export type stdErr = string;
 

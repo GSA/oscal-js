@@ -146,8 +146,6 @@ export async function validateDocument(
       if(options.flags?.includes("disable-schema")){
         additionalArgs.push("--disable-schema-validation")
       }
-      console.log("VALIDATING DOCUMENT",options);      
-
       let command = "validate"
       if(options.module==="http://csrc.nist.gov/ns/oscal/metaschema/1.0"){
         command = "metaschema validate"
@@ -341,7 +339,6 @@ export async function validateDirectory(dirPath: string, options: ValidationOpti
 
 export const validateCommand =async function(fileArg,commandOptions: { file?: string, extensions?: string[], recursive?: boolean,server?:boolean,quiet?:boolean,module:string,disableSchema?:boolean}) {
   let { file, extensions, recursive,server,quiet ,disableSchema,module} = commandOptions;
-  console.log(module);
   let options:ValidationOptions = {extensions,quiet,flags:disableSchema?['disable-schema']:[],module}
   if(disableSchema){
     !quiet && console.log("Disabling schema validation");
@@ -452,7 +449,12 @@ async function executeSarifValidationViaServer(document:string,options:ServerVal
       let documentUri = resolveUri(document)
       const constraint=(options.extensions||[]).map(resolveUri)
       
-      const params = {query:{document:documentUri,constraint,flags:options.flags}}
+      const params = {query:
+        {
+          document:documentUri,
+          constraint,
+          module:options.module,
+          flags:options.flags}}
       const client = await getServerClient("http://localhost",8888,options.quiet);
       const {response,error,data} =await client.GET('/validate',{params,
         parseAs:'json'
@@ -558,7 +560,7 @@ export const validateWithSarif = async ( args: string[]): Promise<Log> => {
     throw new Error(`Failed to read or parse SARIF output: ${error}`);
   }
 };
-function formatSarifOutput(log:Log) {
+export function formatSarifOutput(log:Log) {
   try {
     // Check if log is valid
     if (!log || !log.runs || !log.runs[0] || !log.runs[0].results) {

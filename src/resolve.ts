@@ -6,8 +6,8 @@ import { v4 } from 'uuid';
 import { Catalog, Profile } from './types.js';
 import inquirer from 'inquirer';
 import { executeOscalCliCommand, installOscalCli, installOscalExecutor, isOscalExecutorInstalled } from './env.js';
-import { detectOscalDocumentType,  OscalExecutorOptions } from './utils.js';
-import { OscalConvertOptions } from './convert.js';
+import { detectOscalDocumentType,  ExecutorOptions } from './utils.js';
+import { ConvertOptions } from './convert.js';
 import { getServerClient } from './server.js';
 import { ResolveOptions } from 'dns';
 import { randomUUID } from 'crypto';
@@ -21,8 +21,8 @@ export type OscalResolveOptions = {
 
 export async function resolveProfileInline(
   document: Profile,
-  options: OscalConvertOptions,
-  executor: OscalExecutorOptions = 'oscal-server'
+  options: ConvertOptions,
+  executor: ExecutorOptions = 'oscal-server'
 ): Promise<string|Catalog> {
   const tempInputFile = path.resolve(process.cwd(), `oscal-cli-tmp-input-${randomUUID()}.json`);
   const tempOutputFile = path.resolve(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
@@ -46,8 +46,8 @@ export async function resolveProfileInline(
 }
 export async function resolveProfile(
   documentPath: string,
-  options: OscalConvertOptions,
-  executor: OscalExecutorOptions = 'oscal-server'
+  options: ConvertOptions,
+  executor: ExecutorOptions = 'oscal-server'
 ): Promise<string|Catalog> {
   const tempOutputFile = path.resolve(process.cwd(), `oscal-cli-tmp-output-${randomUUID()}.${options.outputFormat}`);
 
@@ -71,8 +71,8 @@ export async function resolveProfile(
 export async function resolveProfileDocument(
   filePath: string,
   outputPath: string,
-  options: OscalConvertOptions,
-  executor: OscalExecutorOptions
+  options: ConvertOptions,
+  executor: ExecutorOptions
 ): Promise<void> {
   if (executor === 'oscal-server') {
     try {
@@ -111,7 +111,7 @@ export async function resolveProfileDocument(
 async function resolveFileWithServer(
   inputFile: string,
   outputFile: string,
-  options: OscalConvertOptions
+  options: ConvertOptions
 ): Promise<void> {
   try {
     const encodedArgs = `${inputFile.trim()}`;
@@ -197,8 +197,8 @@ export const resolveProfileCommand = async (fileArg, options: { file?: string; o
     const validOutputTypes = ['json', 'xml', 'yaml'];
     const outputType = validOutputTypes.includes(outputFileType) ? outputFileType : fileType;
 
-    const resolveOptions: OscalConvertOptions = { outputFormat: outputType as 'json' | 'yaml' | 'xml' };
-    const executor: OscalExecutorOptions = server ? 'oscal-server' : 'oscal-cli';
+    const resolveOptions: ConvertOptions = { outputFormat: outputType as 'json' | 'yaml' | 'xml' };
+    const executor: ExecutorOptions = server ? 'oscal-server' : 'oscal-cli';
 
     await resolveProfileDocument(file, output, resolveOptions, executor);
 

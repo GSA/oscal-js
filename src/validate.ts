@@ -12,17 +12,18 @@ import { executeOscalCliCommand, installOscalCli, isJavaInstalled, isOscalExecut
 import { oscalSchema } from './schema/oscal.complete.js';
 import { getServerClient } from './server.js';
 import { OscalJsonPackage, ResourceHypertextReference } from './types.js';
-import { OscalExecutorOptions } from './utils.js';
+import { ExecutorOptions } from './utils.js';
 import {  resolveUri } from './utils.js';
 
-export type OscalValidationOptions = {
+export type ValidationOptions = {
     extensions?: ResourceHypertextReference[],
     quiet?:boolean
+    module?:string
     flags?:("disable-schema" | "disable-constraint")[] 
 } 
 
 
-export type OscalServerValidationOptions = OscalValidationOptions&{
+export type ServerValidationOptions = ValidationOptions & {
   inline: boolean
 } 
 
@@ -42,7 +43,7 @@ function getAjv(): Ajv {
 }
 
 
-async function executeSarifValidationWithFileUpload(document: OscalJsonPackage, options: OscalServerValidationOptions): Promise<{isValid: boolean, log: Log}> {
+async function executeSarifValidationWithFileUpload(document: OscalJsonPackage, options: ServerValidationOptions): Promise<{isValid: boolean, log: Log}> {
   try {
     const constraint = (options.extensions || []).map(resolveUri);
     const client = await getServerClient("http://localhost",8888,options.quiet);
@@ -83,8 +84,8 @@ async function executeSarifValidationWithFileUpload(document: OscalJsonPackage, 
 
 export async function validate(
   document: OscalJsonPackage,
-  options: OscalValidationOptions = {extensions: []},
-  executor:OscalExecutorOptions='oscal-server'
+  options: ValidationOptions = {extensions: []},
+  executor:ExecutorOptions='oscal-server'
 ): Promise<{isValid:boolean,log:Log}> {
   if (executor === 'oscal-server') {
     return executeSarifValidationWithFileUpload(document, {...options, inline: true});
@@ -116,9 +117,9 @@ export async function validate(
 
 export async function validateDocument(
   documentPath: string,
-  options: OscalValidationOptions = {extensions: []},
-  executor:OscalExecutorOptions='oscal-server'
-): Promise<{ isValid: boolean; log: Log }> {      
+  options: ValidationOptions = {extensions: [],module:"http://csrc.nist.gov/ns/oscal/1.0"},
+  executor:ExecutorOptions='oscal-server'
+): Promise<{ isValid: boolean; log: Log }> {
     return executeSarifValidation(documentPath, options,executor);  
   }
 
@@ -126,8 +127,8 @@ export async function validateDocument(
 
   export async function executeSarifValidation(
     filePath: string,
-    options: OscalValidationOptions = {},
-    executor: OscalExecutorOptions
+    options: ValidationOptions = {},
+    executor: ExecutorOptions
   ): Promise<{ isValid: boolean; log: Log }> {
 
     const additionalArgs = (options.extensions || []).flatMap(x => ["-c", x]);
@@ -145,7 +146,15 @@ export async function validateDocument(
       if(options.flags?.includes("disable-schema")){
         additionalArgs.push("--disable-schema-validation")
       }
-      return await executeSarifValidationViaCLI([filePath, ...additionalArgs],options.quiet);
+      let command = "validate"
+      if(options.module==="http://csrc.nist.gov/ns/oscal/metaschema/1.0"){
+        command = "metaschema validate"
+      }else if(options.module!=='http://csrc.nist.gov/ns/oscal/1.0'&&typeof options.module!=='undefined'){
+        command = "metaschema validate-content"
+        additionalArgs.push("-m")
+        additionalArgs.push(options.module!)
+      }
+      return await executeSarifValidationViaCLI(command,[filePath, ...additionalArgs],options.quiet);
     }
   
     return { isValid: false, log: buildSarifFromMessage("Invalid executor specified") };
@@ -300,7 +309,7 @@ export function validateDefinition(
 
 
 
-export async function validateDirectory(dirPath: string, options: OscalValidationOptions = { extensions: [] },executor: OscalExecutorOptions): Promise<{isValid:boolean,log:Log}> {
+export async function validateDirectory(dirPath: string, options: ValidationOptions = { extensions: [] },executor: ExecutorOptions): Promise<{isValid:boolean,log:Log}> {
   const files = fs.readdirSync(dirPath);
   
   const validationPromises = files.map(async (file) => {
@@ -328,10 +337,9 @@ export async function validateDirectory(dirPath: string, options: OscalValidatio
   return {isValid,log};
 }
 
-export const validateCommand =async function(fileArg,commandOptions: { file?: string, extensions?: string[], recursive?: boolean,server?:boolean,quiet?:boolean,disableSchema?:boolean}) {
-  let { file, extensions, recursive,server,quiet ,disableSchema} = commandOptions;
-
-  let options:OscalValidationOptions = {extensions,quiet,flags:disableSchema?['disable-schema']:[]}
+export const validateCommand =async function(fileArg,commandOptions: { file?: string, extensions?: string[], recursive?: boolean,server?:boolean,quiet?:boolean,module:string,disableSchema?:boolean}) {
+  let { file, extensions, recursive,server,quiet ,disableSchema,module} = commandOptions;
+  let options:ValidationOptions = {extensions,quiet,flags:disableSchema?['disable-schema']:[],module}
   if(disableSchema){
     !quiet && console.log("Disabling schema validation");
   }
@@ -342,8 +350,8 @@ export const validateCommand =async function(fileArg,commandOptions: { file?: st
     fedramp_extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-allowed-values.xml")
     options.extensions=fedramp_extensions;
   }
-  file = path.resolve(fileArg || file);
-  if (typeof file === 'undefined') {
+  const filePath=fileArg || file;
+  if (typeof filePath === 'undefined') {
     const answer = await inquirer.prompt<{ file: string }>([{
       type: 'input',
       name: 'file',
@@ -352,6 +360,7 @@ export const validateCommand =async function(fileArg,commandOptions: { file?: st
     }]);
     file = answer.file;
   }
+  file = path.resolve(filePath);
 
   !quiet && console.log('Beginning OSCAL document validation for', file);
   const executor = server?"oscal-server":'oscal-cli';
@@ -379,7 +388,7 @@ export const validateCommand =async function(fileArg,commandOptions: { file?: st
   }
 }
 
-async function validateDirectoryRecursively(dirPath: string, options:OscalValidationOptions,log:Log=buildSarif([]),executor:OscalExecutorOptions='oscal-server'): Promise<{isValid:boolean,log:Log}> {
+async function validateDirectoryRecursively(dirPath: string, options:ValidationOptions,log:Log=buildSarif([]),executor:ExecutorOptions='oscal-server'): Promise<{isValid:boolean,log:Log}> {
   const files = fs.readdirSync(dirPath);
   let runs:Run[] = [];
   let isValid = true;
@@ -407,12 +416,12 @@ const validExtensions = ['.xml', '.json', '.yaml', '.yml'];
 return validExtensions.includes(path.extname(filePath).toLowerCase());
 }
 
-const executeSarifValidationViaCLI = async (args: string[],quiet:boolean=false): Promise<{isValid:boolean,log:Log}> => {
+const executeSarifValidationViaCLI = async (command:string,args: string[],quiet:boolean=false): Promise<{isValid:boolean,log:Log}> => {
   const tempFile = path.resolve(`oscal-cli-sarif-log-${v4()}.json`);
   const sarifArgs = [...args, '-o', tempFile, "--sarif-include-pass", '--show-stack-trace'];
   var consoleErr = ""
   try {
-    const [out, err] = await executeOscalCliCommand('validate', sarifArgs, false,quiet);
+    const [out, err] = await executeOscalCliCommand(command, sarifArgs, false,quiet);
     consoleErr = err;
     !quiet&&console.log(out);
     console.error(chalk.red(err));
@@ -435,12 +444,17 @@ const executeSarifValidationViaCLI = async (args: string[],quiet:boolean=false):
 };
 
 
-async function executeSarifValidationViaServer(document:string,options:OscalServerValidationOptions): Promise<{isValid:boolean,log:Log}> {
+async function executeSarifValidationViaServer(document:string,options:ServerValidationOptions): Promise<{isValid:boolean,log:Log}> {
   try {
       let documentUri = resolveUri(document)
       const constraint=(options.extensions||[]).map(resolveUri)
       
-      const params = {query:{document:documentUri,constraint,flags:options.flags}}
+      const params = {query:
+        {
+          document:documentUri,
+          constraint,
+          module:options.module,
+          flags:options.flags}}
       const client = await getServerClient("http://localhost",8888,options.quiet);
       const {response,error,data} =await client.GET('/validate',{params,
         parseAs:'json'
@@ -546,7 +560,7 @@ export const validateWithSarif = async ( args: string[]): Promise<Log> => {
     throw new Error(`Failed to read or parse SARIF output: ${error}`);
   }
 };
-function formatSarifOutput(log:Log) {
+export function formatSarifOutput(log:Log) {
   try {
     // Check if log is valid
     if (!log || !log.runs || !log.runs[0] || !log.runs[0].results) {

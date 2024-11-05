@@ -1,5 +1,5 @@
 export  type * from "./types.js";
-export {validate,validateDocument,validateWithSarif} from "./validate.js";
+export {validate,validateDocument,validateWithSarif,formatSarifOutput} from "./validate.js";
 export {convertDocument,convert} from "./convert.js";
 export {resolveProfileDocument,resolveProfile} from "./resolve.js";
 export {evaluateMetapath} from "./evaluate.js";

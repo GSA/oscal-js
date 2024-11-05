@@ -7,7 +7,7 @@ import { promisify } from "util";
 import { fileURLToPath } from 'url';
 
 const execPromise = promisify(exec);
-export type OscalExecutorOptions = 'oscal-cli'|'oscal-server'
+export type ExecutorOptions = 'oscal-cli'|'oscal-server'
 
 
 function getDocumentType(rootElement: string): string {

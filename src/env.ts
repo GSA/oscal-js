@@ -8,7 +8,7 @@ import { promisify } from "util";
 import AdmZip from 'adm-zip';
 import { getVersionsFromMaven, downloadFromMaven } from './maven.js';
 import { homedir } from 'os';
-import { OscalExecutorOptions } from './utils.js';
+import { ExecutorOptions } from './utils.js';
 const GITHUB_API_URL = 'https://api.github.com/repos/metaschema-framework/oscal-server/releases/latest';
 
 const execPromise = promisify(exec);
@@ -30,7 +30,7 @@ export const whichPromise = async (command: string): Promise<string | null> => {
 
 
 
-export const installOscalExecutorIfNeeded = async (executor:OscalExecutorOptions)=>{
+export const installOscalExecutorIfNeeded = async (executor:ExecutorOptions)=>{
   let isInstalled = await isOscalExecutorInstalled(executor)
     if (!isInstalled) {
       executor==='oscal-cli'?installOscalCli():installOscalServer();
@@ -41,14 +41,14 @@ export const installOscalExecutorIfNeeded = async (executor:OscalExecutorOptions
 }
 
 // Function to check if the OSCAL CLI is installed
-export const isOscalExecutorInstalled = async (executor:OscalExecutorOptions): Promise<boolean> => {
+export const isOscalExecutorInstalled = async (executor:ExecutorOptions): Promise<boolean> => {
   const oscalExecutorPath = await whichPromise(executor);
   if (oscalExecutorPath) return true;  
   const oscalExecutorInstallPath = './'+executor+'/';
   return fs.existsSync(oscalExecutorInstallPath);
 };
 
-export const installOscalExecutor = async (executor:OscalExecutorOptions): Promise<void> => {
+export const installOscalExecutor = async (executor:ExecutorOptions): Promise<void> => {
   if(executor==='oscal-cli'){
     installOscalCli('latest')
   }else{

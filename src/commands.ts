@@ -9,11 +9,12 @@ import { validateCommand } from './validate.js';
 import { useCommand } from './versions.js';
 
 program
-  .version("2.0.4")
+  .version("2.0.5")
   .command('validate [file]')
   .option('-s, --server', 'Use OSCAL server for operations')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
   .option('-e, --extensions <extensions...>', 'List of extension namespaces')
+  .option('-m, --module <module_path>', 'Metaschema module uri (future builds)')
   .option('-r, --recursive', 'Recursively validate files in directories')
   .option('-q, --quiet', 'Only Return Errors')
   .option('-d, --disableSchema', 'Disable Schema validation')

@@ -336,6 +336,9 @@ export async function validateDirectory(dirPath: string, options: ValidationOpti
   let log=buildSarif(runs);
   return {isValid,log};
 }
+export const fedrampValidationOptions:ValidationOptions = {
+extensions:["https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/oscal-external-constraints.xml","https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-constraints.xml","https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-allowed-values.xml"]
+}
 
 export const validateCommand =async function(fileArg,commandOptions: { file?: string, extensions?: string[], recursive?: boolean,server?:boolean,quiet?:boolean,module:string,disableSchema?:boolean}) {
   let { file, extensions, recursive,server,quiet ,disableSchema,module} = commandOptions;
@@ -344,11 +347,7 @@ export const validateCommand =async function(fileArg,commandOptions: { file?: st
     !quiet && console.log("Disabling schema validation");
   }
   if(Array.isArray(options.extensions)&&options.extensions.includes("fedramp")){
-    let fedramp_extensions:string[] = []
-    fedramp_extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-constraints.xml")
-    fedramp_extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/oscal-external-constraints.xml")
-    fedramp_extensions.push("https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-allowed-values.xml")
-    options.extensions=fedramp_extensions;
+    options.extensions=fedrampValidationOptions.extensions;
   }
   const filePath=fileArg || file;
   if (typeof filePath === 'undefined') {

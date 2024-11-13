@@ -64,7 +64,11 @@ let oscalObject: any;
 
 Given('I have an OSCAL document {string}', function (filename: string) {
   console.log(filename+"resolving");
-  documentPath = path.resolve(__dirname, '..', '..', 'examples', filename);
+  if(filename.startsWith("http")){
+    documentPath = filename
+  }else{
+    documentPath = path.resolve(__dirname, '..', '..', 'examples', filename);
+  }
 });
 
 Given('I have a Metaschema extensions document {string}', function (filename: string) {

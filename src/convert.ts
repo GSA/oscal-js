@@ -10,6 +10,7 @@ import {  resolveUri } from './utils.js';
 
 export type ConvertOptions = {
   outputFormat: 'json'|'yaml'|'xml',
+  quiet?:boolean
 } 
 
 
@@ -161,7 +162,7 @@ async function convertFileWithServer(
       }
     }
 
-    const client = await getServerClient();
+    const client = await getServerClient("http://localhost",8888,options.quiet);
     const { response, error,data } = await client.GET('/convert', {
       params: { query: { document: encodedArgs,format:options.outputFormat } },
       parseAs:"blob",

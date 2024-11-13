@@ -342,6 +342,7 @@ extensions:["https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads
 
 export const validateCommand =async function(fileArg,commandOptions: { file?: string, extensions?: string[], recursive?: boolean,server?:boolean,quiet?:boolean,module:string,disableSchema?:boolean}) {
   let { file, extensions, recursive,server,quiet ,disableSchema,module} = commandOptions;
+  
   let options:ValidationOptions = {extensions,quiet,flags:disableSchema?['disable-schema']:[],module}
   if(disableSchema){
     !quiet && console.log("Disabling schema validation");
@@ -359,32 +360,28 @@ export const validateCommand =async function(fileArg,commandOptions: { file?: st
     }]);
     file = answer.file;
   }
-  file = path.resolve(filePath);
-
+  
+  const isRemote = filePath.startsWith("http");
+  const pathOrUri = isRemote ? filePath : path.resolve(filePath);
   !quiet && console.log('Beginning OSCAL document validation for', file);
-  const executor = server?"oscal-server":'oscal-cli';
-  
+  const executor = server ? "oscal-server" : 'oscal-cli';
   !quiet && console.log('Beginning executing on', executor);
-  
-  try {
-    const stats = fs.statSync(file);
-    if (stats.isDirectory()) {
-      if (recursive) {
-        await validateDirectoryRecursively(file,options,buildSarifFromMessage("initial sarif"),executor);
-      } else {
-        await validateDirectory(file,options,executor);
+  if(!isRemote){
+      const stats = fs.statSync(pathOrUri);
+      if (stats.isDirectory()) {
+          if (recursive) {
+              await validateDirectoryRecursively(pathOrUri, options, buildSarifFromMessage("initial sarif"), executor);
+          }
+          else {
+              await validateDirectory(pathOrUri, options, executor);
+          }
       }
-    } else {
-      if (recursive) {
-        console.warn('The --recursive option is ignored for single files.');
-      }
-     const {isValid,log}= await validateDocument(file, options,executor);
-     !isValid&&console.log(formatSarifOutput(log));
-    }
-  } catch (error) {
-    console.error('Error during validation:', error);
-    process.exit(1);
   }
+  if (recursive) {
+      console.warn('The --recursive option is ignored for single files.');
+  }
+  const { isValid, log } = await validateDocument(pathOrUri, options, executor);
+  !isValid && console.log(formatSarifOutput(log));
 }
 
 async function validateDirectoryRecursively(dirPath: string, options:ValidationOptions,log:Log=buildSarif([]),executor:ExecutorOptions='oscal-server'): Promise<{isValid:boolean,log:Log}> {
@@ -574,7 +571,7 @@ export function formatSarifOutput(log:Log) {
       .map(result => {
         // Highlight error messages
         if (result.kind=='fail') {
-          return chalk.red.bold("["+result.level?.toUpperCase()+"] ")+chalk.gray(result.ruleId+" "||" ")+chalk.red(((result.locations![0] as any)?.logicalLocation?.decoratedName||result.ruleId||result.guid))+"\n"+chalk.hex("#b89642")(result.message.text);
+          return chalk.red.bold("["+result.level?.toUpperCase()+"] ")+chalk.gray(result.ruleId||""+" "||" ")+chalk.red(((result.locations![0] as any)?.logicalLocation?.decoratedName||result.ruleId||result.guid))+"\n"+chalk.hex("#b89642")(result.message.text);
         }else{
           return chalk.yellow.bold(result.message.text);
         }

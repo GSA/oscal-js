@@ -73,6 +73,7 @@ async function evaluateMetapathWithCli(options: EvaluateOptions): Promise<string
   try {
     const command = "metaschema metapath eval";
     const [result, errors] = await executeOscalCliCommand(command, args);
+    console.log(result)
     if (errors) console.error(errors);
     return parseMetaPathFromOutput(result);
   } catch (error) {
@@ -82,7 +83,8 @@ async function evaluateMetapathWithCli(options: EvaluateOptions): Promise<string
 }
 
 function parseMetaPathFromOutput(output: string): string {
-  const lines = output.split('\n').filter(line => line.trim() !== '');
+  const lines = output.split('\n').filter(line => line.trim() !== '').filter(x=>x.includes("#"));
+  console.log(lines);
   return lines.pop() || "";
 }
 export async function evaluateMetapath(options: {

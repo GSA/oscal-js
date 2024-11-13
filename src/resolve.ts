@@ -1,21 +1,19 @@
 import { exec } from 'child_process';
+import { randomUUID } from 'crypto';
 import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import inquirer from 'inquirer';
 import path, { dirname, resolve } from 'path';
 import { promisify } from 'util';
-import { v4 } from 'uuid';
-import { Catalog, Profile } from './types.js';
-import inquirer from 'inquirer';
-import { executeOscalCliCommand, installOscalCli, installOscalExecutor, isOscalExecutorInstalled } from './env.js';
-import { detectOscalDocumentType,  ExecutorOptions } from './utils.js';
 import { ConvertOptions } from './convert.js';
+import { executeOscalCliCommand } from './env.js';
 import { getServerClient } from './server.js';
-import { ResolveOptions } from 'dns';
-import { randomUUID } from 'crypto';
-import {  resolveUri } from './utils.js';
+import { Catalog, Profile } from './types.js';
+import { detectOscalDocumentType, ExecutorOptions, resolveUri } from './utils.js';
 
 const execAsync = promisify(exec);
 export type OscalResolveOptions = {
   outputFormat: 'json'|'yaml'|'xml',
+  quiet?:boolean
 } 
 
 
@@ -136,7 +134,7 @@ async function resolveFileWithServer(
           console.warn(`Unsupported output format: ${options.outputFormat}. Defaulting to JSON.`);
       }
     }
-    const client =await getServerClient();
+    const client = await getServerClient("http://localhost",8888,options.quiet);
     const { response, error,data } = await client.GET('/resolve', {
       params: { query: { document: encodedArgs,format:options.outputFormat } },
       parseAs: "blob" ,

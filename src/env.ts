@@ -1,17 +1,31 @@
-import xml2js from 'xml2js';
+import AdmZip from 'adm-zip';
 import chalk from "chalk";
 import { exec, execSync, spawn } from "child_process";
-import fs,{ readFileSync } from "fs";
+import fs from "fs";
 import path from "path";
-import yaml from "js-yaml"
 import { promisify } from "util";
-import AdmZip from 'adm-zip';
-import { getVersionsFromMaven, downloadFromMaven } from './maven.js';
-import { homedir } from 'os';
+import { downloadFromMaven, getVersionsFromMaven } from './maven.js';
 import { ExecutorOptions } from './utils.js';
 const GITHUB_API_URL = 'https://api.github.com/repos/metaschema-framework/oscal-server/releases/latest';
 
 const execPromise = promisify(exec);
+
+// Function to read tool versions from .tool-versions file
+const getToolVersion = (toolName: string): string => {
+  try {
+    const content = fs.readFileSync('.tool-versions', 'utf8');
+    const lines = content.split('\n');
+    for (const line of lines) {
+      const [tool, version] = line.trim().split(' ');
+      if (tool === toolName) {
+        return version;
+      }
+    }
+    return 'latest'; // Fallback to latest if tool not found in file
+  } catch (error) {
+    return 'latest'; // Fallback to latest if file doesn't exist or can't be read
+  }
+};
 
 // Cross-platform which promise function
 export const whichPromise = async (command: string): Promise<string | null> => {
@@ -27,8 +41,6 @@ export const whichPromise = async (command: string): Promise<string | null> => {
     return null;
   }
 };
-
-
 
 export const installOscalExecutorIfNeeded = async (executor:ExecutorOptions)=>{
   let isInstalled = await isOscalExecutorInstalled(executor)
@@ -50,9 +62,11 @@ export const isOscalExecutorInstalled = async (executor:ExecutorOptions): Promis
 
 export const installOscalExecutor = async (executor:ExecutorOptions): Promise<void> => {
   if(executor==='oscal-cli'){
-    installOscalCli('latest')
+    const version = getToolVersion('oscal-cli');
+    installOscalCli(version);
   }else{
-    installOscalServer('latest');
+    const version = getToolVersion('oscal-server');
+    installOscalServer(version);
   }
 };
 
@@ -60,7 +74,8 @@ export const isJavaInstalled = async (): Promise<boolean> => {
   const javaPath = await whichPromise('java');
   return !!javaPath;
 };
-export const installOscalCli = async (version = "latest"): Promise<void> => {
+
+export const installOscalCli = async (version = getToolVersion('oscal-cli')): Promise<void> => {
   try {
       const { versions, latestVersion } = await getVersionsFromMaven();
       
@@ -123,11 +138,26 @@ export const installOscalCli = async (version = "latest"): Promise<void> => {
   }
 };
 
-
-export async function installOscalServer(tag: string = 'latest') {
+export async function installOscalServer(version = getToolVersion('oscal-server')): Promise<void> {
   try {
-      const { latestVersion, releaseData } = await getLatestVersionFromGithub();
-      console.log(`Latest version: ${latestVersion}`);
+      // If version is not 'latest', we need to construct the specific release URL
+      let releaseData;
+      if (version === 'latest') {
+          const result = await getLatestVersionFromGithub();
+          releaseData = result.releaseData;
+      } else {
+          // Construct specific version URL and fetch data
+          const specificVersionUrl = GITHUB_API_URL.replace('/latest', `/tags/${version}`);
+          const response = await fetch(specificVersionUrl, {
+              headers: {
+                  'Accept': 'application/vnd.github.v3+json'
+              }
+          });
+          if (!response.ok) {
+              throw new Error(`Version ${version} not found`);
+          }
+          releaseData = await response.json();
+      }
       
       const zipBuffer = await downloadFromGithub(releaseData);
       console.log(`Downloaded ${zipBuffer.byteLength} bytes`);
@@ -137,7 +167,7 @@ export async function installOscalServer(tag: string = 'latest') {
       const npmPrefix = execSync('npm root').toString().trim();
       const binPath = path.resolve(npmPrefix, '.bin');
       const oscalDir = path.resolve(npmPrefix, 'oscal-server');
-      const installDir = path.resolve(oscalDir, latestVersion);
+      const installDir = path.resolve(oscalDir, version);
       
       // Create directories
       fs.mkdirSync(oscalDir, { recursive: true });
@@ -176,13 +206,12 @@ export async function installOscalServer(tag: string = 'latest') {
           fs.chmodSync(aliasPath, '755'); // Make executable
       }
 
-      console.log(`OSCAL server ${latestVersion} installed successfully`);
+      console.log(`OSCAL server ${version} installed successfully`);
       console.log(`Executable: ${executablePath}`);
       console.log(`Alias created: ${aliasPath}`);
       
-      return latestVersion;
   } catch (error) {
-      console.error('Error installing latest release:', error);
+      console.error('Error installing release:', error);
       throw error;
   }
 }
@@ -220,7 +249,7 @@ export async function downloadFromGithub(releaseData) {
   const downloadUrl = assetToDownload.browser_download_url;
 
   try {
-    console.log(`Downloading latest release from ${downloadUrl}`);
+    console.log(`Downloading release from ${downloadUrl}`);
     const response = await fetch(downloadUrl);
     
     if (!response.ok) {
@@ -228,16 +257,13 @@ export async function downloadFromGithub(releaseData) {
     }
     
     const arrayBuffer = await response.arrayBuffer();
-    console.log(`Successfully downloaded latest release`);
+    console.log(`Successfully downloaded release`);
     return arrayBuffer;
   } catch (error) {
-    console.error(`Error downloading latest release:`, error);
+    console.error(`Error downloading release:`, error);
     throw error;
   }
 }
-
-
-// Function to install OSCAL server
 
 async function findExecutable(dir: string, name: string): Promise<string | null> {
   const files = await fs.promises.readdir(dir);
@@ -329,7 +355,8 @@ export const findOscalServerPath = async (): Promise<string> => {
 
   throw new Error("OSCAL SERVER not found");
 };
-  export type stdIn = string;
+
+export type stdIn = string;
 export type stdErr = string;
 
 export const executeOscalCliCommand = async (command: string, args: string[], showLoader: boolean = false,quiet:boolean=false): Promise<[stdIn, stdErr]> => {

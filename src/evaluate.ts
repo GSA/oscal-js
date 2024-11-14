@@ -9,8 +9,9 @@ interface EvaluateOptions {
   executor?: 'oscal-cli'|'oscal-server';
 }
 
-export async function evaluateMetapathCommand(fileArg,options: EvaluateOptions): Promise<void> {
+export async function evaluateMetapathCommand(fileArg,options: any): Promise<void> {
   options.document = fileArg;
+  options.executor = options.server?"oscal-server":'oscal-cli'
   const result = await evaluateMetapathDocument(options);
   console.log(result);
 }
@@ -27,7 +28,7 @@ export async function evaluateMetapathDocument(options: EvaluateOptions): Promis
   } 
   options.metaschema = `https://raw.githubusercontent.com/usnistgov/OSCAL/main/src/metaschema/oscal_complete_metaschema.xml`;
   return await evaluateMetapathWithCli(options);
-  
+
 }
 
 async function evaluateMetapathWithServer(options: EvaluateOptions): Promise<string | undefined> {
@@ -56,7 +57,7 @@ async function evaluateMetapathWithServer(options: EvaluateOptions): Promise<str
     }
 
     const result = await data.text();
-    return parseMetaPathFromOutput(result);
+    return result;
   } catch (error) {
     console.error('Error during server evaluation:', error);
     throw error;

@@ -98,17 +98,12 @@ export const executeOscalServerCommand = async (
       const fullArgs = [...command.split(" "), ...args];
 
       if (await isServerRunning()) {
-        const pid = await getServerPid();
         if (command === 'start') {
           reject(new Error('OSCAL SERVER is already running. Use the stop command to stop it or the restart command to restart it.'));
           return;
         } else if (command === 'restart') {
-          try {
-            process.kill(pid);
-          } catch (error) {
-            console.warn(`Failed to kill existing process (PID: ${pid}): ${error}`);
-          }
-        }
+          await stopServer();
+          await startServer();        }
       }
 
       let spawnArgs: [string, string[], object];
@@ -220,12 +215,18 @@ async function waitForServerHealth(timeout: number = 30000, interval: number = 1
   return false;
 }
 
-export const serverCommand = async (command: string, { background = false }: { background: boolean }) => {
+export const serverCommand = async (command: string, { background = false, tag = undefined }: { background: boolean, tag?: string }) => {
   if(typeof command==='undefined'){
     console.log("commands: start,stop,restart,update,status")
     return 
   }
   let cmd = command.trim();
+
+  // Validate tag parameter is only used with update command
+  if (tag && cmd !== 'update') {
+    throw new Error('The tag parameter (-t) can only be used with the update command');
+  }
+
   if (cmd == 'start') {
     await startServer(background);
   } else if (cmd == 'restart') {
@@ -234,7 +235,7 @@ export const serverCommand = async (command: string, { background = false }: { b
   } else if (cmd == 'stop') {
     await stopServer();
   } else if (cmd == 'update') {
-    await installOscalExecutor('oscal-server');
+    await installOscalExecutor('oscal-server', tag);
   } else if (cmd == 'status') {
     await checkServerStatus();
   }

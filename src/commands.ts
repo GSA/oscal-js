@@ -9,7 +9,7 @@ import { validateCommand } from './validate.js';
 import { useCommand } from './versions.js';
 
 program
-  .version("2.0.6")
+  .version("2.0.7.rc2")
   .command('validate [file]')
   .option('-s, --server', 'Use OSCAL server for operations')
   .option('-f, --file <path>', 'Path to the OSCAL document or directory')
@@ -49,6 +49,7 @@ program.command('scaffold')
 
 program.command('server [command]')
 .option('-c, --command <cmd>', 'server command')
+.option('-t, --tag <tag>', 'server tag')
 .option('-bg, --background', 'start in the background')
 .description('Start OSCAL Server')
 .action(serverCommand);

@@ -48,11 +48,11 @@ export const isOscalExecutorInstalled = async (executor:ExecutorOptions): Promis
   return fs.existsSync(oscalExecutorInstallPath);
 };
 
-export const installOscalExecutor = async (executor:ExecutorOptions): Promise<void> => {
+export const installOscalExecutor = async (executor:ExecutorOptions,tag="latest"): Promise<void> => {
   if(executor==='oscal-cli'){
-    installOscalCli('latest')
+    installOscalCli(tag)
   }else{
-    installOscalServer('latest');
+    installOscalServer(tag);
   }
 };
 
@@ -123,11 +123,20 @@ export const installOscalCli = async (version = "latest"): Promise<void> => {
   }
 };
 
-
 export async function installOscalServer(tag: string = 'latest') {
   try {
-      const { latestVersion, releaseData } = await getLatestVersionFromGithub();
-      console.log(`Latest version: ${latestVersion}`);
+      let version: string;
+      let releaseData: any;
+    console.log(tag);
+      if (tag === 'latest') {
+          const latest = await getLatestVersionFromGithub();
+          version = latest.latestVersion;
+          releaseData = latest.releaseData;
+      } else {
+          releaseData = await getReleaseByTag(tag);
+          version = tag;
+      }
+      console.log(`Installing version: ${version}`);
       
       const zipBuffer = await downloadFromGithub(releaseData);
       console.log(`Downloaded ${zipBuffer.byteLength} bytes`);
@@ -137,17 +146,14 @@ export async function installOscalServer(tag: string = 'latest') {
       const npmPrefix = execSync('npm root').toString().trim();
       const binPath = path.resolve(npmPrefix, '.bin');
       const oscalDir = path.resolve(npmPrefix, 'oscal-server');
-      const installDir = path.resolve(oscalDir, latestVersion);
+      const installDir = path.resolve(oscalDir, version);
       
-      // Create directories
       fs.mkdirSync(oscalDir, { recursive: true });
       fs.mkdirSync(binPath, { recursive: true });
           
-      // Extract zip file
       const zip = new AdmZip(Buffer.from(zipBuffer));
       zip.extractAllTo(installDir, true);
       
-      // Find the executable in the extracted files
       const executableName = isWindows ? 'oscal-server.bat' : 'oscal-server';
       const executablePath = await findExecutable(installDir, executableName);
       
@@ -155,7 +161,6 @@ export async function installOscalServer(tag: string = 'latest') {
           throw new Error('Could not find OSCAL server executable in the extracted files');
       }
       
-      // Make the executable file executable (for non-Windows systems)
       if (!isWindows) {
           execSync(`chmod +x "${executablePath}"`);
       }
@@ -173,17 +178,42 @@ export async function installOscalServer(tag: string = 'latest') {
           fs.writeFileSync(aliasPath, wrapperContent);
       } else {
           fs.symlinkSync(executablePath, aliasPath);
-          fs.chmodSync(aliasPath, '755'); // Make executable
+          fs.chmodSync(aliasPath, '755');
       }
 
-      console.log(`OSCAL server ${latestVersion} installed successfully`);
+      console.log(`OSCAL server ${version} installed successfully`);
       console.log(`Executable: ${executablePath}`);
       console.log(`Alias created: ${aliasPath}`);
       
-      return latestVersion;
+      return version;
   } catch (error) {
-      console.error('Error installing latest release:', error);
+      console.error('Error installing release:', error);
       throw error;
+  }
+}
+
+async function getReleaseByTag(tag: string) {
+  const headers: HeadersInit = {
+    'Accept': 'application/vnd.github.v3+json',
+  };
+
+  const url = `https://api.github.com/repos/metaschema-framework/oscal-server/releases/tags/${tag}`;
+
+  try {
+    const response = await fetch(url, { headers });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(`Release with tag "${tag}" not found.`);
+      }
+      throw new Error(`Failed to fetch release with tag "${tag}": ${response.statusText}`);
+    }
+
+    const releaseData = await response.json();
+    return releaseData;
+  } catch (error) {
+    console.error('Error fetching release by tag:', error);
+    throw error;
   }
 }
 

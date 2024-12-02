@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import { randomUUID } from 'crypto';
 import fs, { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import inquirer from 'inquirer';
-import { tmpdir } from 'os';
 import path, { resolve } from 'path';
 import { Location, Log, ReportingDescriptor, Result, Run } from 'sarif';
 import { v4 } from 'uuid';
@@ -12,8 +11,7 @@ import { executeOscalCliCommand, installOscalCli, isJavaInstalled, isOscalExecut
 import { oscalSchema } from './schema/oscal.complete.js';
 import { getServerClient } from './server.js';
 import { OscalJsonPackage, ResourceHypertextReference } from './types.js';
-import { ExecutorOptions } from './utils.js';
-import {  resolveUri } from './utils.js';
+import { ExecutorOptions, resolveUri } from './utils.js';
 
 export type ValidationOptions = {
     extensions?: ResourceHypertextReference[],
@@ -556,30 +554,89 @@ export const validateWithSarif = async ( args: string[]): Promise<Log> => {
     throw new Error(`Failed to read or parse SARIF output: ${error}`);
   }
 };
-export function formatSarifOutput(log:Log) {
+
+export function formatSarifOutput(
+  log: Log,
+  logOptions: { showFileName }={ showFileName: true } 
+) {
   try {
     // Check if log is valid
     if (!log || !log.runs || !log.runs[0] || !log.runs[0].results) {
       return chalk.red('Invalid SARIF log format');
     }
 
-    // Extract and join all messages
-    const results = log.runs[0].results
- 
+    // Extract and filter results
+    const results = log.runs[0].results;
+
     // Format the output with different chalk styles
-    const formattedOutput = results.filter(x=>x.kind!='informational'&&x.kind!=='pass')
-      .map(result => {
-        // Highlight error messages
-        if (result.kind=='fail') {
-          return chalk.red.bold("["+result.level?.toUpperCase()+"] ")+chalk.gray(result.ruleId||""+" "||" ")+chalk.red(((result.locations![0] as any)?.logicalLocation?.decoratedName||result.ruleId||result.guid))+"\n"+chalk.hex("#b89642")(result.message.text);
-        }else{
+    const formattedOutput = results
+      .filter((x) => x.kind != 'informational' && x.kind !== 'pass')
+      .map((result) => {
+        // Construct message with or without file name based on the option
+        const fileDetails = logOptions.showFileName
+          ? chalk.gray(
+              (result.ruleId || "") +
+                " " +
+                (result.locations ? createTerminalLink(result.locations[0] as any) : "")
+            )
+          : chalk.gray(result.ruleId || "");
+
+        if (result.kind == 'fail') {
+          // Highlight error messages
+          return (
+            chalk.red.bold("[" + result.level?.toUpperCase() + "] ") +
+            fileDetails +
+            "\n" +
+            chalk.hex("#b89642")(result.message.text)
+          );
+        } else {
           return chalk.yellow.bold(result.message.text);
         }
       })
       .join('\n\n');
 
     return formattedOutput;
-  } catch (error:any) {
-    return chalk.red(`Error processing SARIF log: ${error}`);
+  } catch (error: any) {
+    return chalk.red(`Error processing SARIF log: ${error.message}`);
+  }
+
+  function createTerminalLink(location: Location) {
+    const filePath = location?.physicalLocation?.artifactLocation?.uri || '';
+    const lineNumber = location?.physicalLocation?.region?.startLine;
+    const columnNumber = location?.physicalLocation?.region?.startColumn;
+   
+    if (filePath.startsWith('http')) {
+      const fileName = filePath.split('/').pop() || filePath;
+      const linkText = `${fileName}:${lineNumber}:${columnNumber}`;
+
+      if (filePath.includes('githubusercontent.com')) {
+          // Convert raw GitHub URL to permalink format
+          const [org, repo, ref, ...pathParts] = filePath
+              .replace('https://raw.githubusercontent.com/', '')
+              .replace('refs/heads/', '')
+              .split('/');
+              
+          const path = pathParts.join('/');
+          const githubLink = `https://github.com/${org}/${repo}/blob/${ref}/${path}#L${lineNumber}`;
+          return `\u001b]8;;${githubLink}\u0007${linkText}\u001b]8;;\u0007`;
+      }
+      
+      // For other remote resources, use the direct URL
+      return `\u001b]8;;${filePath}#L${lineNumber}\u0007${linkText}\u001b]8;;\u0007`;
+  }
+  
+    const absolutePath = resolve(filePath);
+    const fileName = filePath.split('/').pop() || filePath;
+
+    // VSCode format: vscode://file/{full_path}:{line}
+    const vscodeLink = `vscode://file/${absolutePath}:${lineNumber}:${columnNumber}`;
+
+    // Create an ANSI escape sequence for the clickable link
+    // Format: \u001b]8;;{link}\u0007{text}\u001b]8;;\u0007
+    const linkText = `${fileName}:${lineNumber}:${columnNumber}`;
+    const terminalLink = `\u001b]8;;${vscodeLink}\u0007${linkText}\u001b]8;;\u0007`;
+
+    return terminalLink;
   }
 }
+

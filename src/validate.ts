@@ -410,81 +410,118 @@ const validExtensions = ['.xml', '.json', '.yaml', '.yml'];
 return validExtensions.includes(path.extname(filePath).toLowerCase());
 }
 
-const executeSarifValidationViaCLI = async (command:string,args: string[],quiet:boolean=false): Promise<{isValid:boolean,log:Log}> => {
+const executeSarifValidationViaCLI = async (
+  command: string,
+  args: string[],
+  quiet: boolean = false
+): Promise<{ isValid: boolean; log: Log }> => {
   const tempFile = path.resolve(`oscal-cli-sarif-log-${v4()}.json`);
   const sarifArgs = [...args, '-o', tempFile, "--sarif-include-pass", '--show-stack-trace'];
-  var consoleErr = ""
+  var consoleErr = "";
+  
   try {
-    const [out, err] = await executeOscalCliCommand(command, sarifArgs, false,quiet);
+    const [out, err] = await executeOscalCliCommand(command, sarifArgs, false, quiet);
     consoleErr = err;
-    !quiet&&console.log(out);
+    !quiet && console.log(out);
     console.error(chalk.red(err));
   } catch (error) {
-    !quiet&&console.error(chalk.red(error));
+    !quiet && console.error(chalk.red(error));
+    
+    // If the temp file wasn't created, use buildSarifFromMessage to create error log
     if (!existsSync(tempFile)) {
-      throw (consoleErr)
+      const errorMessage = error instanceof Error ? 
+        `${error.message}\n${error.stack}` : 
+        String(error);
+      return { isValid: false, log: buildSarifFromMessage(errorMessage) };
     }
+    
     const sarifOutput = readFileSync(tempFile, 'utf8');
     rmSync(tempFile);
-    return {isValid:false,log:JSON.parse(sarifOutput) as Log};
+    return { isValid: false, log: JSON.parse(sarifOutput) as Log };
   }
+
   try {
     const sarifOutput = readFileSync(tempFile, 'utf8');
     rmSync(tempFile);
-    return {isValid:true,log:JSON.parse(sarifOutput) as Log}
+    return { isValid: true, log: JSON.parse(sarifOutput) as Log };
   } catch (error) {
-    throw new Error(`Failed to read or parse SARIF output: ${error}`);
+    const errorMessage = `Failed to read or parse SARIF output: ${error}`;
+    return { isValid: false, log: buildSarifFromMessage(errorMessage) };
   }
 };
 
 
-async function executeSarifValidationViaServer(document:string,options:ServerValidationOptions): Promise<{isValid:boolean,log:Log}> {
+async function executeSarifValidationViaServer(
+  document: string,
+  options: ServerValidationOptions
+): Promise<{ isValid: boolean; log: Log }> {
   try {
-      let documentUri = resolveUri(document)
-      const constraint=(options.extensions||[]).map(resolveUri)
-      
-      const params = {query:
-        {
-          document:documentUri,
-          constraint,
-          module:options.module,
-          flags:options.flags}}
-      const client = await getServerClient("http://localhost",8888,options.quiet);
-      const {response,error,data} =await client.GET('/validate',{params,
-        parseAs:'json'
-      })
-      if(error){
-        console.error(error.error)
-      }
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      if (!data) {
-        throw new Error(`HTTP error! missing data`);
-      }
-      
-      const responseCode = response.headers.get("exit-status")
-      let isValid = false;
-      if(responseCode=="OK"){
-        isValid = true;
-      }
-      const log = data as any;
-    return {isValid,log};  
-} catch (error) {
+    let documentUri = resolveUri(document);
+    const constraint = (options.extensions || []).map(resolveUri);
+
+    const params = {
+      query: {
+        document: documentUri,
+        constraint,
+        module: options.module,
+        flags: options.flags,
+      },
+    };
+
+    const client = await getServerClient("http://localhost", 8888, options.quiet);
+    const { response, error, data } = await client.GET('/validate', {
+      params,
+      parseAs: 'json',
+    });
+
+    if (error) {
+      console.error(error.error);
+      return {
+        isValid: false,
+        log: buildSarifFromMessage(`Server error: ${error.error}`),
+      };
+    }
+
+    if (!response.ok) {
+      return {
+        isValid: false,
+        log: buildSarifFromMessage(`HTTP error! status: ${response.status}`),
+      };
+    }
+
+    if (!data) {
+      return {
+        isValid: false,
+        log: buildSarifFromMessage('HTTP error! missing data'),
+      };
+    }
+
+    const responseCode = response.headers.get("exit-status");
+    let isValid = responseCode === "OK";
+    const log = data as any as Log;
+    return { isValid, log };
+
+  } catch (error) {
     console.error('Error during validation:', error);
-    throw error;
+    const errorMessage = error instanceof Error ? 
+      `${error.message}\n${error.stack}` : 
+      String(error);
+    return {
+      isValid: false,
+      log: buildSarifFromMessage(errorMessage),
+    };
   }
 }
 
 
-function buildSarifFromMessage(message: string): Log {
+function buildSarifFromMessage(message: string, documentUri: string = 'unknown'): Log {
   const ruleId = randomUUID();
   
   const rule: ReportingDescriptor = {
     id: ruleId,
     name: 'Runtime Error',
     shortDescription: {
-      text: 'An error occured during runtime'
+      text: 'An error occurred during runtime'
     }
   };
 
@@ -498,7 +535,7 @@ function buildSarifFromMessage(message: string): Log {
       {
         physicalLocation: {
           artifactLocation: {
-            uri: 'unknown'
+            uri: documentUri
           },
           region: {
             startLine: 1,
@@ -516,7 +553,14 @@ function buildSarifFromMessage(message: string): Log {
         rules: [rule]
       }
     },
-    results: [result]
+    results: [result],
+    artifacts: [
+      {
+        location: {
+          uri: documentUri
+        }
+      }
+    ]
   };
 
   return buildSarif([run]);

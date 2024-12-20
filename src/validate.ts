@@ -16,6 +16,7 @@ import { ExecutorOptions, resolveUri } from './utils.js';
 export type ValidationOptions = {
     extensions?: ResourceHypertextReference[],
     quiet?:boolean
+    format?:'xml'|"yaml"|"json"
     module?:string
     flags?:("disable-schema" | "disable-constraint")[] 
 } 
@@ -40,17 +41,23 @@ function getAjv(): Ajv {
   return ajv;
 }
 
+export type XmlOscalPackage = string
+export type YamlOscalPackage = string
+async function executeSarifValidationWithFileUpload(document: OscalJsonPackage|XmlOscalPackage|YamlOscalPackage, options: ServerValidationOptions): Promise<{isValid: boolean, log: Log}> {
+  const body = typeof document === 'string' ? document : JSON.stringify(document);
 
-async function executeSarifValidationWithFileUpload(document: OscalJsonPackage, options: ServerValidationOptions): Promise<{isValid: boolean, log: Log}> {
   try {
-    const constraint = (options.extensions || []).map(resolveUri);
     const client = await getServerClient("http://localhost",8888,options.quiet);
     
     const { response, error, data } = await client.POST('/validate', {      
-      body: document as any, 
+      headers: {
+        'Content-Type': options.format === 'json' ? 'application/json' : 'text/plain'
+      },
+      body, 
       params: {
         query: {
-          constraint,
+          format: options.format || "json",
+          constraint: (options.extensions || []).map(resolveUri),
           flags: options.flags
         }
       },
@@ -81,7 +88,7 @@ async function executeSarifValidationWithFileUpload(document: OscalJsonPackage, 
 }
 
 export async function validate(
-  document: OscalJsonPackage,
+  document: OscalJsonPackage|XmlOscalPackage|YamlOscalPackage,
   options: ValidationOptions = {extensions: []},
   executor:ExecutorOptions='oscal-server'
 ): Promise<{isValid:boolean,log:Log}> {
@@ -91,8 +98,7 @@ export async function validate(
 
   const javaInstalled = await isJavaInstalled();
   if (!javaInstalled) {
-    console.error("Java not installed. Validating with schema");
-    return validateWithJsonSchema(document);
+    console.error("Java not installed. Please install java");
   }
 
   let oscalCliInstalled = await isOscalExecutorInstalled('oscal-cli');
@@ -102,7 +108,6 @@ export async function validate(
       oscalCliInstalled = true;
     } catch (error) {
       console.error('Failed to install OSCAL CLI:', error);
-      return validateWithJsonSchema(document);
     }
   }
 
@@ -121,8 +126,28 @@ export async function validateDocument(
     return executeSarifValidation(documentPath, options,executor);  
   }
 
- 
-
+  function processServerLog(log: Log): Log {
+    if (!log.runs) return log;
+  
+    for (const run of log.runs) {
+      if (!run.results) continue;
+  
+      for (const result of run.results) {
+        if (!result.locations) continue;
+  
+        for (const location of result.locations) {
+          if (!location.physicalLocation?.artifactLocation?.uri) continue;
+  
+          // Resolve the relative path
+          location.physicalLocation.artifactLocation.uri = path.resolve(
+            location.physicalLocation.artifactLocation.uri.replace("..","../..")
+          );
+        }
+      }
+    }
+  
+    return log;
+  }
   export async function executeSarifValidation(
     filePath: string,
     options: ValidationOptions = {},
@@ -133,7 +158,9 @@ export async function validateDocument(
   
     if (executor === 'oscal-server') {
       try {
-        return await executeSarifValidationViaServer((filePath), { ...options, inline: false });
+        const {isValid,log}=await executeSarifValidationViaServer((filePath), { ...options, inline: false });
+
+        return {isValid,log:processServerLog(log)}
       } catch (error) {
         console.warn("Server validation failed. Falling back to CLI validation.");
         executor = 'oscal-cli';
@@ -601,7 +628,7 @@ export const validateWithSarif = async ( args: string[]): Promise<Log> => {
 
 export function formatSarifOutput(
   log: Log,
-  logOptions: { showFileName }={ showFileName: true } 
+  logOptions: { showFileName,filterFunction }={ showFileName: true,filterFunction:(x:Result) => x.kind != 'informational' && x.kind !== 'pass' } 
 ) {
   try {
     // Check if log is valid
@@ -614,7 +641,7 @@ export function formatSarifOutput(
 
     // Format the output with different chalk styles
     const formattedOutput = results
-      .filter((x) => x.kind != 'informational' && x.kind !== 'pass')
+      .filter(logOptions.filterFunction)
       .map((result) => {
         // Construct message with or without file name based on the option
         const fileDetails = logOptions.showFileName

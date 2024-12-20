@@ -231,6 +231,7 @@ export interface operations {
                  * @example disable-schema
                  */
                 flags?: ("disable-schema" | "disable-constraint")[];
+                format?: ("xml" | "json"|"yaml");
             };
             header?: never;
             path?: never;
@@ -238,7 +239,8 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/octet-stream": string;
+                "text/plain": string;
+                "application/json": string;
             };
         };
         responses: {

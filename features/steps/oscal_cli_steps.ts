@@ -1,33 +1,31 @@
-import { Given, Then, When } from '@cucumber/cucumber';
-import yaml from 'js-yaml';
+import { Given, setDefaultTimeout, Then, When } from '@cucumber/cucumber';
 import Ajv from 'ajv';
 import addFormats from "ajv-formats";
 import { assert, expect } from 'chai';
 import { existsSync, readFileSync } from 'fs';
-import path, { join } from 'path';
+import yaml from 'js-yaml';
+import path, { dirname } from 'path';
 import { Log } from 'sarif';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import { parseString } from 'xml2js';
-import { setDefaultTimeout,BeforeAll,AfterAll } from '@cucumber/cucumber';
-import { Catalog } from '../../src/types.js';
-import { startServer, stopServer } from '../../src/server.js';
+import { convertDocument } from '../../src/convert.js';
 import {
-  installOscalCli,
   executeOscalCliCommand,
-  isOscalExecutorInstalled,
-  installOscalServer
+  installOscalCli,
+  installOscalServer,
+  isOscalExecutorInstalled
 } from '../../src/env.js';
+import { evaluateMetapath, evaluateMetapathDocument } from '../../src/evaluate.js';
+import { resolveProfile, resolveProfileDocument } from '../../src/resolve.js';
+import { sarifSchema } from '../../src/schema/sarif.js';
+import { startServer } from '../../src/server.js';
+import { Catalog } from '../../src/types.js';
 import { detectOscalDocumentType, ExecutorOptions } from '../../src/utils.js';
 import {
   validate,
   validateDefinition,
   validateDocument
 } from '../../src/validate.js';
-import { convert, convertDocument } from '../../src/convert.js';
-import { resolveProfile, resolveProfileDocument } from '../../src/resolve.js';
-import { evaluateMetapath, evaluateMetapathDocument } from '../../src/evaluate.js';
-import { sarifSchema } from '../../src/schema/sarif.js';
 
 startServer()
 const DEFAULT_TIMEOUT = 17000;

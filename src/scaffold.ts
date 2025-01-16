@@ -2,117 +2,56 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import inquirer from 'inquirer';
-import { v4 as uuidv4 } from 'uuid';
-import { SystemSecurityPlanSSP } from './types';
+import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 
 interface ScaffoldOptions {
   output?: string;
 }
 
-export const scaffoldCommand = async (options: ScaffoldOptions) => {
-  console.log('Scaffolding OSCAL document');
-
-  const { template } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'template',
-      message: 'Select the OSCAL template:',
-      choices: ['fedramp-ssp', 'fedramp-poam'],
-    },
-  ]);
-  const document = template.replaceAll("fedramp-","").replaceAll("nist-","")
-  const document_map:Record<string,string> ={"ssp":"system-security-plan","poam":"plan-of-action-and-milestones"} 
-  var document_path = document_map[document];
-  const { baseline } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'baseline',
-      message: 'Select the OSCAL baseline:',
-      choices: ['HIGH', 'MODERATE', 'LOW', 'LI-SaaS'],
-    },
-  ]);
-
-  const { resolved } = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'resolved',
-      message: 'Use resolved catalog?',
-    },
-  ]);
-
-  const {title}= await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'title',
-      message: 'Enter the '+document+' name:',
-      default: 'My '+document,
-    },
-  ]);
-  let outputPath = options.output as string;
-  if (!outputPath) {
-    const { output } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'output',
-        message: 'Enter the output path:',
-        default: './',
-      },
-    ]);
-    outputPath = output;
+const examples = {
+  'fedramp-ssp': {
+    url: 'https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/content/rev5/examples/ssp/xml/fedramp-ssp-example.oscal.xml',
+    description: 'FedRAMP System Security Plan Example'
+  },
+  'nist-ssp': {
+    url: 'https://raw.githubusercontent.com/usnistgov/oscal-content/refs/heads/main/examples/ssp/xml/ssp-example.xml',
+    description: 'NIST System Security Plan Example'
   }
+} as const;
 
-  if (!fs.existsSync(outputPath)) {
-    fs.mkdirSync(outputPath, { recursive: true });
-  }
+type ExampleType = keyof typeof examples;
 
-  const templateUrls = {
-    'fedramp-ssp': 'https://raw.githubusercontent.com/GSA/fedramp-automation/master/dist/content/rev5/templates/ssp/json/FedRAMP-SSP-OSCAL-Template.json',
-    'fedramp-poam': 'https://raw.githubusercontent.com/GSA/fedramp-automation/master/dist/content/rev5/templates/poam/json/FedRAMP-POAM-OSCAL-Template.json'
-  };
-
-  const baselineUrls = {
-    'HIGH': 'https://raw.githubusercontent.com/GSA/fedramp-automation/master/dist/content/rev5/baselines/json/FedRAMP_rev5_HIGH-baseline_profile.json',
-    'MODERATE': 'https://raw.githubusercontent.com/GSA/fedramp-automation/master/dist/content/rev5/baselines/json/FedRAMP_rev5_MODERATE-baseline_profile.json',
-    'LOW': 'https://raw.githubusercontent.com/GSA/fedramp-automation/master/dist/content/rev5/baselines/json/FedRAMP_rev5_LOW-baseline_profile.json',
-    'LI-SaaS': 'https://raw.githubusercontent.com/GSA/fedramp-automation/master/dist/content/rev5/baselines/json/FedRAMP_rev5_LI-SaaS-baseline-resolved-profile_catalog.json'
-  };
-
-  const templateUrl = templateUrls[template];
-  const baselineUrl = baselineUrls[baseline];
-
-  const templateFileName = `${title.replace(/\s+/g, '-')}-${path.basename(templateUrl)}`;
-  const templateFilePath = path.join(outputPath, templateFileName);
-
-  console.log(`Downloading template from "${templateUrl}"`);
-  const templateContent = await downloadFile(templateUrl);
-
-  console.log(`Downloading baseline from "${baselineUrl}"`);
-  const baselineContent = await downloadFile(baselineUrl);
-
-  // Parse the template and baseline JSON
-  const templateJson:{"system-security-plan":SystemSecurityPlanSSP} = JSON.parse(templateContent);
-  const baselineJson = JSON.parse(baselineContent);
-
-  // Update the SSP
-  console.log(templateContent)
-  
-
-  templateJson[document_path].uuid = uuidv4();
-  templateJson[document_path].metadata.title = title;
-  templateJson[document_path].metadata["last-modified"] = new Date().toISOString();
-  templateJson[document_path].metadata.version = "1.0";
-if(document==="ssp"){
-  templateJson[document_path]["import-profile"] = {
-    href: baselineUrl
-  };
-
+interface PromptAnswers {
+  selected: ExampleType;
+  systemName: string;
 }
 
-  // Write the updated SSP to file
-  fs.writeFileSync(templateFilePath, JSON.stringify(templateJson, null, 2));
+async function createPrompts(): Promise<PromptAnswers> {
+  const choices = Object.entries(examples).map(([key, value]) => ({
+    name: value.description,
+    value: key
+  }));
 
-  console.log(`OSCAL template "${template}" with baseline "${baseline}" scaffolded successfully at "${templateFilePath}".`);
-};
+  return inquirer.prompt([
+    {
+      type: 'list', // Changed from checkbox to list for single selection
+      name: 'selected',
+      message: 'Select an OSCAL SSP example to download:',
+      choices
+    },
+    {
+      type: 'input',
+      name: 'systemName',
+      message: 'Enter the name of your system:',
+      validate: (input) => {
+        if (input.trim().length < 1) {
+          return 'System name cannot be empty';
+        }
+        return true;
+      }
+    }
+  ]);
+}
 
 function downloadFile(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -135,3 +74,56 @@ function downloadFile(url: string): Promise<string> {
     });
   });
 }
+
+function updateSystemTitle(xmlContent: string, systemName: string): string {
+  const parser = new DOMParser();
+  const serializer = new XMLSerializer();
+  const doc = parser.parseFromString(xmlContent, 'text/xml');
+
+  // Update title in metadata
+  const metadataTitle = doc.getElementsByTagName('title')[0];
+  if (metadataTitle) {
+    metadataTitle.textContent = `System Security Plan for ${systemName}`;
+  }
+
+  // Update system name in system-characteristics
+  const systemCharacteristics = doc.getElementsByTagName('system-characteristics')[0];
+  if (systemCharacteristics) {
+    const systemTitle = systemCharacteristics.getElementsByTagName('title')[0];
+    if (systemTitle) {
+      systemTitle.textContent = systemName;
+    }
+  }
+
+  return serializer.serializeToString(doc);
+}
+
+export const scaffoldCommand = async (options: ScaffoldOptions) => {
+  console.log('\nOSCAL Example Downloader and Customizer');
+  
+  const outputPath = options.output || './';
+  if (!fs.existsSync(outputPath)) {
+    fs.mkdirSync(outputPath, { recursive: true });
+  }
+
+  try {
+    const { selected, systemName } = await createPrompts();
+    const { url } = examples[selected];
+    
+    console.log(`\nDownloading ${selected.toUpperCase()} example from "${url}"`);
+    let content = await downloadFile(url);
+    
+    console.log('Updating system title...');
+    content = updateSystemTitle(content, systemName);
+
+    const fileName = `${systemName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-ssp.xml`;
+    const filePath = path.join(outputPath, fileName);
+
+    fs.writeFileSync(filePath, content);
+    console.log(`\nSaved customized SSP to "${filePath}"`);
+    console.log('OSCAL example downloaded and customized successfully.');
+  } catch (error) {
+    console.error( error);
+    process.exit(1);
+  }
+};

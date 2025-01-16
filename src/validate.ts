@@ -12,6 +12,7 @@ import { oscalSchema } from './schema/oscal.complete.js';
 import { getServerClient } from './server.js';
 import { OscalJsonPackage, ResourceHypertextReference } from './types.js';
 import { ExecutorOptions, resolveUri } from './utils.js';
+import { exit } from 'process';
 
 export type ValidationOptions = {
     extensions?: ResourceHypertextReference[],
@@ -365,17 +366,33 @@ export const fedrampValidationOptions:ValidationOptions = {
 extensions:["https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/oscal-external-constraints.xml","https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-constraints.xml","https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/fedramp-external-allowed-values.xml"]
 }
 
-export const validateCommand =async function(fileArg,commandOptions: { file?: string, extensions?: string[], recursive?: boolean,server?:boolean,quiet?:boolean,module:string,disableSchema?:boolean}) {
-  let { file, extensions, recursive,server,quiet ,disableSchema,module} = commandOptions;
+export const validateCommand = async function(fileArg, commandOptions: { 
+  file?: string, 
+  extensions?: string[], 
+  recursive?: boolean,
+  server?: boolean,
+  quiet?: boolean,
+  module: string,
+  disableSchema?: boolean
+}): Promise<void> {
+  let { file, extensions, recursive, server, quiet, disableSchema, module } = commandOptions;
   
-  let options:ValidationOptions = {extensions,quiet,flags:disableSchema?['disable-schema']:[],module}
-  if(disableSchema){
+  let options: ValidationOptions = {
+    extensions,
+    quiet,
+    flags: disableSchema ? ['disable-schema'] : [],
+    module
+  };
+
+  if (disableSchema) {
     !quiet && console.log("Disabling schema validation");
   }
-  if(Array.isArray(options.extensions)&&options.extensions.includes("fedramp")){
-    options.extensions=fedrampValidationOptions.extensions;
+
+  if (Array.isArray(options.extensions) && options.extensions.includes("fedramp")) {
+    options.extensions = fedrampValidationOptions.extensions;
   }
-  const filePath=fileArg || file;
+
+  const filePath = fileArg || file;
   if (typeof filePath === 'undefined') {
     const answer = await inquirer.prompt<{ file: string }>([{
       type: 'input',
@@ -391,22 +408,43 @@ export const validateCommand =async function(fileArg,commandOptions: { file?: st
   !quiet && console.log('Beginning OSCAL document validation for', file);
   const executor = server ? "oscal-server" : 'oscal-cli';
   !quiet && console.log('Beginning executing on', executor);
-  if(!isRemote){
+
+  try {
+    if (!isRemote) {
       const stats = fs.statSync(pathOrUri);
       if (stats.isDirectory()) {
-          if (recursive) {
-              await validateDirectoryRecursively(pathOrUri, options, buildSarifFromMessage("initial sarif"), executor);
+        if (recursive) {
+          const result = await validateDirectoryRecursively(pathOrUri, options, buildSarifFromMessage("initial sarif"), executor);
+          if (!result.isValid) {
+            !quiet && console.log(formatSarifOutput(result.log));
+            exit(1);
           }
-          else {
-              await validateDirectory(pathOrUri, options, executor);
+          return;
+        } else {
+          const result = await validateDirectory(pathOrUri, options, executor);
+          if (!result.isValid) {
+            !quiet && console.log(formatSarifOutput(result.log));
+            exit(1);
           }
+          return;
+        }
       }
-  }
-  if (recursive) {
+    }
+
+    if (recursive) {
       console.warn('The --recursive option is ignored for single files.');
+    }
+
+    const { isValid, log } = await validateDocument(pathOrUri, options, executor);
+    if (!isValid) {
+      !quiet && console.log(formatSarifOutput(log));
+      exit(1);
+    }
+    return;
+  } catch (error) {
+    console.error(error);
+    return;
   }
-  const { isValid, log } = await validateDocument(pathOrUri, options, executor);
-  !isValid && console.log(formatSarifOutput(log));
 }
 
 async function validateDirectoryRecursively(dirPath: string, options:ValidationOptions,log:Log=buildSarif([]),executor:ExecutorOptions='oscal-server'): Promise<{isValid:boolean,log:Log}> {
@@ -628,22 +666,24 @@ export const validateWithSarif = async ( args: string[]): Promise<Log> => {
 
 export function formatSarifOutput(
   log: Log,
-  logOptions: { showFileName,filterFunction }={ showFileName: true,filterFunction:(x:Result) => x.kind != 'informational' && x.kind !== 'pass' } 
+  logOptions: { 
+    showFileName?: boolean,
+    filterFunction?: (x: Result) => boolean 
+  } = { 
+    showFileName: true,
+    filterFunction: (x: Result) => x.kind !== 'informational' && x.kind !== 'pass'
+  }
 ) {
   try {
-    // Check if log is valid
     if (!log || !log.runs || !log.runs[0] || !log.runs[0].results) {
       return chalk.red('Invalid SARIF log format');
     }
 
-    // Extract and filter results
     const results = log.runs[0].results;
 
-    // Format the output with different chalk styles
     const formattedOutput = results
-      .filter(logOptions.filterFunction)
+      .filter(logOptions.filterFunction||Boolean)
       .map((result) => {
-        // Construct message with or without file name based on the option
         const fileDetails = logOptions.showFileName
           ? chalk.gray(
               (result.ruleId || "") +
@@ -652,16 +692,36 @@ export function formatSarifOutput(
             )
           : chalk.gray(result.ruleId || "");
 
-        if (result.kind == 'fail') {
-          // Highlight error messages
+        // Handle different message types based on both kind and level
+        if (result.kind === 'fail') {
           return (
-            chalk.red.bold("[" + result.level?.toUpperCase() + "] ") +
+            chalk.red.bold("[ERROR] ") +
             fileDetails +
             "\n" +
             chalk.hex("#b89642")(result.message.text)
           );
+        } else if (result.level === 'warning') {
+          return (
+            chalk.yellow.bold("[WARNING] ") +
+            fileDetails +
+            "\n" +
+            chalk.yellow(result.message.text)
+          );
+        } else if (result.kind === 'informational') {
+          return (
+            chalk.blue.bold("[INFO] ") +
+            fileDetails +
+            "\n" +
+            chalk.blue(result.message.text)
+          );
         } else {
-          return chalk.yellow.bold(result.message.text);
+          // Default case for other messages
+          return (
+            chalk.gray.bold("[" + (result.level?.toUpperCase() || "NOTE") + "] ") +
+            fileDetails +
+            "\n" +
+            chalk.gray(result.message.text)
+          );
         }
       })
       .join('\n\n');
@@ -670,7 +730,7 @@ export function formatSarifOutput(
   } catch (error: any) {
     return chalk.red(`Error processing SARIF log: ${error.message}`);
   }
-
+}
   function createTerminalLink(location: Location) {
     const filePath = location?.physicalLocation?.artifactLocation?.uri || '';
     const lineNumber = location?.physicalLocation?.region?.startLine;
@@ -709,5 +769,5 @@ export function formatSarifOutput(
 
     return terminalLink;
   }
-}
+
 

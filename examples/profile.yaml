@@ -1,16 +1,41 @@
 ---
 profile:
-  back-matter:
-    resources:
-    - rlinks:
-      - href: https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/xml/NIST_SP-800-53_rev5_catalog.xml
-        media-type: application/oscal.catalog+xml
-      uuid: 84cbf061-eb87-4ec1-8112-1f529232e907
-      description: "NIST Special Publication 800-53 Revision 5: Security and Privacy Controls for Federal Information Systems and Organizations"
-  uuid: ad6ca352-8b0e-40e7-b6e2-279706ef5456
+  merge:
+    as-is: true
+  metadata:
+    roles:
+    - id: creator
+      title: Creator
+    - id: contact
+      title: Contact
+    title: NIST Special Publication 800-53 Revision 5.1.1 HIGH IMPACT BASELINE
+    responsible-parties:
+    - role-id: creator
+      party-uuids:
+      - c748c806-1d77-4695-bb40-e117b2afa82e
+    - role-id: contact
+      party-uuids:
+      - c748c806-1d77-4695-bb40-e117b2afa82e
+    last-modified: 2024-02-04T23:16:00Z
+    oscal-version: 1.1.2
+    parties:
+    - name: "Joint Task Force, Transformation Initiative"
+      uuid: c748c806-1d77-4695-bb40-e117b2afa82e
+      addresses:
+      - city: Gaithersburg
+        addr-lines:
+        - National Institute of Standards and Technology
+        - "Attn: Computer Security Division"
+        - Information Technology Laboratory
+        - 100 Bureau Drive (Mail Stop 8930)
+        postal-code: 20899-8930
+        state: MD
+      email-addresses:
+      - sec-cert@nist.gov
+      type: organization
+    version: 5.1.1+u4
   imports:
-  - href: '#84cbf061-eb87-4ec1-8112-1f529232e907'
-    include-controls:
+  - include-controls:
     - with-ids:
       - ac-1
       - ac-2
@@ -382,37 +407,12 @@ profile:
       - sr-11.1
       - sr-11.2
       - sr-12
-  metadata:
-    title: NIST Special Publication 800-53 Revision 5.1.1 HIGH IMPACT BASELINE
-    roles:
-    - title: Creator
-      id: creator
-    - title: Contact
-      id: contact
-    version: 5.1.1+u4
-    parties:
-    - type: organization
-      email-addresses:
-      - sec-cert@nist.gov
-      addresses:
-      - city: Gaithersburg
-        state: MD
-        postal-code: 20899-8930
-        addr-lines:
-        - National Institute of Standards and Technology
-        - "Attn: Computer Security Division"
-        - Information Technology Laboratory
-        - 100 Bureau Drive (Mail Stop 8930)
-      uuid: c748c806-1d77-4695-bb40-e117b2afa82e
-      name: "Joint Task Force, Transformation Initiative"
-    oscal-version: 1.1.2
-    last-modified: 2024-02-04T23:16:00Z
-    responsible-parties:
-    - party-uuids:
-      - c748c806-1d77-4695-bb40-e117b2afa82e
-      role-id: creator
-    - party-uuids:
-      - c748c806-1d77-4695-bb40-e117b2afa82e
-      role-id: contact
-  merge:
-    as-is: true
+    href: "#84cbf061-eb87-4ec1-8112-1f529232e907"
+  uuid: ad6ca352-8b0e-40e7-b6e2-279706ef5456
+  back-matter:
+    resources:
+    - description: "NIST Special Publication 800-53 Revision 5: Security and Privacy Controls for Federal Information Systems and Organizations"
+      uuid: 84cbf061-eb87-4ec1-8112-1f529232e907
+      rlinks:
+      - href: ../content/nist/nist.gov/SP800-53/rev5/xml/NIST_SP-800-53_rev5_catalog.xml
+        media-type: application/oscal.catalog+xml

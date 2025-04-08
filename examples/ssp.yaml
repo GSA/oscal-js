@@ -1,28 +1,20 @@
 ---
 system-security-plan:
-  uuid: 12345678-1234-4321-8765-123456789012
-  import-profile:
-    href: https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/content/fedramp-tailoring-profile.xml
   system-implementation:
     components:
-    - responsible-roles:
-      - party-uuids:
-        - 11111111-0000-4000-9000-000000000001
-        role-id: system-admin
-      remarks: This is the primary application server for the system.
-      title: Primary Application Server
+    - title: Primary Application Server
       purpose: main line
       uuid: 55555555-0000-4000-9000-000000000005
       description: Main application server hosting the core system functionality.
       status:
         state: operational
       type: this-system
-    - responsible-roles:
-      - party-uuids:
+      responsible-roles:
+      - role-id: system-admin
+        party-uuids:
         - 11111111-0000-4000-9000-000000000001
-        role-id: system-admin
-      remarks: This connection is used for secure data exchange with external systems.
-      title: External API Connection
+      remarks: This is the primary application server for the system.
+    - title: External API Connection
       uuid: 66666666-0000-4000-9000-000000000006
       description: Secure connection to an external API for data enrichment.
       status:
@@ -35,16 +27,21 @@ system-security-plan:
         name: interconnection-direction
         ns: https://fedramp.gov/ns/oscal
       type: interconnection
+      responsible-roles:
+      - role-id: system-admin
+        party-uuids:
+        - 11111111-0000-4000-9000-000000000001
+      remarks: This connection is used for secure data exchange with external systems.
     users:
-    - props:
+    - uuid: 44444444-0000-4000-9000-000000000004
+      title: System Administrator
+      role-ids:
+      - system-admin
+      props:
       - value: internal
         name: type
       - value: non-privileged
         name: privilege-level
-      uuid: 44444444-0000-4000-9000-000000000004
-      title: System Administrator
-      role-ids:
-      - system-admin
     inventory-items:
     - uuid: 77777777-0000-4000-9000-000000000007
       props:
@@ -68,90 +65,85 @@ system-security-plan:
           name: asset-id
         component-uuid: 55555555-0000-4000-9000-000000000005
       responsible-parties:
-      - party-uuids:
+      - role-id: asset-owner
+        party-uuids:
         - 11111111-0000-4000-9000-000000000001
-        role-id: asset-owner
   metadata:
     locations:
-    - props:
+    - uuid: 11111112-0000-4000-9001-000000000009
+      address:
+        country: US
+      props:
       - value: dc-zone-1
         class: primary
         name: data-center
         ns: https://fedramp.gov/ns/oscal
-      uuid: 11111112-0000-4000-9001-000000000009
+    - uuid: 11111112-0000-4000-9000-000000000003
       address:
         country: US
-    - props:
+      props:
       - value: aws-us-west-1
         class: alternate
         name: data-center
         ns: https://fedramp.gov/ns/oscal
-      uuid: 11111112-0000-4000-9000-000000000003
-      address:
-        country: US
     parties:
-    - short-name: ExOrg
+    - type: organization
+      name: Example Organization
+      uuid: 11111111-0000-4000-9000-000000000001
+      short-name: ExOrg
       links:
       - rel: website
         href: https://example.com
-      type: organization
-      name: Example Organization
-      uuid: 11111111-0000-4000-9000-000000000001
-    - email-addresses:
-      - jane.doe@example.com
-      type: person
+    - type: person
       name: Jane Doe
       uuid: 22222222-0000-4000-9000-000000000002
       addresses:
       - type: work
+      email-addresses:
+      - jane.doe@example.com
     version: "1.1"
     published: 2024-08-01T14:30:00Z
     remarks: This SSP is an example for demonstration purposes.
     roles:
-    - id: creator
-      title: Document Creator
-    - id: content-approver
-      title: Content Approver
-    - id: system-admin
-      title: System Administrator
-    - id: asset-owner
-      title: Asset Owner
-    - id: system-owner
-      title: System Owner
-    - id: authorizing-official-poc
-      title: Authorizing Official Point of Contact
-    - id: information-system-security-officer
-      title: Information System Security Officer (or Equivalent)
+    - title: Document Creator
+      id: creator
+    - title: Content Approver
+      id: content-approver
+    - title: System Administrator
+      id: system-admin
+    - title: Asset Owner
+      id: asset-owner
+    - title: System Owner
+      id: system-owner
+    - title: Authorizing Official Point of Contact
+      id: authorizing-official-poc
+    - title: Information System Security Officer (or Equivalent)
+      id: information-system-security-officer
     title: Enhanced Example System Security Plan
     responsible-parties:
-    - party-uuids:
+    - role-id: creator
+      party-uuids:
       - 11111111-0000-4000-9000-000000000001
-      role-id: creator
-    - party-uuids:
+    - role-id: content-approver
+      party-uuids:
       - 22222222-0000-4000-9000-000000000002
-      role-id: content-approver
     last-modified: 2024-08-01T14:30:00Z
     oscal-version: 1.0.0
     document-ids:
-    - scheme: https://example.com/identifiers
-      identifier: SSP-2024-002
+    - identifier: SSP-2024-002
+      scheme: https://example.com/identifiers
   back-matter:
     resources:
-    - props:
-      - value: policy
-        name: type
-        ns: https://fedramp.gov/ns/oscal
-      uuid: eeeeeeee-0000-4000-9000-00000000000e
+    - uuid: eeeeeeee-0000-4000-9000-00000000000e
       rlinks:
       - href: https://example.com/policies/access-control.pdf
       title: Access Control Policy
       description: Detailed access control policy document
-    - props:
-      - value: users-guide
+      props:
+      - value: policy
         name: type
-      - value: 2023-01-01T00:00:00Z
-        name: published
-      remarks: |-
+        ns: https://fedramp.gov/ns/oscal
+    - remarks: |-
         Table 12-1 Attachments: User's Guide Attachment
 
         May use `rlink` with a relative path, or embedded as `base64`.
@@ -160,28 +152,47 @@ system-security-plan:
       - href: ./documents/guides/sample_guide.pdf
       title: User's Guide
       description: User's Guide
-    - props:
+      props:
+      - value: users-guide
+        name: type
+      - value: 2023-01-01T00:00:00Z
+        name: published
+    - remarks: |-
+        Table 12-1 Attachments: Rules of Behavior (ROB)
+
+        May use `rlink` with a relative path, or embedded as `base64`.
+      base64:
+        value: "00000000"
+        filename: rob.docx
+        media-type: application/msword
+      uuid: 489112e1-57f2-4c29-8dd0-95b1442fbf3b
+      rlinks:
+      - href: ./documents/rob.docx
+        media-type: application/msword
+      title: Document Title
+      description: Rules of Behavior
+      props:
       - value: rules-of-behavior
         name: type
       - value: 2023-01-01T00:00:00Z
         name: published
       - value: Document Version
         name: version
-      remarks: |-
-        Table 12-1 Attachments: Rules of Behavior (ROB)
+    - remarks: |-
+        Table 12-1 Attachments: Contingency Plan (CP) Attachment
 
         May use `rlink` with a relative path, or embedded as `base64`.
       base64:
-        media-type: application/msword
         value: "00000000"
-        filename: rob.docx
-      uuid: 489112e1-57f2-4c29-8dd0-95b1442fbf3b
+        filename: cp.docx
+        media-type: application/msword
+      uuid: c7860916-f2f4-43aa-b578-d48cf8e6d381
       rlinks:
-      - media-type: application/msword
-        href: ./documents/rob.docx
+      - href: ./documents/cp.docx
+        media-type: application/msword
       title: Document Title
-      description: Rules of Behavior
-    - props:
+      description: Contingency Plan (CP)
+      props:
       - value: plan
         class: information-system-contingency-plan
         name: type
@@ -189,21 +200,21 @@ system-security-plan:
         name: published
       - value: Document Version
         name: version
-      remarks: |-
-        Table 12-1 Attachments: Contingency Plan (CP) Attachment
+    - remarks: |-
+        Table 12-1 Attachments: Configuration Management (CM) Plan Attachment
 
         May use `rlink` with a relative path, or embedded as `base64`.
       base64:
-        media-type: application/msword
         value: "00000000"
-        filename: cp.docx
-      uuid: c7860916-f2f4-43aa-b578-d48cf8e6d381
+        filename: CM_Plan.docx
+        media-type: application/msword
+      uuid: ab56cf27-0dae-40d6-89b7-d750137309af
       rlinks:
-      - media-type: application/msword
-        href: ./documents/cp.docx
+      - href: ./documents/CM_Plan.docx
+        media-type: application/msword
       title: Document Title
-      description: Contingency Plan (CP)
-    - props:
+      description: Configuration Management (CM) Plan
+      props:
       - value: plan
         class: configuration-management-plan
         name: type
@@ -211,21 +222,21 @@ system-security-plan:
         name: published
       - value: Document Version
         name: version
-      remarks: |-
-        Table 12-1 Attachments: Configuration Management (CM) Plan Attachment
+    - remarks: |-
+        Table 12-1 Attachments: Incident Response (IR) Plan Attachment
 
         May use `rlink` with a relative path, or embedded as `base64`.
       base64:
-        media-type: application/msword
         value: "00000000"
-        filename: CM_Plan.docx
-      uuid: ab56cf27-0dae-40d6-89b7-d750137309af
+        filename: IR_Plan.docx
+        media-type: application/msword
+      uuid: 3f771ab5-8016-4571-98d1-f0fb962e15e2
       rlinks:
-      - media-type: application/msword
-        href: ./documents/CM_Plan.docx
+      - href: ./documents/IR_Plan.docx
+        media-type: application/msword
       title: Document Title
-      description: Configuration Management (CM) Plan
-    - props:
+      description: Incident Response (IR) Plan
+      props:
       - value: plan
         class: incident-response-plan
         name: type
@@ -233,21 +244,18 @@ system-security-plan:
         name: published
       - value: Document Version
         name: version
-      remarks: |-
-        Table 12-1 Attachments: Incident Response (IR) Plan Attachment
-
-        May use `rlink` with a relative path, or embedded as `base64`.
+    - remarks: "May use `rlink` with a relative path, or embedded as `base64`."
       base64:
-        media-type: application/msword
         value: "00000000"
-        filename: IR_Plan.docx
-      uuid: 3f771ab5-8016-4571-98d1-f0fb962e15e2
+        filename: Sep_Matrix.docx
+        media-type: application/msword
+      uuid: 49fb4631-1da2-41ca-b0b3-e1b1006d4025
       rlinks:
-      - media-type: application/msword
-        href: ./documents/IR_Plan.docx
-      title: Document Title
-      description: Incident Response (IR) Plan
-    - props:
+      - href: ./documents/Sep_Matrix.docx
+        media-type: application/msword
+      title: Separation of Duties Matrix
+      description: Separation of Duties Matrix
+      props:
       - value: separation-of-duties-matrix
         name: type
         ns: https://fedramp.gov/ns/oscal
@@ -255,37 +263,18 @@ system-security-plan:
         name: published
       - value: Document Version
         name: version
-      remarks: "May use `rlink` with a relative path, or embedded as `base64`."
+    - remarks: "May use `rlink` with a relative path, or embedded as `base64`."
       base64:
-        media-type: application/msword
         value: "00000000"
         filename: Sep_Matrix.docx
-      uuid: 49fb4631-1da2-41ca-b0b3-e1b1006d4025
-      rlinks:
-      - media-type: application/msword
-        href: ./documents/Sep_Matrix.docx
-      title: Separation of Duties Matrix
-      description: Separation of Duties Matrix
-    - props:
-      - value: diagram
-        name: type
-        ns: https://fedramp.gov/ns/oscal
-      - value: 2023-01-01T00:00:00Z
-        name: published
-      - value: Document Version
-        name: version
-      remarks: "May use `rlink` with a relative path, or embedded as `base64`."
-      base64:
         media-type: application/msword
-        value: "00000000"
-        filename: Sep_Matrix.docx
       uuid: ac5d7535-f3b8-45d3-bf3b-735c82c64547
       rlinks:
-      - media-type: application/msword
-        href: ./documents/Sep_Matrix.docx
+      - href: ./documents/Sep_Matrix.docx
+        media-type: application/msword
       title: Diagram
       description: Diagram
-    - props:
+      props:
       - value: diagram
         name: type
         ns: https://fedramp.gov/ns/oscal
@@ -293,18 +282,18 @@ system-security-plan:
         name: published
       - value: Document Version
         name: version
-      remarks: "May use `rlink` with a relative path, or embedded as `base64`."
+    - remarks: "May use `rlink` with a relative path, or embedded as `base64`."
       base64:
-        media-type: application/msword
         value: "00000000"
         filename: Sep_Matrix.docx
+        media-type: application/msword
       uuid: d2eb3c18-6754-4e3a-a933-03d289e3fad5
       rlinks:
-      - media-type: application/msword
-        href: ./documents/Sep_Matrix.docx
+      - href: ./documents/Sep_Matrix.docx
+        media-type: application/msword
       title: Diagram
       description: Diagram
-    - props:
+      props:
       - value: diagram
         name: type
         ns: https://fedramp.gov/ns/oscal
@@ -312,37 +301,43 @@ system-security-plan:
         name: published
       - value: Document Version
         name: version
-      remarks: "May use `rlink` with a relative path, or embedded as `base64`."
+    - remarks: "May use `rlink` with a relative path, or embedded as `base64`."
       base64:
-        media-type: application/msword
         value: "00000000"
         filename: Sep_Matrix.docx
+        media-type: application/msword
       uuid: 61081e81-850b-43c1-bf43-1ecbddcb9e7f
       rlinks:
-      - media-type: application/msword
-        href: ./documents/Sep_Matrix.docx
+      - href: ./documents/Sep_Matrix.docx
+        media-type: application/msword
       title: Diagram
       description: Diagram
+      props:
+      - value: diagram
+        name: type
+        ns: https://fedramp.gov/ns/oscal
+      - value: 2023-01-01T00:00:00Z
+        name: published
+      - value: Document Version
+        name: version
   system-characteristics:
-    status:
-      state: operational
     network-architecture:
       diagrams:
-      - uuid: e97c3395-433a-48c1-8cc7-dd1e1555941c
-        caption: Network Diagram
+      - caption: Network Diagram
         links:
         - rel: diagram
-          href: '#61081e81-850b-43c1-bf43-1ecbddcb9e7f'
+          href: "#61081e81-850b-43c1-bf43-1ecbddcb9e7f"
         description: A diagram-specific explanation.
+        uuid: e97c3395-433a-48c1-8cc7-dd1e1555941c
       description: "A holistic, top-level explanation of the network architecture."
     data-flow:
       diagrams:
-      - uuid: e3b98448-4219-46a5-b229-412423c566f3
-        caption: Data Flow Diagram
+      - caption: Data Flow Diagram
         links:
         - rel: diagram
-          href: '#ac5d7535-f3b8-45d3-bf3b-735c82c64547'
+          href: "#ac5d7535-f3b8-45d3-bf3b-735c82c64547"
         description: A diagram-specific explanation.
+        uuid: e3b98448-4219-46a5-b229-412423c566f3
       description: "A holistic, top-level explanation of the system's data flows."
     props:
     - value: government-only-cloud
@@ -369,43 +364,37 @@ system-security-plan:
         uuid: 33333333-0000-4000-9000-000000000003
         title: Financial Information
         categorizations:
-        - information-type-ids:
+        - system: https://doi.org/10.6028/NIST.SP.800-60v2r1
+          information-type-ids:
           - C.2.8.12
-          system: https://doi.org/10.6028/NIST.SP.800-60v2r1
         description: Contains sensitive financial data related to organizational operations.
         integrity-impact:
           base: moderate
     system-name: Enhanced Example System
     security-impact-level:
-      security-objective-confidentiality: moderate
       security-objective-availability: moderate
       security-objective-integrity: moderate
+      security-objective-confidentiality: moderate
     security-sensitivity-level: moderate
     authorization-boundary:
       diagrams:
-      - uuid: dbf46c27-52a9-49c4-beb6-b6399cd75497
-        caption: Authorization Boundary Diagram
+      - caption: Authorization Boundary Diagram
         links:
         - rel: diagram
-          href: '#d2eb3c18-6754-4e3a-a933-03d289e3fad5'
+          href: "#d2eb3c18-6754-4e3a-a933-03d289e3fad5"
         description: A diagram-specific explanation.
+        uuid: dbf46c27-52a9-49c4-beb6-b6399cd75497
       description: The authorization boundary includes all components within the main data center and the disaster recovery site.
     description: "This is an enhanced example system for demonstration purposes, incorporating more FedRAMP-specific elements."
     system-ids:
-    - identifier-type: https://fedramp.gov
-      id: F00000001
+    - id: F00000001
+      identifier-type: https://fedramp.gov
+    status:
+      state: operational
   control-implementation:
     description: Implementation of controls for the Enhanced Example System
     implemented-requirements:
-    - props:
-      - value: sp-system
-        name: control-origination
-        ns: https://fedramp.gov/ns/oscal
-      - value: partial
-        name: implementation-status
-        ns: https://fedramp.gov/ns/oscal
-      control-id: ac-1
-      uuid: 88888888-0000-4000-9000-000000000008
+    - uuid: 88888888-0000-4000-9000-000000000008
       statements:
       - uuid: 99999999-0000-4000-9000-000000000009
         statement-id: ac-1_stmt.a
@@ -417,16 +406,19 @@ system-security-plan:
           name: implementation-status
           ns: https://fedramp.gov/ns/oscal
         responsible-roles:
-        - party-uuids:
+        - role-id: system-admin
+          party-uuids:
           - 11111111-0000-4000-9000-000000000001
-          role-id: system-admin
         uuid: aaaaaaaa-0000-4000-9000-00000000000a
-    - props:
+      props:
       - value: sp-system
         name: control-origination
         ns: https://fedramp.gov/ns/oscal
-      control-id: cm-8
-      uuid: bbbbbbbb-0000-4000-9000-00000000000b
+      - value: partial
+        name: implementation-status
+        ns: https://fedramp.gov/ns/oscal
+      control-id: ac-1
+    - uuid: bbbbbbbb-0000-4000-9000-00000000000b
       statements:
       - uuid: cccccccc-0000-4000-9000-00000000000c
         statement-id: cm-8_stmt.a
@@ -438,7 +430,15 @@ system-security-plan:
           name: implementation-status
           ns: https://fedramp.gov/ns/oscal
         responsible-roles:
-        - party-uuids:
+        - role-id: system-admin
+          party-uuids:
           - 11111111-0000-4000-9000-000000000001
-          role-id: system-admin
         uuid: dddddddd-0000-4000-9000-00000000000d
+      props:
+      - value: sp-system
+        name: control-origination
+        ns: https://fedramp.gov/ns/oscal
+      control-id: cm-8
+  uuid: 12345678-1234-4321-8765-123456789012
+  import-profile:
+    href: ../content/fedramp/src/content/rev5/baselines/xml/FedRAMP_rev5_catalog_tailoring_profile.xml

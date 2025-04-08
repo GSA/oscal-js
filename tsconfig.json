@@ -18,5 +18,5 @@
     "esm": true,
     "experimentalSpecifierResolution": "node"
   },
-  "exclude": ["node_modules", "features/", "examples", "dist"]
+  "exclude": ["node_modules", "features/", "examples", "dist", "content"]
 }

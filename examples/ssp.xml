@@ -67,7 +67,7 @@
     </remarks>
   </metadata>
   
-  <import-profile href="https://raw.githubusercontent.com/GSA/fedramp-automation/refs/heads/develop/src/validations/constraints/content/fedramp-tailoring-profile.xml"/>
+  <import-profile href="../content/fedramp/src/content/rev5/baselines/xml/FedRAMP_rev5_catalog_tailoring_profile.xml"/>
   
   <system-characteristics>
     <system-id identifier-type="https://fedramp.gov">F00000001</system-id>

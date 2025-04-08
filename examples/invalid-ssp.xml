@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml-model schematypens="http://www.w3.org/2001/XMLSchema" type="application/xml" href="https://github.com/usnistgov/OSCAL/releases/download/v1.1.1/oscal_complete_schema.xsd"?>
+<?xml-model schematypens="http://www.w3.org/2001/XMLSchema" type="application/xml" href="https://github.com/usnistgov/OSCAL/releases/download/v1.1.3/oscal_complete_schema.xsd"?>
 <system-security-plan xmlns="http://csrc.nist.gov/ns/oscal/1.0"
     uuid="cff8385f-108e-40a5-8f7a-82f3dc0eaba8">
     <metadata>
@@ -393,11 +393,11 @@
                 <p>NIST Special Publication 800-53 Revision 4: Moderate Baseline Profile</p>
             </description>
             <rlink media-type="application/oscal.catalog+xml"
-                href="../../../nist.gov/SP800-53/rev4/xml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.xml" />
+                href="../content/nist/nist.gov/SP800-53/rev4/xml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.xml" />
             <rlink media-type="application/oscal.catalog+json"
-                href="../../../nist.gov/SP800-53/rev4/json/NIST_SP-800-53_rev4_MODERATE-baseline_profile.json" />
+                href="../content/nist/nist.gov/SP800-53/rev4/json/NIST_SP-800-53_rev4_MODERATE-baseline_profile.json" />
             <rlink media-type="application/oscal.catalog+yaml"
-                href="../../../nist.gov/SP800-53/rev4/yaml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.yaml" />
+                href="../content/nist/nist.gov/SP800-53/rev4/yaml/NIST_SP-800-53_rev4_MODERATE-baseline_profile.yaml" />
         </resource>
     </back-matter>
 </system-security-plan>

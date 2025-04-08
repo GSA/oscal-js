@@ -131,7 +131,7 @@ Feature: OSCAL Operations with Multiple Executors
     Then I should receive the sarif output
     Examples:
       | executor     | document_source |
-      | oscal-cli    | ../content/rev5/templates/ssp/xml/FedRAMP-SSP-OSCAL-Template.xml |
-      | oscal-server | ../content/rev5/templates/ssp/xml/FedRAMP-SSP-OSCAL-Template.xml |
-      | oscal-cli    | https://raw.githubusercontent.com/usnistgov/oscal-content/refs/heads/main/nist.gov/SP800-53/rev5/xml/NIST_SP-800-53_rev5_catalog.xml|
-      | oscal-server | https://raw.githubusercontent.com/usnistgov/oscal-content/refs/heads/main/nist.gov/SP800-53/rev5/xml/NIST_SP-800-53_rev5_catalog.xml |
+      | oscal-cli    | ../content/fedramp/src/content/rev5/examples/ssp/xml/fedramp-ssp-example.oscal.xml |
+      | oscal-server | ../content/fedramp/src/content/rev5/examples/ssp/xml/fedramp-ssp-example.oscal.xml |
+      | oscal-cli    | ../content/nist/nist.gov/SP800-53/rev5/xml/NIST_SP-800-53_rev5_catalog.xml |
+      | oscal-server | ../content/nist/nist.gov/SP800-53/rev5/xml/NIST_SP-800-53_rev5_catalog.xml  |

@@ -42,13 +42,13 @@
   },
   "type": "module",
   "devDependencies": {
-    "@cucumber/cucumber": "^10.8.0",
+    "@cucumber/cucumber": "^12.2.0",
     "@types/adm-zip": "^0.5.5",
     "@types/chai": "^4.3.16",
     "@types/inquirer": "^9.0.7",
     "@types/node": "^18.19.55",
     "cross-env": "^7.0.3",
-    "json-schema-to-typescript": "^14.1.0",
+    "json-schema-to-typescript": "^15.0.4",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.5.2"
